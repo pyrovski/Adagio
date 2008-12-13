@@ -1,0 +1,3 @@
+harness.c	Test harness for the library.
+Makefile	Not just for building anymore.
+Manifest	This file
