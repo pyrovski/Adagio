@@ -10,6 +10,14 @@ void shim_post( int shim_id, union shim_parameters *p );
 char* f2str( int shim_id );
 void Log( int shim_id, union shim_parameters *p );
 
+// Schedule entry
+struct entry{
+	double observed_comp_seconds;
+	double observed_comm_seconds;
+	int following_entry;
+};
+
+
 // MPI_Init
 static void pre_MPI_Init 	( union shim_parameters *p );
 static void post_MPI_Init	( union shim_parameters *p );

@@ -1,5 +1,6 @@
 #include <assert.h>
 #include "util.h"
+#include "md5.h"
 
 double
 delta_seconds(struct timeval *s, struct timeval *e){
@@ -21,18 +22,22 @@ initialize_logfile(int rank){
 #include <libunwind.h>
 int
 hash_backtrace(int fid) {
-	int rc=0;
 	unw_cursor_t cursor; unw_context_t uc;
 	unw_word_t ip, sp;
+
+	md5_state_t pms;
+	md5_byte_t digest[16];
+	md5_init(   &pms );
 
 	unw_getcontext(&uc);
 	unw_init_local(&cursor, &uc);
 	while (unw_step(&cursor) > 0) {
 		unw_get_reg(&cursor, UNW_REG_IP, &ip);
 		unw_get_reg(&cursor, UNW_REG_SP, &sp);
-		//printf ("ip = %lx, sp = %lx\n", (long) ip, (long) sp);
-		//rc += (int)( (ip >> (sp%3)) * (sp >> (sp%5)) * 13) ;
-		rc += (int)( (ip >> 2) + (sp >> 2) ) ;
+		md5_append( &pms, &ip, sizeof(unw_word_t) );
+		md5_append( &pms, &sp, sizeof(unw_word_t) );
 	}
-	return (rc+fid*11) & 0xfff;
+	md5_append( &pms, &fid, sizeof(int) );
+	md5_finish( &pms, digest );
+	return *((int*)digest) & 0x1fff; //8192 entries.
 }

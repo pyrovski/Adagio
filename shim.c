@@ -24,6 +24,9 @@ static int g_trace;	// tracing level.
 
 FILE *logfile;
 
+// Don't change this without altering the hash function.
+static struct entry schedule[8192];
+
 enum{ 
 	// To run without library overhead, use the .pristine binary.
 	algo_NONE	= 0x000,	// Identical to CLEAN.
@@ -145,7 +148,7 @@ f2str( int shim_id ){
 void
 Log( int shim_id, union shim_parameters *p ){
 
-	static int initialized=0;
+	static int initialized=0, prev_hash=-1;
 	MPI_Aint lb; 
 	MPI_Aint extent;
 	int MsgSz=-1, hash=hash_backtrace(shim_id);
@@ -203,15 +206,24 @@ Log( int shim_id, union shim_parameters *p ){
 			MsgSz = -1;	// We don't have complete coverage, obviously.
 	}
 			
+	// Write the schedule entry.
+	schedule[hash].observed_comp_seconds = 
+		delta_seconds(&ts_start_computation, &ts_stop_computation);
+	schedule[hash].observed_comm_seconds = 
+		delta_seconds(&ts_start_communication, &ts_stop_communication);
+	if( prev_hash >= 0 ){
+		schedule[prev_hash].following_entry = hash;
+	}
+	prev_hash = hash;
+
 	// Write to the logfile.
 	fprintf( logfile,
 		var_format,
 		rank,
-		f2str(p->MPI_Dummy_p.shim_id),	// Function
-		//f2str(shim_id),				// Function
+		f2str(p->MPI_Dummy_p.shim_id),	
 		hash,
-		delta_seconds(&ts_start_computation,   &ts_stop_computation),
-		delta_seconds(&ts_start_communication, &ts_stop_communication),
+		schedule[hash].observed_comp_seconds,
+		schedule[hash].observed_comm_seconds,
 		MsgSz
 	);
 

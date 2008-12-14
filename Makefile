@@ -20,7 +20,7 @@ MPICC=mpicc
 CFLAGS=-O0 -Wall -g
 LIBDIR=-L$(HOME)/GreenMPI/local/lib
 INCDIR=-I$(HOME)/GreenMPI/local/include
-LIBS=-lunwind
+LIBS=-lunwind -lmd5
 GENERATED_SHIMFILES = shim_enumeration.h shim_functions.c shim_parameters.h 	\
 shim_selection.h  shim_str.h  shim_structs.h  shim_union.h			
 
@@ -83,7 +83,7 @@ shim.o: Makefile shim.c shim.h $(GENERATED_SHIMFILES)
 	$(MPICC) -c shim_functions.c
 
 util.o: Makefile util.c util.h
-	$(MPICC) $(CFLAGS) $(INC) -c util.c
+	$(MPICC) $(CFLAGS) $(INCDIR) -c util.c
 
 $(GENERATED_SHIMFILES): Makefile shim.py shim.sh
 	echo $(SHELL)
