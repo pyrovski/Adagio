@@ -115,7 +115,7 @@ post_MPI_Init( union shim_parameters *p ){
 	PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	PMPI_Comm_size(MPI_COMM_WORLD, &size);
 	// Fire up the logfile.
-	logfile = initialize_logfile( rank );
+	if(g_trace){logfile = initialize_logfile( rank );}
 }
 	
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,7 +129,7 @@ pre_MPI_Finalize( union shim_parameters *p ){
 static void
 post_MPI_Finalize( union shim_parameters *p ){
 	p=p;
-	fclose(logfile);
+	if(g_trace){fclose(logfile);}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

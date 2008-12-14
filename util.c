@@ -34,10 +34,10 @@ hash_backtrace(int fid) {
 	while (unw_step(&cursor) > 0) {
 		unw_get_reg(&cursor, UNW_REG_IP, &ip);
 		unw_get_reg(&cursor, UNW_REG_SP, &sp);
-		md5_append( &pms, &ip, sizeof(unw_word_t) );
-		md5_append( &pms, &sp, sizeof(unw_word_t) );
+		md5_append( &pms, (md5_byte_t *)(&ip), sizeof(unw_word_t) );
+		md5_append( &pms, (md5_byte_t *)(&sp), sizeof(unw_word_t) );
 	}
-	md5_append( &pms, &fid, sizeof(int) );
+	md5_append( &pms, (md5_byte_t*)(&fid), sizeof(int) );
 	md5_finish( &pms, digest );
 	return *((int*)digest) & 0x1fff; //8192 entries.
 }

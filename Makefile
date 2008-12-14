@@ -62,10 +62,9 @@ test: Makefile rank
 
 # Harness code.
 
-harness: Makefile shim.o harness.o shim_functions.o util.o 
+harness: Makefile harness.o GreenMPI
 	$(MPICC) $(CFLAGS) $(LIBDIR) $(INCDIR)  -o harness 	\
-	harness.o shim.o shim_functions.o util.o 		\
-	$(LIBS)
+	harness.o -lGreenMPI
 
 harness_pristine: Makefile harness.o
 	$(MPICC) $(CFLAGS) -o harness_pristine harness.o 
@@ -78,12 +77,17 @@ clean:
 
 # Adagio libraries.
 
+GreenMPI: Makefile shim.o util.o $(GENERATED_SHIMFILES)  
+	$(MPICC) $(CFLAGS) $(LIBDIR) -shared -Wl,-soname,libGreenMPI.so \
+		-o libGreenMPI.so shim.o shim_functions.o util.o -lc -lm $(LIBS)
+	mv libGreenMPI.so ${HOME}/GreenMPI/local/lib
+
 shim.o: Makefile shim.c shim.h $(GENERATED_SHIMFILES) 
-	$(MPICC) -DUSE_EAGER_LOGGING -c shim.c
-	$(MPICC) -c shim_functions.c
+	$(MPICC) -fPIC -DUSE_EAGER_LOGGING -c shim.c
+	$(MPICC) -fPIC -c shim_functions.c
 
 util.o: Makefile util.c util.h
-	$(MPICC) $(CFLAGS) $(INCDIR) -c util.c
+	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c util.c
 
 $(GENERATED_SHIMFILES): Makefile shim.py shim.sh
 	echo $(SHELL)
