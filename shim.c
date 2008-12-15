@@ -10,6 +10,7 @@
 #include "shim.h"
 #include "util.h"	// Brings in <stdio.h>, <sys/time.h>, <time.h>
 #include "wpapi.h"	// PAPI wrappers.
+#include "shift.h"	// shift, enums.
 
 static int rank, size;
 
@@ -20,7 +21,8 @@ static int g_algo;	// which algorithm(s) to use.
 static int g_freq;	// frequency to use with fixedfreq.
 static int g_trace;	// tracing level.  
 
-static int current_hash=0, previous_hash=-1, current_freq=0;
+static int current_hash=0, previous_hash=-1, current_freq=0, next_freq=0;
+static int in_computation=1;
 
 
 
@@ -28,6 +30,8 @@ FILE *logfile;
 
 // Don't change this without altering the hash function.
 static struct entry schedule[8192];
+static double current_comp_seconds[NUM_FREQS];
+static double current_comp_insn[NUM_FREQS];
 
 enum{ 
 	// To run without library overhead, use the .pristine binary.
@@ -156,8 +160,14 @@ Log( int shim_id, union shim_parameters *p ){
 	MPI_Aint lb; 
 	MPI_Aint extent;
 	int MsgSz=-1;
-	char *var_format ="%5d %20s %06d %9.6lf %9.6lf %7d\n";
-	char *hdr_format="%5s %20s %6s %9s %9s %7s\n";
+	char *var_format =
+		"%5d %20s %06d "			\
+		" %9.6lf %9.6lf %9.6lf %9.6lf %9.6lf"	\
+		" %9.6lf %7d\n";
+	char *hdr_format =
+		"%5s %20s %6s"				\ 
+		" %9s %9s %9s %9s %9s"			\ 
+		" %9s %7s\n";
 
 
 	// One-time initialization.
@@ -166,11 +176,15 @@ Log( int shim_id, union shim_parameters *p ){
 		if(rank==0){
 			fprintf(logfile, 
 				hdr_format,
-				" Rank", "Function", "Hash", "Comp", "Comm", "MsgSz");
+				" Rank", "Function", "Hash", 
+				"Comp0", "Comp1", "Comp2", "Comp3", "Comp4",
+				"Comm", "MsgSz");
 		}else{
 			fprintf(logfile, 
 				hdr_format,
-				"#Rank", "Function", "Hash", "Comp", "Comm", "MsgSz");
+				"#Rank", "Function", "Hash", 
+				"Comp0", "Comp1", "Comp2", "Comp3", "Comp4",
+				"Comm", "MsgSz");
 		}
 		initialized=1;
 	}
@@ -216,7 +230,11 @@ Log( int shim_id, union shim_parameters *p ){
 		rank,
 		f2str(p->MPI_Dummy_p.shim_id),	
 		current_hash,
-		schedule[current_hash].observed_comp_seconds,
+		schedule[current_hash].observed_comp_seconds[0],
+		schedule[current_hash].observed_comp_seconds[1],
+		schedule[current_hash].observed_comp_seconds[2],
+		schedule[current_hash].observed_comp_seconds[3],
+		schedule[current_hash].observed_comp_seconds[4],
 		schedule[current_hash].observed_comm_seconds,
 		MsgSz
 	);
@@ -233,6 +251,7 @@ Log( int shim_id, union shim_parameters *p ){
 void 
 shim_pre( int shim_id, union shim_parameters *p ){
 	// Bookkeeping.
+	in_computation = 0;
 	gettimeofday(&ts_stop_computation, NULL);  
 
 	// Which call is this?
@@ -244,7 +263,7 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	
 	// Bookkeeping.
 	gettimeofday(&ts_start_communication, NULL);  
-	schedule[current_hash].observed_comp_insn[current_freq]=papi_stop();
+	current_comp_insn[current_freq]=papi_stop();
 }
 
 void 
@@ -256,7 +275,25 @@ shim_post( int shim_id, union shim_parameters *p ){
 	if(shim_id == GMPI_INIT){ post_MPI_Init( p ); }
 	
 	// Write the schedule entry.  MUST COME BEFORE LOGGING.
-	schedule[current_hash].observed_comp_seconds = 
+	memcpy(	// Copy time accrued before we shifted into current freq.
+		schedule[current_hash].observed_comp_seconds, 
+		current_comp_seconds, 
+		sizeof( double ) * NUM_FREQS);
+	memset(
+		current_comp_seconds,
+		0,
+		sizeof( double ) * NUM_FREQS);
+
+	memcpy( // Copy insn accrued before we shifted into current freq.
+		schedule[current_hash].observed_comp_insn,
+		current_comp_insn,
+		sizeof( double ) * NUM_FREQS);
+	memset(
+		current_comp_insn,
+		0,
+		sizeof( double ) * NUM_FREQS);
+
+	schedule[current_hash].observed_comp_seconds[current_freq] = 
 		delta_seconds(&ts_start_computation, &ts_stop_computation);
 	schedule[current_hash].observed_comm_seconds = 
 		delta_seconds(&ts_start_communication, &ts_stop_communication);
@@ -275,5 +312,34 @@ shim_post( int shim_id, union shim_parameters *p ){
 	// NOTE:  THIS HAS TO GO LAST.  Otherwise the logfile will be closed
 	// prematurely.
 	if(shim_id == GMPI_FINALIZE){ pre_MPI_Finalize( p ); }
+	in_computation = 1;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Signals
+////////////////////////////////////////////////////////////////////////////////
+static struct itimerval itv;
+static void signal_handler(int signal);
+static void initialize_handler(void);
+static void
+signal_handler(int signal){
+	// Keep this really simple and stupid.  
+	// When we catch a signal, shift(next_freq).
+	// If we're in the computation phase, record time spent computing.
+        signal = signal;
+	if(in_computation){
+		gettimeofday(&ts_stop_computation, NULL);
+		current_comp_seconds[current_freq] 
+			= delta_seconds(&ts_start_computation, &ts_stop_computation);
+		current_comp_insn[current_freq]=stop_papi();
+	}
+	shift(next_freq);
+	current_freq = next_freq;
+	next_freq = NO_SHIFT;
+	if(in_computation){
+		gettimeofday(&ts_start_computation, NULL);
+	}
+	start_papi();
+}
+
 
