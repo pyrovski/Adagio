@@ -5,6 +5,7 @@
  */
 
 #include "shim_parameters.h"
+#define NUM_FREQS (5)
 void shim_pre( int shim_id, union shim_parameters *p );
 void shim_post( int shim_id, union shim_parameters *p );
 char* f2str( int shim_id );
@@ -14,6 +15,7 @@ void Log( int shim_id, union shim_parameters *p );
 struct entry{
 	double observed_comp_seconds;
 	double observed_comm_seconds;
+	double observed_comp_insn[NUM_FREQS];
 	int following_entry;
 };
 

@@ -9,18 +9,20 @@
 #include "shim_enumeration.h"
 #include "shim.h"
 #include "util.h"	// Brings in <stdio.h>, <sys/time.h>, <time.h>
+#include "wpapi.h"	// PAPI wrappers.
 
 static int rank, size;
 
 static struct timeval ts_start_communication, ts_start_computation,
 			ts_stop_communication, ts_stop_computation;
 
-static int g_algo;	// which algorithm(s) to use.  (Not all combinations
-			//   necessarily make sense.
-
+static int g_algo;	// which algorithm(s) to use.
 static int g_freq;	// frequency to use with fixedfreq.
-
 static int g_trace;	// tracing level.  
+
+static int current_hash=0, previous_hash=-1, current_freq=0;
+
+
 
 FILE *logfile;
 
@@ -106,6 +108,8 @@ pre_MPI_Init( union shim_parameters *p ){
 	// Put a reasonable value in.
 	gettimeofday(&ts_start_computation, NULL);  
 	gettimeofday(&ts_stop_computation, NULL);  
+	papi_start();	// Pretend computation started here.
+
 }
 
 static void
@@ -148,10 +152,10 @@ f2str( int shim_id ){
 void
 Log( int shim_id, union shim_parameters *p ){
 
-	static int initialized=0, prev_hash=-1;
+	static int initialized=0;
 	MPI_Aint lb; 
 	MPI_Aint extent;
-	int MsgSz=-1, hash=hash_backtrace(shim_id);
+	int MsgSz=-1;
 	char *var_format ="%5d %20s %06d %9.6lf %9.6lf %7d\n";
 	char *hdr_format="%5s %20s %6s %9s %9s %7s\n";
 
@@ -206,24 +210,14 @@ Log( int shim_id, union shim_parameters *p ){
 			MsgSz = -1;	// We don't have complete coverage, obviously.
 	}
 			
-	// Write the schedule entry.
-	schedule[hash].observed_comp_seconds = 
-		delta_seconds(&ts_start_computation, &ts_stop_computation);
-	schedule[hash].observed_comm_seconds = 
-		delta_seconds(&ts_start_communication, &ts_stop_communication);
-	if( prev_hash >= 0 ){
-		schedule[prev_hash].following_entry = hash;
-	}
-	prev_hash = hash;
-
 	// Write to the logfile.
 	fprintf( logfile,
 		var_format,
 		rank,
 		f2str(p->MPI_Dummy_p.shim_id),	
-		hash,
-		schedule[hash].observed_comp_seconds,
-		schedule[hash].observed_comm_seconds,
+		current_hash,
+		schedule[current_hash].observed_comp_seconds,
+		schedule[current_hash].observed_comm_seconds,
 		MsgSz
 	);
 
@@ -240,6 +234,9 @@ void
 shim_pre( int shim_id, union shim_parameters *p ){
 	// Bookkeeping.
 	gettimeofday(&ts_stop_computation, NULL);  
+
+	// Which call is this?
+	current_hash=hash_backtrace(shim_id);
 	
 	// Function-specific intercept code.
 	if(shim_id == GMPI_INIT){ pre_MPI_Init( p ); }
@@ -247,6 +244,7 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	
 	// Bookkeeping.
 	gettimeofday(&ts_start_communication, NULL);  
+	schedule[current_hash].observed_comp_insn[current_freq]=papi_stop();
 }
 
 void 
@@ -257,14 +255,27 @@ shim_post( int shim_id, union shim_parameters *p ){
 	// (Most) Function-specific intercept code.
 	if(shim_id == GMPI_INIT){ post_MPI_Init( p ); }
 	
+	// Write the schedule entry.  MUST COME BEFORE LOGGING.
+	schedule[current_hash].observed_comp_seconds = 
+		delta_seconds(&ts_start_computation, &ts_stop_computation);
+	schedule[current_hash].observed_comm_seconds = 
+		delta_seconds(&ts_start_communication, &ts_stop_communication);
+	if( previous_hash >= 0 ){
+		schedule[previous_hash].following_entry = current_hash;
+	}
+
 	// Logging occurs as we're about to leave the task.
 	if(g_trace){ Log( shim_id, p ); };
 	
 	// Bookkeeping.  MUST COME AFTER LOGGING.
+	previous_hash = current_hash;
 	gettimeofday(&ts_start_computation, NULL);  
+	papi_start();	//Computation.
 
 	// NOTE:  THIS HAS TO GO LAST.  Otherwise the logfile will be closed
 	// prematurely.
 	if(shim_id == GMPI_FINALIZE){ pre_MPI_Finalize( p ); }
+
+
 }
 

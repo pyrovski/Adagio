@@ -20,7 +20,7 @@ MPICC=mpicc
 CFLAGS=-O0 -Wall -g
 LIBDIR=-L$(HOME)/GreenMPI/local/lib
 INCDIR=-I$(HOME)/GreenMPI/local/include
-LIBS=-lunwind -lmd5
+LIBS=-lc -lm -lunwind -lmd5 -lpapi 
 GENERATED_SHIMFILES = shim_enumeration.h shim_functions.c shim_parameters.h 	\
 shim_selection.h  shim_str.h  shim_structs.h  shim_union.h			
 
@@ -77,17 +77,20 @@ clean:
 
 # Adagio libraries.
 
-GreenMPI: Makefile shim.o util.o $(GENERATED_SHIMFILES)  
+GreenMPI: Makefile shim.o util.o wpapi.o $(GENERATED_SHIMFILES)  
 	$(MPICC) $(CFLAGS) $(LIBDIR) -shared -Wl,-soname,libGreenMPI.so \
-		-o libGreenMPI.so shim.o shim_functions.o util.o -lc -lm $(LIBS)
+		-o libGreenMPI.so shim.o shim_functions.o util.o wpapi.o $(LIBS)
 	mv libGreenMPI.so ${HOME}/GreenMPI/local/lib
 
-shim.o: Makefile shim.c shim.h $(GENERATED_SHIMFILES) 
+shim.o: Makefile shim.c shim.h util.o wpapi.o $(GENERATED_SHIMFILES) 
 	$(MPICC) -fPIC -DUSE_EAGER_LOGGING -c shim.c
 	$(MPICC) -fPIC -c shim_functions.c
 
 util.o: Makefile util.c util.h
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c util.c
+
+wpapi.o: Makefile wpapi.c wpapi.h
+	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c wpapi.c
 
 $(GENERATED_SHIMFILES): Makefile shim.py shim.sh
 	echo $(SHELL)
