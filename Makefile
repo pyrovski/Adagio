@@ -79,10 +79,13 @@ clean:
 
 GreenMPI: Makefile shim.o util.o wpapi.o $(GENERATED_SHIMFILES)  
 	$(MPICC) $(CFLAGS) $(LIBDIR) -shared -Wl,-soname,libGreenMPI.so \
-		-o libGreenMPI.so shim.o shim_functions.o util.o wpapi.o $(LIBS)
+		-o libGreenMPI.so 					\
+		shim.o shim_functions.o util.o wpapi.o shift.o cpuid.o	\
+		$(LIBS)
 	mv libGreenMPI.so ${HOME}/GreenMPI/local/lib
 
-shim.o: Makefile shim.c shim.h util.o wpapi.o $(GENERATED_SHIMFILES) 
+shim.o: Makefile shim.c shim.h util.o wpapi.o shift.o cpuid.o 		\
+		$(GENERATED_SHIMFILES) 
 	$(MPICC) -fPIC -DUSE_EAGER_LOGGING -c shim.c
 	$(MPICC) -fPIC -c shim_functions.c
 
@@ -91,6 +94,13 @@ util.o: Makefile util.c util.h
 
 wpapi.o: Makefile wpapi.c wpapi.h
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c wpapi.c
+
+shift.o: Makefile shift.c shift.h cpuid.o
+	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c shift.c
+
+cpuid.o: Makefile cpuid.c cpuid.h 
+	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c cpuid.c
+
 
 $(GENERATED_SHIMFILES): Makefile shim.py shim.sh
 	echo $(SHELL)

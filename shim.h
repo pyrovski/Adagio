@@ -5,7 +5,7 @@
  */
 
 #include "shim_parameters.h"
-#define NUM_FREQS (5)
+#include "machine.h"
 void shim_pre( int shim_id, union shim_parameters *p );
 void shim_post( int shim_id, union shim_parameters *p );
 char* f2str( int shim_id );
