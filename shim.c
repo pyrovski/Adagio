@@ -140,6 +140,7 @@ static void
 pre_MPI_Finalize( union shim_parameters *p ){
 	p=p;
 	mark_joules(rank, size);
+	PMPI_Barrier( MPI_COMM_WORLD );
 }
 	
 static void
