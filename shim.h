@@ -15,9 +15,10 @@ void Log( int shim_id, union shim_parameters *p );
 
 // Schedule entry
 struct entry{
-	double observed_comp_seconds[NUM_FREQS];
 	double observed_comm_seconds;
+	double observed_comp_seconds[NUM_FREQS];
 	double observed_comp_insn[NUM_FREQS];
+	double seconds_per_insn[NUM_FREQS];
 	int following_entry;
 };
 
@@ -29,3 +30,9 @@ static void post_MPI_Init	( union shim_parameters *p );
 static void pre_MPI_Finalize 	( union shim_parameters *p );
 static void post_MPI_Finalize	( union shim_parameters *p );
 
+// Scheduling
+static void schedule_communication	( int idx );
+static void schedule_computation  	( int idx );
+static void initialize_handler    	(void);
+static void signal_handler        	( int signal);
+static void set_alarm			( double s );

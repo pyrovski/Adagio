@@ -11,6 +11,7 @@
 #include "util.h"	// Brings in <stdio.h>, <sys/time.h>, <time.h>
 #include "wpapi.h"	// PAPI wrappers.
 #include "shift.h"	// shift, enums.
+#include "machine.h"	// frequencies.
 
 static int rank, size;
 
@@ -112,7 +113,10 @@ pre_MPI_Init( union shim_parameters *p ){
 	// Put a reasonable value in.
 	gettimeofday(&ts_start_computation, NULL);  
 	gettimeofday(&ts_stop_computation, NULL);  
-	papi_start();	// Pretend computation started here.
+	// Pretend computation started here.
+	papi_start();	
+	// Set up signal handling.
+	initialize_handler();
 
 }
 
@@ -141,7 +145,7 @@ post_MPI_Finalize( union shim_parameters *p ){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Utilities
+// Logging
 ////////////////////////////////////////////////////////////////////////////////
 char*
 f2str( int shim_id ){
@@ -264,6 +268,9 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	// Bookkeeping.
 	gettimeofday(&ts_start_communication, NULL);  
 	current_comp_insn[current_freq]=papi_stop();
+
+	// Schedule communication.
+	schedule_communication( hash );
 }
 
 void 
@@ -309,6 +316,9 @@ shim_post( int shim_id, union shim_parameters *p ){
 	gettimeofday(&ts_start_computation, NULL);  
 	papi_start();	//Computation.
 
+	// Setup computation schedule.
+	schedule_computation( schedule[current_hash].following_entry );
+
 	// NOTE:  THIS HAS TO GO LAST.  Otherwise the logfile will be closed
 	// prematurely.
 	if(shim_id == GMPI_FINALIZE){ pre_MPI_Finalize( p ); }
@@ -342,4 +352,123 @@ signal_handler(int signal){
 	start_papi();
 }
 
+static void
+initialize_handler(void){
+        sigset_t sig;
+        struct sigaction act;
+        sigemptyset(&sig);
+        act.sa_handler = signal_handler;
+        act.sa_flags = SA_RESTART;
+        act.sa_mask = sig;
+        sigaction(SIGALRM, &act, NULL);
+        signal_handler_initialized=1;
+}
+
+static void
+set_alarm(double s){
+	itv.it_value.tv_sec  = (suseconds_t)s;
+	itv.it_value.tv_usec = (suseconds_t)( (s-floor(s) )*1000000.0);
+	setitimer(ITIMER_REAL, &itv, NULL);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Schedules
+////////////////////////////////////////////////////////////////////////////////
+
+static void
+schedule_communication( int idx ){
+
+}
+
+static void
+schedule_computation( int idx ){
+	int i, first_freq=0; 
+	double p=0.0, d=0.0, I=0.0, seconds_until_interrupt=0.0;
+
+	// If we have no data to work with, go home.
+	if( idx==0 ){ return; }
+
+	// On the first time through, establish worst-case slowdown rates.
+	if( schedule[ idx ].seconds_per_insn[ 0 ] == 0.0 ){
+		if( schedule[ idx ].observed_comp_seconds[ 0 ] <= GMPI_MIN_COMP_SECONDS ){
+			return;
+		}
+		schedule[ idx ].seconds_per_insn[ 0 ] = 
+			schedule[ idx ].observed_comp_insn[ 0 ] /
+			schedule[ idx ].observed_comp_seconds[ 0 ];
+		for( i=1; i<NUM_FREQS; i++ ){
+			schedule[ idx ].seconds_per_insn[ i ] = 
+				schedule[ idx ].seconds_per_insn[ 0 ] *
+				( frequency[ i ]  / frequency[ 0 ] );
+		}
+	}
+
+	// On subsequent execution, only update where we have data.
+	for( i=0; i<NUM_FREQS; i++ ){
+		if( schedule[ idx ].observed_comp_seconds[ i ] > GMPI_MIN_COMP_SECONDS ){
+			schedule[ idx ].seconds_per_insn[ i ] = 
+				schedule[ idx ].observed_comp_insn[ i ] /
+				schedule[ idx ].observed_comp_seconds[ i ];
+		}
+	}
+
+	// Given I instructions to be executed over d time using available
+	// rates r[], 
+	//
+	// pIr[i] + (1-p)Ir[i+1] = d
+	//
+	// thus
+	//
+	// p = ( d - Ir[i+1] )/( Ir[i] - Ir[i+1] ) 
+	
+	for( i=0; i<NUM_FREQS; i++ ){
+		d += schedule[ idx ].observed_comp_seconds[ i ];
+		I += schedule[ idx ].observed_comp_insn[ i ];
+	}
+	// If there's not enough computation to bother scaling, skip it.
+	if( d <= GMPI_MIN_COMP_SECONDS ){
+		return;
+	}
+
+	// The deadline includes blocking time, minus a buffer.
+	d += schedule[ idx ].observed_comm_seconds - GMPI_BLOCKING_BUFFER;
+
+	// Create the schedule.
+	
+	// If the fastest frequency isn't fast enough, use f0 all the time.
+	if( I * schedule[ idx ].seconds_per_insn[ 0 ] >= d ){
+		shift(0);
+	}
+	// If the slowest frequency isn't slow enough, use that.
+	else if( I * schedule[ idx ].seconds_per_insn[ SLOWEST_FREQ ] >= d ){
+		shift(SLOWEST_FREQ);
+	}
+	// Find the slowest frequency that allows the work to be completed in time.
+	else{
+		for( i=SLOWEST_FREQ-1; i<=0; i-- ){
+			if( I * schedule[ idx ].seconds_per_insn[ i ] < d ){
+				// We have a winner.
+				p = 
+					( d - I * schedule[ idx ].seconds_per_insn[ i+1 ] )
+					/
+					( I * schedule[ idx ].seconds_per_insn[ i ] - 
+					  I * schedule[ idx ].seconds_per_insn[ i+1 ] );
+
+				shift(i);
+
+				// Do we need to shift down partway through?
+				if((    p * I * schedule[idx].seconds_per_insn[i  ] > GMPI_MIN_COMP_SECONDS)
+				&& (1.0-p * I * schedule[idx].seconds_per_insn[i+1] > GMPI_MIN_COMP_SECONDS)
+				){
+					seconds_until_interrupt = 
+						p * I * schedule[ idx ].seconds_per_insn[ i+i ];
+					next_freq = i+1;
+
+					set_alarm(seconds_until_interrupt);
+				
+				}
+			}
+		}
+	}
+}
 
