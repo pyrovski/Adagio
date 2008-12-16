@@ -56,7 +56,7 @@ mark_joules(int rank, int size){
 				size,
 				seconds,
 				total_joules-prev_total_joules,
-				(double) total_joules-prev_total_joules / seconds / (double) size);
+				(double) (total_joules-prev_total_joules) / seconds / (double) size);
 		}
 	}
 	return total_joules;
