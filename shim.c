@@ -6,13 +6,12 @@
 #include <stdio.h>
 #include <stdlib.h>	// getenv
 #include <string.h>	// strlen, strstr
+#include <math.h>
 #include "shim_enumeration.h"
 #include "shim.h"
 #include "util.h"	// Brings in <stdio.h>, <sys/time.h>, <time.h>
 #include "wpapi.h"	// PAPI wrappers.
-#include "shift.h"	// shift, enums.
-#include "machine.h"	// frequencies.
-
+#include "shift.h"	// shift, enums.  Brings in machine.h.
 static int rank, size;
 
 static struct timeval ts_start_communication, ts_start_computation,
@@ -25,6 +24,9 @@ static int g_trace;	// tracing level.
 static int current_hash=0, previous_hash=-1, current_freq=0, next_freq=0;
 static int in_computation=1;
 
+static double frequency[NUM_FREQS] = {1.8, 1.6, 1.4, 1.2, 1.0};
+#define GMPI_MIN_COMP_SECONDS (0.1)     // In seconds.
+#define GMPI_BLOCKING_BUFFER (0.1)      // In seconds.
 
 
 FILE *logfile;
@@ -167,12 +169,12 @@ Log( int shim_id, union shim_parameters *p ){
 	MPI_Aint extent;
 	int MsgSz=-1;
 	char *var_format =
-		"%5d %20s %06d "			\
-		" %9.6lf %9.6lf %9.6lf %9.6lf %9.6lf"	\
+		"%5d %20s %06d "\
+		" %9.6lf %9.6lf %9.6lf %9.6lf %9.6lf"\
 		" %9.6lf %7d\n";
 	char *hdr_format =
-		"%5s %20s %6s"				\ 
-		" %9s %9s %9s %9s %9s"			\ 
+		"%5s %20s %6s"\
+		" %9s %9s %9s %9s %9s"\
 		" %9s %7s\n";
 
 
@@ -275,7 +277,7 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	current_comp_insn[current_freq]=papi_stop();
 
 	// Schedule communication.
-	schedule_communication( hash );
+	schedule_communication( current_hash );
 }
 
 void 
@@ -350,7 +352,7 @@ signal_handler(int signal){
 	}
 	shift(next_freq);
 	current_freq = next_freq;
-	next_freq = NO_SHIFT;
+	next_freq = 0;
 	if(in_computation){
 		gettimeofday(&ts_start_computation, NULL);
 	}
@@ -366,7 +368,6 @@ initialize_handler(void){
         act.sa_flags = SA_RESTART;
         act.sa_mask = sig;
         sigaction(SIGALRM, &act, NULL);
-        signal_handler_initialized=1;
 }
 
 static void

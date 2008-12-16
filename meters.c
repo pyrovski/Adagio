@@ -1,3 +1,4 @@
+#include <mpi.h>
 #include <assert.h>
 #include <stdlib.h>	//system()
 #include <stdio.h>
@@ -19,6 +20,7 @@ mark_joules(int rank, int size){
 	static long long int prev_total_joules=-1;
 	static int initialized = 0;
 	static struct timeval start, stop;
+	double seconds = -1.0;
 
         //Capture current joules.
 	snprintf(buf, 127, "/osr/pac/bin/powermeter -j -U > /tmp/blr_n%03d_j", rank);
@@ -49,12 +51,13 @@ mark_joules(int rank, int size){
 			initialized = 1;
 		}else{
 			gettimeofday( &stop, NULL );
-			fprintf(stderr, "QQQ Size= %3d  Seconds= %7.2f Joules= %12lld Watts= %7.2f AvgWatts=%3.2f\n",
+			seconds = delta_seconds( &start, &stop ),
+			fprintf(stderr, "QQQ Size= %3d  Seconds= %7.2f Joules= %12lld AvgWatts=%3.2f\n",
 				size,
-				delta_seconds( &start, &stop ),
+				seconds,
 				total_joules-prev_total_joules,
-				(double) total_joules-prev_total_joules / seconds,
 				(double) total_joules-prev_total_joules / seconds / (double) size);
 		}
 	}
+	return total_joules;
 }

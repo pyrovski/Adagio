@@ -5,7 +5,6 @@
  */
 
 #include "shim_parameters.h"
-#include "machine.h"
 void shim_pre( int shim_id, union shim_parameters *p );
 void shim_post( int shim_id, union shim_parameters *p );
 char* f2str( int shim_id );
@@ -14,6 +13,7 @@ void Log( int shim_id, union shim_parameters *p );
 
 
 // Schedule entry
+enum{ NUM_FREQ=5, NUM_FREQS=5, SLOWEST_FREQ=4 };
 struct entry{
 	double observed_comm_seconds;
 	double observed_comp_seconds[NUM_FREQS];

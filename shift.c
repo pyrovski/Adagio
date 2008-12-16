@@ -34,26 +34,7 @@ shift(int freq_idx){
 
         if( freq_idx == prev_freq_idx[ cpuid ] ){
                 return freq_idx;
-        }else if( freq_idx == GO_FASTER ){
-		if( prev_freq_idx[ cpuid ] == 0 ){
-			return 0;
-		}else{
-			freq_idx = --prev_freq_idx[ cpuid ];
-		}
-	}else if( freq_idx == GO_SLOWER ){
-		if( prev_freq_idx[ cpuid ] == NUM_FREQS-1 ){
-			return NUM_FREQS-1;
-		}else{
-			freq_idx = ++prev_freq_idx[ cpuid ];
-		}
-	}else if( freq_idx == GO_FASTEST ){
-		freq_idx = 0;
-	}else if( freq_idx == GO_SLOWEST ){
-		freq_idx = 4;
-	}else if( freq_idx == NO_SHIFT ){
-		return prev_freq_idx[ cpuid ];
-	}
-	
+        }
 	prev_freq_idx[ cpuid ] = freq_idx;
 	
 	assert( (freq_idx >= 0) && (freq_idx <= 4) );
