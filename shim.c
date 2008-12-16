@@ -128,6 +128,7 @@ post_MPI_Init( union shim_parameters *p ){
 	PMPI_Comm_size(MPI_COMM_WORLD, &size);
 	// Fire up the logfile.
 	if(g_trace){logfile = initialize_logfile( rank );}
+	mark_joules(rank, size);
 }
 	
 ////////////////////////////////////////////////////////////////////////////////
@@ -136,6 +137,7 @@ post_MPI_Init( union shim_parameters *p ){
 static void
 pre_MPI_Finalize( union shim_parameters *p ){
 	p=p;
+	mark_joules(rank, size);
 }
 	
 static void
@@ -254,6 +256,9 @@ Log( int shim_id, union shim_parameters *p ){
 ////////////////////////////////////////////////////////////////////////////////
 void 
 shim_pre( int shim_id, union shim_parameters *p ){
+	// Kill the timer.
+	set_alarm(0.0);
+
 	// Bookkeeping.
 	in_computation = 0;
 	gettimeofday(&ts_stop_computation, NULL);  
@@ -377,7 +382,7 @@ set_alarm(double s){
 
 static void
 schedule_communication( int idx ){
-
+	idx=idx;
 }
 
 static void
