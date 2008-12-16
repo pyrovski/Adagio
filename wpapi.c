@@ -14,7 +14,7 @@ static void initialize_papi(void);
 
 
 void
-papi_start(){
+start_papi(){
         static int initialized=0;
         if(!initialized){
                 initialize_papi();
@@ -26,7 +26,7 @@ papi_start(){
 }
 
 double
-papi_stop(){
+stop_papi(){
         wpapi_stop(EventSet, &inst);
         return (double)inst;
 }

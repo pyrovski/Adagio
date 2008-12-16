@@ -116,7 +116,7 @@ pre_MPI_Init( union shim_parameters *p ){
 	gettimeofday(&ts_start_computation, NULL);  
 	gettimeofday(&ts_stop_computation, NULL);  
 	// Pretend computation started here.
-	papi_start();	
+	start_papi();	
 	// Set up signal handling.
 	initialize_handler();
 
@@ -274,7 +274,7 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	
 	// Bookkeeping.
 	gettimeofday(&ts_start_communication, NULL);  
-	current_comp_insn[current_freq]=papi_stop();
+	current_comp_insn[current_freq]=stop_papi();
 
 	// Schedule communication.
 	schedule_communication( current_hash );
@@ -321,7 +321,7 @@ shim_post( int shim_id, union shim_parameters *p ){
 	// Bookkeeping.  MUST COME AFTER LOGGING.
 	previous_hash = current_hash;
 	gettimeofday(&ts_start_computation, NULL);  
-	papi_start();	//Computation.
+	start_papi();	//Computation.
 
 	// Setup computation schedule.
 	schedule_computation( schedule[current_hash].following_entry );

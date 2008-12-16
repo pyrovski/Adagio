@@ -1,8 +1,8 @@
 #include <papi.h>
 
 // High-level interface.  This does auto-initialize.
-void papi_start(void);
-double papi_stop(void);
+void start_papi(void);
+double stop_papi(void);
 
 // Low-level stuff.  Don't use.
 static void initialize_papi();

@@ -77,7 +77,7 @@ clean:
 
 # Adagio libraries.
 
-GreenMPI: Makefile shim.o util.o wpapi.o meters.o $(GENERATED_SHIMFILES)  
+GreenMPI: Makefile shim.o util.o wpapi.o shift.o cpuid.o meters.o $(GENERATED_SHIMFILES)  
 	$(MPICC) $(CFLAGS) $(LIBDIR) -shared -Wl,-soname,libGreenMPI.so \
 		-o libGreenMPI.so 					\
 		shim.o shim_functions.o util.o wpapi.o shift.o cpuid.o	\
