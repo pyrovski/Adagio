@@ -330,7 +330,7 @@ shim_post( int shim_id, union shim_parameters *p ){
 
 	// NOTE:  THIS HAS TO GO LAST.  Otherwise the logfile will be closed
 	// prematurely.
-	if(shim_id == GMPI_FINALIZE){ pre_MPI_Finalize( p ); }
+	if(shim_id == GMPI_FINALIZE){ post_MPI_Finalize( p ); }
 	in_computation = 1;
 }
 
