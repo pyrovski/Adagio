@@ -12,7 +12,7 @@ mark_joules(int rank, int size){
 	// Nodes:   0 12 34567 8901 2345 6
 	//          | |  |//// |/// |/// |
 	// Meters:  0 1  3     8    2    6
-	
+/*	
         //This is really stupid.
         FILE *jfp;
         long long int total_joules=-1, joules=-1, rc;
@@ -60,4 +60,5 @@ mark_joules(int rank, int size){
 		}
 	}
 	return total_joules;
+*/
 }
