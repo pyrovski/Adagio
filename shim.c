@@ -433,8 +433,8 @@ schedule_computation( int idx ){
 	for( i=0; i<NUM_FREQS; i++ ){
 		if( schedule[ idx ].observed_comp_seconds[ i ] > GMPI_MIN_COMP_SECONDS ){
 			schedule[ idx ].seconds_per_insn[ i ] = 
-				schedule[ idx ].observed_comp_insn[ i ] /
-				schedule[ idx ].observed_comp_seconds[ i ];
+				schedule[ idx ].observed_comp_seconds[ i ]/
+				schedule[ idx ].observed_comp_insn[ i ];
 		}
 	}
 
