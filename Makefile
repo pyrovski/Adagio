@@ -32,11 +32,11 @@ all: Makefile harness_pristine harness
 
 # Test runs
 spin: Makefile harness harness_pristine
-	$(MPIRUN) -np 12 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
+	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
 		./harness -v --test_spin 
 		cat runtime* > spin.nosched
 		rm -rf runtime*
-	$(MPIRUN) -np 12 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
+	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
 		$(ADAGIO_FLAGS)	\
 		./harness -v --test_spin 
 		cat runtime* > spin.adagio
