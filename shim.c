@@ -12,6 +12,7 @@
 #include "util.h"	// Brings in <stdio.h>, <sys/time.h>, <time.h>
 #include "wpapi.h"	// PAPI wrappers.
 #include "shift.h"	// shift, enums.  Brings in machine.h.
+#include "affinity.h"	// Setting cpu affinity.
 static int rank, size;
 
 static struct timeval ts_start_communication, ts_start_computation,
@@ -128,6 +129,10 @@ post_MPI_Init( union shim_parameters *p ){
 	// Now that PMPI_Init has ostensibly succeeded, grab the rank & size.
 	PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	PMPI_Comm_size(MPI_COMM_WORLD, &size);
+	
+	// Set CPU affinity.
+	set_cpu_affinity( rank );
+
 	// Fire up the logfile.
 	if(g_trace){logfile = initialize_logfile( rank );}
 	mark_joules(rank, size);
@@ -279,7 +284,7 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	current_comp_insn[current_freq]=stop_papi();
 
 	// Schedule communication.
-	schedule_communication( current_hash );
+	// schedule_communication( current_hash );
 }
 
 void 
@@ -326,7 +331,9 @@ shim_post( int shim_id, union shim_parameters *p ){
 	start_papi();	//Computation.
 
 	// Setup computation schedule.
-	schedule_computation( schedule[current_hash].following_entry );
+	if(g_algo & algo_ADAGIO){
+		schedule_computation( schedule[current_hash].following_entry );
+	}
 
 	// NOTE:  THIS HAS TO GO LAST.  Otherwise the logfile will be closed
 	// prematurely.

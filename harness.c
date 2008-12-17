@@ -8,10 +8,28 @@
 
 static int g_rank, g_size;
 
+volatile int dummy_var;
+void
+spin( int n ){
+	int h, i, j, k;
+	for( h=0; h<n; h++ ){
+		for( i=0; i<1000; i++){
+			for(j=0; j<1000; j++){
+				for(k=0; k<1000; k++){
+					dummy_var += h*i*j*k;
+				}
+			}
+		}
+	}
+}
+
+
+
 struct harness_options{
 	int test_hash;
 	int test_rank;
 	int test_ping;
+	int test_spin;
 };
 
 static void
@@ -44,13 +62,14 @@ parse_options( int argc, char **argv, struct harness_options *o ){
 		{"test_hash",	0,	NULL,	'H'},
 		{"test_ping",	0,	NULL,	'p'},
 		{"test_rank", 	0, 	NULL, 	'r'},
+		{"test_spin",	0, 	NULL,	'S'},
 		{"test_sane",  	0,	NULL,	's'},
 		{"version", 	0, 	NULL, 	'v'},
 		{0, 		0, 	0, 	0}
 	};
 
 	while (1) {
-		c = getopt_long(argc, argv, "Hhprsv", long_options, &option_index);
+		c = getopt_long(argc, argv, "HhprSsv", long_options, &option_index);
 		if( c==-1 ){ break; }
 
 		switch( c ){
@@ -59,6 +78,7 @@ parse_options( int argc, char **argv, struct harness_options *o ){
 			case 'p':	o->test_ping = 1;	break;
 			case 'r':	o->test_rank = 1; 	break;
 			case 'v':	print_version();	break;
+			case 'S':	o->test_spin = 1; 	break;
 			case 's':				break;
 			default : 	fprintf(stderr, 
 					"Unknown options '%c'.  Bye!\n", 
@@ -68,6 +88,18 @@ parse_options( int argc, char **argv, struct harness_options *o ){
 		}
 	}
 }
+
+static int
+test_spin(){
+	int i;
+	for( i=0; i<10; i++ ){
+		if( rank==0 ){
+			spin(1);
+		}
+	}
+	return 0;
+}
+
 
 static int
 test_rank(){
@@ -142,6 +174,7 @@ main( int argc, char **argv ){
 	assert( !o.test_rank || !test_rank() );
 	assert( !o.test_ping || !test_ping() );
 	assert( !o.test_hash || !test_hash() );
+	assert( !o.test_spin || !test_spin() );
 
 	assert( MPI_SUCCESS == MPI_Finalize() );
 	return 0;

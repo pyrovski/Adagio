@@ -77,11 +77,12 @@ clean:
 
 # Adagio libraries.
 
-GreenMPI: Makefile shim.o util.o wpapi.o shift.o cpuid.o meters.o $(GENERATED_SHIMFILES)  
+GreenMPI: Makefile shim.o util.o wpapi.o shift.o cpuid.o meters.o\
+	affinity.o $(GENERATED_SHIMFILES)  
 	$(MPICC) $(CFLAGS) $(LIBDIR) -shared -Wl,-soname,libGreenMPI.so \
 		-o libGreenMPI.so 					\
 		shim.o shim_functions.o util.o wpapi.o shift.o cpuid.o	\
-		meters.o						\
+		meters.o affinity.o					\
 		$(LIBS)
 	mv libGreenMPI.so ${HOME}/GreenMPI/local/lib
 
@@ -104,6 +105,9 @@ cpuid.o: Makefile cpuid.c cpuid.h
 
 meters.o: Makefile meters.c meters.h util.o 
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c meters.c
+
+affinity.o: Makefile affinity.c affinity.h 
+	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c affinity.c
 
 
 $(GENERATED_SHIMFILES): Makefile shim.py shim.sh
