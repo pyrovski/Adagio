@@ -113,11 +113,16 @@ pre_MPI_Init( union shim_parameters *p ){
 		fprintf(stdout,"g_trace=%s %d\n", env_trace, g_trace);
 	}
 
+	// Start us in a known frequency.
+	shift(0);
+	
 	// Put a reasonable value in.
 	gettimeofday(&ts_start_computation, NULL);  
 	gettimeofday(&ts_stop_computation, NULL);  
+	
 	// Pretend computation started here.
 	start_papi();	
+	
 	// Set up signal handling.
 	initialize_handler();
 
@@ -147,6 +152,9 @@ pre_MPI_Finalize( union shim_parameters *p ){
 	mark_joules(rank, size);
 	fprintf(stderr, "Node %d about to finalize\n", rank);
 	PMPI_Barrier( MPI_COMM_WORLD );
+	// Leave us in a known frequency.
+	shift(0);
+	
 }
 	
 static void
