@@ -93,11 +93,11 @@ static int
 test_spin(){
 	int i;
 	for( i=0; i<10; i++ ){
+		MPI_Barrier( MPI_COMM_WORLD );
 		if( g_rank==0 ){
-			MPI_Barrier( MPI_COMM_WORLD );
 			spin(1);
-			MPI_Barrier( MPI_COMM_WORLD );
 		}
+		MPI_Barrier( MPI_COMM_WORLD );
 	}
 	return 0;
 }
