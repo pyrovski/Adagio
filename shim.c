@@ -113,9 +113,6 @@ pre_MPI_Init( union shim_parameters *p ){
 		fprintf(stdout,"g_trace=%s %d\n", env_trace, g_trace);
 	}
 
-	// Start us in a known frequency.
-	shift(0);
-	
 	// Put a reasonable value in.
 	gettimeofday(&ts_start_computation, NULL);  
 	gettimeofday(&ts_stop_computation, NULL);  
@@ -138,6 +135,9 @@ post_MPI_Init( union shim_parameters *p ){
 	// Set CPU affinity.
 	set_cpu_affinity( rank );
 
+	// Start us in a known frequency.
+	shift(0);
+	
 	// Fire up the logfile.
 	if(g_trace){logfile = initialize_logfile( rank );}
 	mark_joules(rank, size);
