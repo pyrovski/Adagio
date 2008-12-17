@@ -408,12 +408,15 @@ schedule_computation( int idx ){
 	int i, first_freq=0; 
 	double p=0.0, d=0.0, I=0.0, seconds_until_interrupt=0.0;
 
+	fprintf( logfile, "==> schedule_computation called with idx=%d\n", idx);
 	// If we have no data to work with, go home.
 	if( idx==0 ){ return; }
 
 	// On the first time through, establish worst-case slowdown rates.
 	if( schedule[ idx ].seconds_per_insn[ 0 ] == 0.0 ){
+		fprintf( logfile, "==> schedule_computation First time through.\n");
 		if( schedule[ idx ].observed_comp_seconds[ 0 ] <= GMPI_MIN_COMP_SECONDS ){
+			fprintf( logfile, "==> schedule_computation min_seconds violation.\n");
 			return;
 		}
 		schedule[ idx ].seconds_per_insn[ 0 ] = 
