@@ -15,7 +15,7 @@ spin( int n ){
 	for( h=0; h<n; h++ ){
 		for( i=0; i<500; i++){
 			for(j=0; j<500; j++){
-				for(k=0; k<500; k++){
+				for(k=0; k<1000; k++){
 					dummy_var += h*i*j*k;
 				}
 			}
