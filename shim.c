@@ -465,6 +465,10 @@ schedule_computation( int idx ){
 	// If the fastest frequency isn't fast enough, use f0 all the time.
 	if( I * schedule[ idx ].seconds_per_insn[ 0 ] >= d ){
 		fprintf( logfile, "==> schedule_computation GO FASTEST.\n");
+		fprintf( logfile, "==>     I=%lf\n", I);
+		fprintf( logfile, "==>   SPI=%lf\n",   seconds_per_insn[0]);
+		fprintf( logfile, "==> I*SPI=%lf\n", I*seconds_per_insn[0]);
+		fprintf( logfile, "==>     d=%lf\n", d);
 		shift(0);
 	}
 	// If the slowest frequency isn't slow enough, use that.
