@@ -7,7 +7,8 @@
 # gmpi_trace:
 # 	none all ts file line fn comp comm rank pcontrol
 #GMPI_FLAGS=-mca gmpi_algo fermata -mca gmpi_trace all
-GMPI_FLAGS= -mca gmpi_algo fermata,jitter -mca gmpi_trace ts,file -mca gmpi_trace line,fn 
+GMPI_FLAGS= -mca gmpi_trace all
+ADAGIO_FLAGS= -mca gmpi_algo adagio 
 MCA_REQUIRED_FLAGS=-mca btl self,tcp		# used on eponymous to shut up the stupid ubuntu dist errors.
 
 # Runtime environment
@@ -30,6 +31,16 @@ all: Makefile harness_pristine harness
 
 
 # Test runs
+spin: Makefile harness harness_pristine
+	$(MPIRUN) -np 2 hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
+		./harness -v -h --test_spin 
+		cat runtime* > spin.nosched
+		rm -rf runtime*
+	$(MPIRUN) -np 2 hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
+		$(ADAGIO_FLAGS)
+		./harness -v -h --test_spin 
+		cat runtime* > spin.adagio
+		rm -rf runtime*
 ping: Makefile harness
 	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
 		./harness -v -h --test_ping 
