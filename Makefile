@@ -37,7 +37,7 @@ spin: Makefile harness harness_pristine
 		cat runtime* > spin.nosched
 		rm -rf runtime*
 	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
-		$(ADAGIO_FLAGS)
+		$(ADAGIO_FLAGS)	\
 		./harness -v -h --test_spin 
 		cat runtime* > spin.adagio
 		rm -rf runtime*
