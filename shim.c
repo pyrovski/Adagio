@@ -361,6 +361,7 @@ signal_handler(int signal){
 	// When we catch a signal, shift(next_freq).
 	// If we're in the computation phase, record time spent computing.
         signal = signal;
+	fprintf( logfile, "++> SIGNAL HANDLER\n");
 	if(in_computation){
 		gettimeofday(&ts_stop_computation, NULL);
 		current_comp_seconds[current_freq] 
@@ -470,11 +471,13 @@ schedule_computation( int idx ){
 		fprintf( logfile, "==> I*SPI=%lf\n", I*schedule[ idx ].seconds_per_insn[0]);
 		fprintf( logfile, "==>     d=%lf\n", d);
 		shift(0);
+		current_freq = 0;
 	}
 	// If the slowest frequency isn't slow enough, use that.
 	else if( I * schedule[ idx ].seconds_per_insn[ SLOWEST_FREQ ] >= d ){
 		fprintf( logfile, "==> schedule_computation GO SLOWEST.\n");
 		shift(SLOWEST_FREQ);
+		current_freq = SLOWEST_FREQ;
 	}
 	// Find the slowest frequency that allows the work to be completed in time.
 	else{
@@ -489,6 +492,7 @@ schedule_computation( int idx ){
 
 				fprintf( logfile, "==> schedule_computation GO %d.\n", i);
 				shift(i);
+				current_freq = i;
 
 				// Do we need to shift down partway through?
 				if((    p * I * schedule[idx].seconds_per_insn[i  ] > GMPI_MIN_COMP_SECONDS)
