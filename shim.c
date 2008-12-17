@@ -453,6 +453,7 @@ schedule_computation( int idx ){
 	}
 	// If there's not enough computation to bother scaling, skip it.
 	if( d <= GMPI_MIN_COMP_SECONDS ){
+		fprintf( logfile, "==> schedule_computation min_seconds total violation.\n");
 		return;
 	}
 
@@ -463,10 +464,12 @@ schedule_computation( int idx ){
 	
 	// If the fastest frequency isn't fast enough, use f0 all the time.
 	if( I * schedule[ idx ].seconds_per_insn[ 0 ] >= d ){
+		fprintf( logfile, "==> schedule_computation GO FASTEST.\n");
 		shift(0);
 	}
 	// If the slowest frequency isn't slow enough, use that.
 	else if( I * schedule[ idx ].seconds_per_insn[ SLOWEST_FREQ ] >= d ){
+		fprintf( logfile, "==> schedule_computation GO SLOWEST.\n");
 		shift(SLOWEST_FREQ);
 	}
 	// Find the slowest frequency that allows the work to be completed in time.
@@ -480,6 +483,7 @@ schedule_computation( int idx ){
 					( I * schedule[ idx ].seconds_per_insn[ i ] - 
 					  I * schedule[ idx ].seconds_per_insn[ i+1 ] );
 
+				fprintf( logfile, "==> schedule_computation GO %d.\n", i);
 				shift(i);
 
 				// Do we need to shift down partway through?
@@ -490,6 +494,8 @@ schedule_computation( int idx ){
 						p * I * schedule[ idx ].seconds_per_insn[ i+i ];
 					next_freq = i+1;
 
+					fprintf( logfile, "==> schedule_computation alarm=%lf.\n", 
+							seconds_until_interrupt);
 					set_alarm(seconds_until_interrupt);
 				
 				}
