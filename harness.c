@@ -93,7 +93,7 @@ static int
 test_spin(){
 	int i;
 	for( i=0; i<10; i++ ){
-		if( rank==0 ){
+		if( g_rank==0 ){
 			spin(1);
 		}
 	}
