@@ -92,9 +92,11 @@ parse_options( int argc, char **argv, struct harness_options *o ){
 static int
 test_spin(){
 	int i;
-	for( i=0; i<10; i++ ){
+	for( i=0; i<5; i++ ){
 		MPI_Barrier( MPI_COMM_WORLD );
 		if( g_rank==0 ){
+			spin(2);
+		}else{
 			spin(1);
 		}
 		MPI_Barrier( MPI_COMM_WORLD );
