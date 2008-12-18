@@ -35,25 +35,29 @@ all: Makefile harness_pristine harness
 
 # Test runs
 spin: Makefile harness 
-#	echo -n "Andante " >> spin.results
-#	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
-#		$(ANDANTE_FLAGS) ./harness --test_spin >> spin.results 2>&1 
-#	cat runtime* > spin.andante
-#	rm -rf runtime*
-#	echo -n "Fermata " >> spin.results
-#	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
-#		$(FERMATA_FLAGS) ./harness -v --test_spin >> spin.results
-#	cat runtime* > spin.fermata
-#	rm -rf runtime*
-#	echo -n "Adagio  " >> spin.results
-#	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
-#		$(ADAGIO_FLAGS) ./harness -v --test_spin >> spin.results
-#	cat runtime* > spin.adagio
-#	rm -rf runtime*
+	# Andante
+	echo -n "Andante " >> spin.results
+	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
+		$(ANDANTE_FLAGS) ./harness --test_spin >> spin.results 2>&1 
+	cat runtime* > spin.andante
+	rm -rf runtime*
+	# Fermata
+	echo -n "Fermata " >> spin.results
+	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
+		$(FERMATA_FLAGS) ./harness --test_spin >> spin.results 2>&1
+	cat runtime* > spin.fermata
+	rm -rf runtime*
+	# Adagio
+	echo -n "Adagio  " >> spin.results
+	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
+		$(ADAGIO_FLAGS) ./harness --test_spin >> spin.results 2>&1
+	cat runtime* > spin.adagio
+	rm -rf runtime*
+	# Nosched
 	echo -n "Nosched " >> spin.results
 	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
-		$(NOSCHED_FLAGS) ./harness -v --test_spin >> spin.results
-	cat runtime* > spin.adagio
+		$(NOSCHED_FLAGS) ./harness --test_spin >> spin.results 2>&1
+	cat runtime* > spin.nosched
 	rm -rf runtime*
 ping: Makefile harness
 	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \

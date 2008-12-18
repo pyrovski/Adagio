@@ -379,15 +379,17 @@ signal_handler(int signal){
 		gettimeofday(&ts_stop_computation, NULL);
 		current_comp_seconds[current_freq] 
 			= delta_seconds(&ts_start_computation, &ts_stop_computation);
-		current_comp_insn[current_freq]=stop_papi();
+		current_comp_insn[current_freq]=stop_papi();	//  <---|
+	}							//  	|
+								//	|
+	shift(next_freq);					//	|
+	current_freq = next_freq;				//	|
+	next_freq = 0;						//	|
+								//	|
+	if(in_computation){					//	|
+		gettimeofday(&ts_start_computation, NULL);	//	|
+		start_papi();					//  <---|
 	}
-	shift(next_freq);
-	current_freq = next_freq;
-	next_freq = 0;
-	if(in_computation){
-		gettimeofday(&ts_start_computation, NULL);
-	}
-	start_papi();
 }
 
 static void
