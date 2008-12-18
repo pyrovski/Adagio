@@ -27,6 +27,8 @@ static int in_computation=1;
 
 static double frequency[NUM_FREQS] = {1.8, 1.6, 1.4, 1.2, 1.0};
 #define GMPI_MIN_COMP_SECONDS (0.1)     // In seconds.
+#define GMPI_MIN_COMP_SECONDS (0.1)     // In seconds.
+#define GMPI_MIN_COMM_SECONDS (0.1)     // In seconds.
 #define GMPI_BLOCKING_BUFFER (0.1)      // In seconds.
 
 
@@ -83,7 +85,7 @@ pre_MPI_Init( union shim_parameters *p ){
 		g_algo &= strstr(env_algo, "none"      ) ? algo_NONE      : 0xFFF;
 		g_algo |= strstr(env_algo, "fermata"   ) ? algo_FERMATA   : 0;
 		g_algo |= strstr(env_algo, "andante"   ) ? algo_ANDANTE   : 0;
-		g_algo |= strstr(env_algo, "adagio"    ) ? algo_ADAGIO    : 0;
+		g_algo |= strstr(env_algo, "adagio"    ) ? algo_FERMATA | algo_ANDANTE    : 0;
 		g_algo |= strstr(env_algo, "allegro"   ) ? algo_ALLEGRO   : 0;
 		g_algo |= strstr(env_algo, "fixedfreq" ) ? algo_FIXEDFREQ : 0;
 		g_algo |= strstr(env_algo, "jitter"    ) ? algo_JITTER    : 0;
@@ -110,7 +112,7 @@ pre_MPI_Init( union shim_parameters *p ){
 		g_trace |= strstr(env_trace, "comm"    ) ? trace_COMM  	: 0;
 		g_trace |= strstr(env_trace, "rank"    ) ? trace_RANK  	: 0;
 		g_trace |= strstr(env_trace, "pcontrol") ? trace_PCONTROL: 0;
-		fprintf(stdout,"g_trace=%s %d\n", env_trace, g_trace);
+		//fprintf(stdout,"g_trace=%s %d\n", env_trace, g_trace);
 	}
 
 	// Put a reasonable value in.
@@ -150,7 +152,6 @@ static void
 pre_MPI_Finalize( union shim_parameters *p ){
 	p=p;
 	mark_joules(rank, size);
-	fprintf(stderr, "Node %d about to finalize\n", rank);
 	PMPI_Barrier( MPI_COMM_WORLD );
 	// Leave us in a known frequency.
 	shift(0);
@@ -294,11 +295,14 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	current_comp_insn[current_freq]=stop_papi();
 
 	// Schedule communication.
-	// schedule_communication( current_hash );
+	if( g_algo & algo_FERMATA ) { schedule_communication( current_hash ); }
 }
 
 void 
 shim_post( int shim_id, union shim_parameters *p ){
+	// Kill the timer (may have been set by fermata algo).
+	set_alarm(0.0);
+
 	// Bookkeeping.
 	gettimeofday(&ts_stop_communication, NULL);  
 	//dump_timeval(logfile, "Communication halted. ", &ts_stop_communication);
@@ -343,9 +347,14 @@ shim_post( int shim_id, union shim_parameters *p ){
 	start_papi();	//Computation.
 
 	// Setup computation schedule.
-	if(g_algo & algo_ADAGIO){
+	if(g_algo & algo_ANDANTE){
 		schedule_computation( schedule[current_hash].following_entry );
+	}else{
+		current_freq = 0;	// Default case.
 	}
+	// Regardless of computation scheduling algorithm, always shift here.
+	// (Most of the time it should have no effect.)
+	shift( current_freq );
 
 	// NOTE:  THIS HAS TO GO LAST.  Otherwise the logfile will be closed
 	// prematurely.
@@ -405,13 +414,30 @@ set_alarm(double s){
 
 static void
 schedule_communication( int idx ){
-	idx=idx;
+	// If we have no data to work with, go home.
+	if( idx==0 ){ return; }
+
+	// If we haven't measured communication time yet, or there isn't 
+	// enough to bother with, go home.
+	if( schedule[ idx ].observed_comm_seconds < 2*GMPI_MIN_COMM_SECONDS ){
+		return;
+	}
+
+	// Ok, so we have a chunk of communication time to work with.
+	// Set the timer to go off and return.
+	next_freq = SLOWEST_FREQ;
+	set_alarm( schedule[ idx ].observed_comm_seconds - GMPI_MIN_COMM_SECONDS );
 }
 
 static void
 schedule_computation( int idx ){
 	int i, first_freq=0; 
 	double p=0.0, d=0.0, I=0.0, seconds_until_interrupt=0.0;
+
+	// WARNING:  The actual shift to the value placed in current_freq
+	// happens after this function returns.  The default case is to 
+	// run at the highest frequency (0).  
+	current_freq = 0;
 
 	//fprintf( logfile, "==> schedule_computation called with idx=%d\n", idx);
 	// If we have no data to work with, go home.
@@ -488,7 +514,6 @@ schedule_computation( int idx ){
 		//fprintf( logfile, "==> I*SPI=%lf\n", 
 		//		I*schedule[ idx ].seconds_per_insn[0]);
 		//fprintf( logfile, "==>     d=%lf\n", d);
-		shift(0);
 		current_freq = 0;
 	}
 	// If the slowest frequency isn't slow enough, use that.
@@ -500,7 +525,6 @@ schedule_computation( int idx ){
 		//fprintf( logfile, "==> I*SPI=%lf\n", 
 		//		I*schedule[ idx ].seconds_per_insn[ SLOWEST_FREQ ]);
 		//fprintf( logfile, "==>     d=%lf\n", d);
-		shift(SLOWEST_FREQ);
 		current_freq = SLOWEST_FREQ;
 	}
 	// Find the slowest frequency that allows the work to be completed in time.
@@ -523,7 +547,6 @@ schedule_computation( int idx ){
 				fprintf( logfile, "---->       p = %lf\n", p);
 				fprintf( logfile, "---->     idx = %d\n", idx);
 				*/
-				shift(i);
 				current_freq = i;
 
 				// Do we need to shift down partway through?
@@ -531,13 +554,13 @@ schedule_computation( int idx ){
 				&& (1.0-p * I * schedule[idx].seconds_per_insn[i+1]>GMPI_MIN_COMP_SECONDS)
 				){
 					seconds_until_interrupt = 
-						p * I * schedule[ idx ].seconds_per_insn[ i+i ];
+						p * I * schedule[ idx ].seconds_per_insn[ i ];
 					next_freq = i+1;
-
-					//fprintf( logfile, "==> schedule_computation alarm=%lf.\n", 
-					//		seconds_until_interrupt);
+					/*
+					fprintf( logfile, "==> schedule_computation alarm=%15.14lf.\n", 
+							seconds_until_interrupt);
+					*/
 					set_alarm(seconds_until_interrupt);
-				
 				}
 				break;
 			}

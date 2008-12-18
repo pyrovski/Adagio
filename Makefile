@@ -8,8 +8,11 @@
 # 	none all ts file line fn comp comm rank pcontrol
 #GMPI_FLAGS=-mca gmpi_algo fermata -mca gmpi_trace all
 GMPI_FLAGS= -mca gmpi_trace all
-ADAGIO_FLAGS= -mca gmpi_algo adagio 
 MCA_REQUIRED_FLAGS=-mca btl self,tcp		# used on eponymous to shut up the stupid ubuntu dist errors.
+ADAGIO_FLAGS= -mca gmpi_algo adagio 
+ANDANTE_FLAGS= -mca gmpi_algo andante 
+FERMATA_FLAGS= -mca gmpi_algo fermata 
+NOSCHED_FLAGS= 
 
 # Runtime environment
 MPIRUN=mpirun
@@ -31,16 +34,27 @@ all: Makefile harness_pristine harness
 
 
 # Test runs
-spin: Makefile harness harness_pristine
+spin: Makefile harness 
+#	echo -n "Andante " >> spin.results
 #	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
-#		./harness -v --test_spin 
-#		cat runtime* > spin.nosched
-#		rm -rf runtime*
+#		$(ANDANTE_FLAGS) ./harness --test_spin >> spin.results 2>&1 
+#	cat runtime* > spin.andante
+#	rm -rf runtime*
+#	echo -n "Fermata " >> spin.results
+#	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
+#		$(FERMATA_FLAGS) ./harness -v --test_spin >> spin.results
+#	cat runtime* > spin.fermata
+#	rm -rf runtime*
+#	echo -n "Adagio  " >> spin.results
+#	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
+#		$(ADAGIO_FLAGS) ./harness -v --test_spin >> spin.results
+#	cat runtime* > spin.adagio
+#	rm -rf runtime*
+	echo -n "Nosched " >> spin.results
 	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
-		$(ADAGIO_FLAGS)	\
-		./harness -v --test_spin 
-		cat runtime* > spin.adagio
-		rm -rf runtime*
+		$(NOSCHED_FLAGS) ./harness -v --test_spin >> spin.results
+	cat runtime* > spin.adagio
+	rm -rf runtime*
 ping: Makefile harness
 	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
 		./harness -v -h --test_ping 
