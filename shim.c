@@ -280,7 +280,6 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	// Bookkeeping.
 	in_computation = 0;
 	gettimeofday(&ts_stop_computation, NULL);  
-	//dump_timeval(logfile, "COMPUTATION halted.   ", &ts_stop_computation);
 
 	// Which call is this?
 	current_hash=hash_backtrace(shim_id);
@@ -290,25 +289,7 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	if(shim_id == GMPI_FINALIZE){ pre_MPI_Finalize( p ); }
 	
 	// Bookkeeping.
-	gettimeofday(&ts_start_communication, NULL);  
-	//dump_timeval(logfile, "Communication started.", &ts_start_communication);
 	current_comp_insn[current_freq]=stop_papi();
-
-	// Schedule communication.
-	if( g_algo & algo_FERMATA ) { schedule_communication( current_hash ); }
-}
-
-void 
-shim_post( int shim_id, union shim_parameters *p ){
-	// Kill the timer (may have been set by fermata algo).
-	set_alarm(0.0);
-
-	// Bookkeeping.
-	gettimeofday(&ts_stop_communication, NULL);  
-	//dump_timeval(logfile, "Communication halted. ", &ts_stop_communication);
-
-	// (Most) Function-specific intercept code.
-	if(shim_id == GMPI_INIT){ post_MPI_Init( p ); }
 	
 	// Write the schedule entry.  MUST COME BEFORE LOGGING.
 	memcpy(	// Copy time accrued before we shifted into current freq.
@@ -331,6 +312,24 @@ shim_post( int shim_id, union shim_parameters *p ){
 
 	schedule[current_hash].observed_comp_seconds[current_freq] = 
 		delta_seconds(&ts_start_computation, &ts_stop_computation);
+
+	// Schedule communication.
+	gettimeofday(&ts_start_communication, NULL);  
+	if( g_algo & algo_FERMATA ) { schedule_communication( current_hash ); }
+}
+
+void 
+shim_post( int shim_id, union shim_parameters *p ){
+	// Kill the timer (may have been set by fermata algo).
+	set_alarm(0.0);
+
+	// Bookkeeping.
+	gettimeofday(&ts_stop_communication, NULL);  
+	//dump_timeval(logfile, "Communication halted. ", &ts_stop_communication);
+
+	// (Most) Function-specific intercept code.
+	if(shim_id == GMPI_INIT){ post_MPI_Init( p ); }
+	
 	schedule[current_hash].observed_comm_seconds = 
 		delta_seconds(&ts_start_communication, &ts_stop_communication);
 	if( previous_hash >= 0 ){
@@ -383,6 +382,8 @@ signal_handler(int signal){
 	}							//  	|
 								//	|
 	shift(next_freq);					//	|
+	fprintf(logfile, "==> Signal handler shifting to %d, in_computation=%d\n", 
+			next_freq, in_computation);
 	current_freq = next_freq;				//	|
 	next_freq = 0;						//	|
 								//	|
@@ -428,7 +429,7 @@ schedule_communication( int idx ){
 	// Ok, so we have a chunk of communication time to work with.
 	// Set the timer to go off and return.
 	next_freq = SLOWEST_FREQ;
-	set_alarm( schedule[ idx ].observed_comm_seconds - GMPI_MIN_COMM_SECONDS );
+	set_alarm( GMPI_MIN_COMM_SECONDS );
 }
 
 static void

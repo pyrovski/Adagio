@@ -27,6 +27,26 @@ shift(int freq_idx){
 	int temp_cpuid;
 	if(!shift_initialized){
 		cpuid = get_cpuid();
+		// Shift both processors to top gear.  This is clumsy, but
+		// we can clean it up later.
+		sfp = fopen(cpufreq_filename[ 1 ], "w");
+		if(!sfp){
+			fprintf(stderr, "!!! cpufreq_filename[%d]=%s does not exist.  Bye!\n", 
+					cpuid, cpufreq_filename[cpuid]);
+		}
+		assert(sfp);
+		fprintf(sfp, freq_str[ 0 ]);
+		fclose(sfp);
+
+		sfp = fopen(cpufreq_filename[ 2 ], "w");
+		if(!sfp){
+			fprintf(stderr, "!!! cpufreq_filename[%d]=%s does not exist.  Bye!\n", 
+					cpuid, cpufreq_filename[cpuid]);
+		}
+		assert(sfp);
+		fprintf(sfp, freq_str[ 0 ]);
+		fclose(sfp);
+
 		shift_initialized=1;
 	}
 	temp_cpuid = get_cpuid();

@@ -96,11 +96,11 @@ test_spin(){
 	MPI_Barrier( MPI_COMM_WORLD );
 	MPI_Barrier( MPI_COMM_WORLD );
 	MPI_Pcontrol( 7 );
-	for( i=0; i<5; i++ ){
+	for( i=0; i<9; i++ ){
 		if( g_rank==0 ){
-			spin(9);
+			spin(11);
 		}else{
-			spin(5);
+			spin(7);
 		}
 		MPI_Barrier( MPI_COMM_WORLD );
 	}

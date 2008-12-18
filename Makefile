@@ -8,15 +8,19 @@
 # 	none all ts file line fn comp comm rank pcontrol
 #GMPI_FLAGS=-mca gmpi_algo fermata -mca gmpi_trace all
 GMPI_FLAGS= -mca gmpi_trace all
-MCA_REQUIRED_FLAGS=-mca btl self,tcp		# used on eponymous to shut up the stupid ubuntu dist errors.
+MCA_REQUIRED_FLAGS=-mca btl self,tcp
+NUMA_FLAGS=numactl --local
+
+
 ADAGIO_FLAGS= -mca gmpi_algo adagio 
 ANDANTE_FLAGS= -mca gmpi_algo andante 
 FERMATA_FLAGS= -mca gmpi_algo fermata 
 NOSCHED_FLAGS= 
 
+
 # Runtime environment
-MPIRUN=mpirun
-NP=4
+NP=16
+MPIRUN=mpirun -np $(NP) -hostfile $(HOSTFILE) $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) 
 
 # Compile environment
 
@@ -37,30 +41,26 @@ all: Makefile harness_pristine harness
 spin: Makefile harness 
 	# Andante
 	echo -n "Andante " >> spin.results
-	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
-		$(ANDANTE_FLAGS) ./harness --test_spin >> spin.results 2>&1 
+	$(MPIRUN) $(ANDANTE_FLAGS) ./harness --test_spin >> spin.results 2>&1 
 	cat runtime* > spin.andante
 	rm -rf runtime*
 	# Fermata
 	echo -n "Fermata " >> spin.results
-	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
-		$(FERMATA_FLAGS) ./harness --test_spin >> spin.results 2>&1
+	$(MPIRUN) $(FERMATA_FLAGS) ./harness --test_spin >> spin.results 2>&1
 	cat runtime* > spin.fermata
 	rm -rf runtime*
 	# Adagio
 	echo -n "Adagio  " >> spin.results
-	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
-		$(ADAGIO_FLAGS) ./harness --test_spin >> spin.results 2>&1
+	$(MPIRUN) $(ADAGIO_FLAGS) ./harness --test_spin >> spin.results 2>&1
 	cat runtime* > spin.adagio
 	rm -rf runtime*
 	# Nosched
 	echo -n "Nosched " >> spin.results
-	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
-		$(NOSCHED_FLAGS) ./harness --test_spin >> spin.results 2>&1
+	$(MPIRUN) $(NOSCHED_FLAGS) ./harness --test_spin >> spin.results 2>&1
 	cat runtime* > spin.nosched
 	rm -rf runtime*
 ping: Makefile harness
-	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
+	$(MPIRUN) -np $(NP) -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
 		./harness -v -h --test_ping 
 	cat runtime* > ping.normal
 	rm -rf runtime*
