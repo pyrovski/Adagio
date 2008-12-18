@@ -1,0 +1,8 @@
+#!/bin/bash
+
+git config remote.origin.push master:refs/remotes/opt/master
+git push origin
+
+# use 
+# git merge opt/master
+# on the backup server side to merge in changes.
