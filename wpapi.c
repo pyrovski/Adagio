@@ -51,6 +51,7 @@ initialize_papi(){
                         case PAPI_ESYS:
                                 perror("\nfroodle");
                                 fprintf(stderr,"PAPI_ESYS (system call failed)  ");
+				exit(-1);
                                 break;
                         default:
                                 fprintf(stderr,"PAPI_WTF?  ");

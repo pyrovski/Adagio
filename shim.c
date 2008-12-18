@@ -30,7 +30,7 @@ static double frequency[NUM_FREQS] = {1.8, 1.6, 1.4, 1.2, 1.0};
 #define GMPI_BLOCKING_BUFFER (0.1)      // In seconds.
 
 
-FILE *logfile;
+FILE *logfile = NULL;
 
 // Don't change this without altering the hash function.
 static struct entry schedule[8192];
@@ -184,11 +184,11 @@ Log( int shim_id, union shim_parameters *p ){
 	MPI_Aint extent;
 	int MsgSz=-1;
 	char *var_format =
-		"%5d %20s %06d "\
+		"%5d %14s %06d "\
 		" %9.6lf %9.6lf %9.6lf %9.6lf %9.6lf"\
 		" %9.6lf %7d\n";
 	char *hdr_format =
-		"%5s %20s %6s"\
+		"%5s %14s %6s"\
 		" %9s %9s %9s %9s %9s"\
 		" %9s %7s\n";
 
@@ -279,6 +279,7 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	// Bookkeeping.
 	in_computation = 0;
 	gettimeofday(&ts_stop_computation, NULL);  
+	//dump_timeval(logfile, "COMPUTATION halted.   ", &ts_stop_computation);
 
 	// Which call is this?
 	current_hash=hash_backtrace(shim_id);
@@ -289,6 +290,7 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	
 	// Bookkeeping.
 	gettimeofday(&ts_start_communication, NULL);  
+	//dump_timeval(logfile, "Communication started.", &ts_start_communication);
 	current_comp_insn[current_freq]=stop_papi();
 
 	// Schedule communication.
@@ -299,6 +301,7 @@ void
 shim_post( int shim_id, union shim_parameters *p ){
 	// Bookkeeping.
 	gettimeofday(&ts_stop_communication, NULL);  
+	//dump_timeval(logfile, "Communication halted. ", &ts_stop_communication);
 
 	// (Most) Function-specific intercept code.
 	if(shim_id == GMPI_INIT){ post_MPI_Init( p ); }
@@ -336,6 +339,7 @@ shim_post( int shim_id, union shim_parameters *p ){
 	// Bookkeeping.  MUST COME AFTER LOGGING.
 	previous_hash = current_hash;
 	gettimeofday(&ts_start_computation, NULL);  
+	//dump_timeval(logfile, "COMPUTATION started.  ", &ts_start_computation);
 	start_papi();	//Computation.
 
 	// Setup computation schedule.
@@ -361,7 +365,7 @@ signal_handler(int signal){
 	// When we catch a signal, shift(next_freq).
 	// If we're in the computation phase, record time spent computing.
         signal = signal;
-	fprintf( logfile, "++> SIGNAL HANDLER\n");
+	//fprintf( logfile, "++> SIGNAL HANDLER\n");
 	if(in_computation){
 		gettimeofday(&ts_stop_computation, NULL);
 		current_comp_seconds[current_freq] 
@@ -409,25 +413,31 @@ schedule_computation( int idx ){
 	int i, first_freq=0; 
 	double p=0.0, d=0.0, I=0.0, seconds_until_interrupt=0.0;
 
-	fprintf( logfile, "==> schedule_computation called with idx=%d\n", idx);
+	//fprintf( logfile, "==> schedule_computation called with idx=%d\n", idx);
 	// If we have no data to work with, go home.
 	if( idx==0 ){ return; }
 
 	// On the first time through, establish worst-case slowdown rates.
 	if( schedule[ idx ].seconds_per_insn[ 0 ] == 0.0 ){
-		fprintf( logfile, "==> schedule_computation First time through.\n");
+		//fprintf( logfile, "==> schedule_computation First time through.\n");
 		if( schedule[ idx ].observed_comp_seconds[ 0 ] <= GMPI_MIN_COMP_SECONDS ){
-			fprintf( logfile, "==> schedule_computation min_seconds violation.\n");
+			//fprintf( logfile, "==> schedule_computation min_seconds violation.\n");
 			return;
 		}
 		schedule[ idx ].seconds_per_insn[ 0 ] = 
-			schedule[ idx ].observed_comp_insn[ 0 ] /
-			schedule[ idx ].observed_comp_seconds[ 0 ];
+			schedule[ idx ].observed_comp_seconds[ 0 ]/
+			schedule[ idx ].observed_comp_insn[ 0 ];
 		for( i=1; i<NUM_FREQS; i++ ){
 			schedule[ idx ].seconds_per_insn[ i ] = 
 				schedule[ idx ].seconds_per_insn[ 0 ] *
-				( frequency[ i ]  / frequency[ 0 ] );
+				( frequency[ 0 ]  / frequency[ i ] );
 		}
+		/*
+		for( i=0; i<NUM_FREQS; i++ ){
+			fprintf(logfile, "&&& SPI %d = %16.15lf\n", 
+					i, schedule[idx].seconds_per_insn[ i ]);
+		}
+		*/
 	}
 
 	// On subsequent execution, only update where we have data.
@@ -437,6 +447,12 @@ schedule_computation( int idx ){
 				schedule[ idx ].observed_comp_seconds[ i ]/
 				schedule[ idx ].observed_comp_insn[ i ];
 		}
+		/*
+		for( i=0; i<NUM_FREQS; i++ ){
+			fprintf(logfile, "&&& SPI %d = %16.15lf\n", 
+					i, schedule[idx].seconds_per_insn[ i ]);
+		}
+		*/
 	}
 
 	// Given I instructions to be executed over d time using available
@@ -454,7 +470,7 @@ schedule_computation( int idx ){
 	}
 	// If there's not enough computation to bother scaling, skip it.
 	if( d <= GMPI_MIN_COMP_SECONDS ){
-		fprintf( logfile, "==> schedule_computation min_seconds total violation.\n");
+		//fprintf( logfile, "==> schedule_computation min_seconds total violation.\n");
 		return;
 	}
 
@@ -465,23 +481,31 @@ schedule_computation( int idx ){
 	
 	// If the fastest frequency isn't fast enough, use f0 all the time.
 	if( I * schedule[ idx ].seconds_per_insn[ 0 ] >= d ){
-		fprintf( logfile, "==> schedule_computation GO FASTEST.\n");
-		fprintf( logfile, "==>     I=%lf\n", I);
-		fprintf( logfile, "==>   SPI=%lf\n",   schedule[ idx ].seconds_per_insn[0]);
-		fprintf( logfile, "==> I*SPI=%lf\n", I*schedule[ idx ].seconds_per_insn[0]);
-		fprintf( logfile, "==>     d=%lf\n", d);
+		//fprintf( logfile, "==> schedule_computation GO FASTEST.\n");
+		//fprintf( logfile, "==>     I=%lf\n", I);
+		//fprintf( logfile, "==>   SPI=%lf\n",   
+		//		schedule[ idx ].seconds_per_insn[0]);
+		//fprintf( logfile, "==> I*SPI=%lf\n", 
+		//		I*schedule[ idx ].seconds_per_insn[0]);
+		//fprintf( logfile, "==>     d=%lf\n", d);
 		shift(0);
 		current_freq = 0;
 	}
 	// If the slowest frequency isn't slow enough, use that.
-	else if( I * schedule[ idx ].seconds_per_insn[ SLOWEST_FREQ ] >= d ){
-		fprintf( logfile, "==> schedule_computation GO SLOWEST.\n");
+	else if( I * schedule[ idx ].seconds_per_insn[ SLOWEST_FREQ ] <= d ){
+		//fprintf( logfile, "==> schedule_computation GO SLOWEST.\n");
+		//fprintf( logfile, "==>     I=%lf\n", I);
+		//fprintf( logfile, "==>   SPI=%lf\n",   
+		//		schedule[ idx ].seconds_per_insn[ SLOWEST_FREQ ]);
+		//fprintf( logfile, "==> I*SPI=%lf\n", 
+		//		I*schedule[ idx ].seconds_per_insn[ SLOWEST_FREQ ]);
+		//fprintf( logfile, "==>     d=%lf\n", d);
 		shift(SLOWEST_FREQ);
 		current_freq = SLOWEST_FREQ;
 	}
 	// Find the slowest frequency that allows the work to be completed in time.
 	else{
-		for( i=SLOWEST_FREQ-1; i<=0; i-- ){
+		for( i=SLOWEST_FREQ-1; i>0; i-- ){
 			if( I * schedule[ idx ].seconds_per_insn[ i ] < d ){
 				// We have a winner.
 				p = 
@@ -490,23 +514,32 @@ schedule_computation( int idx ){
 					( I * schedule[ idx ].seconds_per_insn[ i ] - 
 					  I * schedule[ idx ].seconds_per_insn[ i+1 ] );
 
+				/*
 				fprintf( logfile, "==> schedule_computation GO %d.\n", i);
+				fprintf( logfile, "----> SPI[%d] = %15.14lf\n", 0, schedule[idx].seconds_per_insn[0]);
+				fprintf( logfile, "----> SPI[%i] = %15.14lf\n", i, schedule[idx].seconds_per_insn[i]);
+				fprintf( logfile, "---->       d = %lf\n", d);
+				fprintf( logfile, "---->       I = %lf\n", I);
+				fprintf( logfile, "---->       p = %lf\n", p);
+				fprintf( logfile, "---->     idx = %d\n", idx);
+				*/
 				shift(i);
 				current_freq = i;
 
 				// Do we need to shift down partway through?
-				if((    p * I * schedule[idx].seconds_per_insn[i  ] > GMPI_MIN_COMP_SECONDS)
-				&& (1.0-p * I * schedule[idx].seconds_per_insn[i+1] > GMPI_MIN_COMP_SECONDS)
+				if((    p * I * schedule[idx].seconds_per_insn[i  ]>GMPI_MIN_COMP_SECONDS)
+				&& (1.0-p * I * schedule[idx].seconds_per_insn[i+1]>GMPI_MIN_COMP_SECONDS)
 				){
 					seconds_until_interrupt = 
 						p * I * schedule[ idx ].seconds_per_insn[ i+i ];
 					next_freq = i+1;
 
-					fprintf( logfile, "==> schedule_computation alarm=%lf.\n", 
-							seconds_until_interrupt);
+					//fprintf( logfile, "==> schedule_computation alarm=%lf.\n", 
+					//		seconds_until_interrupt);
 					set_alarm(seconds_until_interrupt);
 				
 				}
+				break;
 			}
 		}
 	}
