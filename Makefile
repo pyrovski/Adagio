@@ -8,8 +8,10 @@
 # 	none all ts file line fn comp comm rank pcontrol
 #GMPI_FLAGS=-mca gmpi_algo fermata -mca gmpi_trace all
 GMPI_FLAGS= -mca gmpi_trace all
-MCA_REQUIRED_FLAGS=-mca btl self,tcp
-NUMA_FLAGS=numactl --local
+#MCA_REQUIRED_FLAGS=-mca btl self,tcp -mca mpi_paffinity_alone 1 -mca mpi_maffinity libnuma
+MCA_REQUIRED_FLAGS=-mca btl self,tcp 
+#NUMA_FLAGS=numactl --localalloc --physcpubind=1,2 --
+NUMA_FLAGS=
 
 
 ADAGIO_FLAGS= -mca gmpi_algo adagio 
@@ -19,7 +21,7 @@ NOSCHED_FLAGS=
 
 
 # Runtime environment
-NP=16
+NP=32
 MPIRUN=mpirun -np $(NP) -hostfile $(HOSTFILE) $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) 
 
 # Compile environment
@@ -41,22 +43,22 @@ all: Makefile harness_pristine harness
 spin: Makefile harness 
 	# Andante
 	echo -n "Andante " >> spin.results
-	$(MPIRUN) $(ANDANTE_FLAGS) ./harness --test_spin >> spin.results 2>&1 
+	$(MPIRUN) $(ANDANTE_FLAGS) $(NUMA_FLAGS) ./harness --test_spin >> spin.results 2>&1 
 	cat runtime* > spin.andante
 	rm -rf runtime*
 	# Fermata
 	echo -n "Fermata " >> spin.results
-	$(MPIRUN) $(FERMATA_FLAGS) ./harness --test_spin >> spin.results 2>&1
+	$(MPIRUN) $(FERMATA_FLAGS) $(NUMA_FLAGS) ./harness --test_spin >> spin.results 2>&1
 	cat runtime* > spin.fermata
 	rm -rf runtime*
 	# Adagio
 	echo -n "Adagio  " >> spin.results
-	$(MPIRUN) $(ADAGIO_FLAGS) ./harness --test_spin >> spin.results 2>&1
+	$(MPIRUN) $(ADAGIO_FLAGS) $(NUMA_FLAGS) ./harness --test_spin >> spin.results 2>&1
 	cat runtime* > spin.adagio
 	rm -rf runtime*
 	# Nosched
 	echo -n "Nosched " >> spin.results
-	$(MPIRUN) $(NOSCHED_FLAGS) ./harness --test_spin >> spin.results 2>&1
+	$(MPIRUN) $(NOSCHED_FLAGS) $(NUMA_FLAGS) ./harness --test_spin >> spin.results 2>&1
 	cat runtime* > spin.nosched
 	rm -rf runtime*
 ping: Makefile harness

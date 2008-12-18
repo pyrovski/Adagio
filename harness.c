@@ -96,7 +96,7 @@ test_spin(){
 	MPI_Barrier( MPI_COMM_WORLD );
 	MPI_Barrier( MPI_COMM_WORLD );
 	MPI_Pcontrol( 7 );
-	for( i=0; i<9; i++ ){
+	for( i=0; i<4; i++ ){
 		if( g_rank==0 ){
 			spin(11);
 		}else{
