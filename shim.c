@@ -24,9 +24,9 @@ static int g_trace;	// tracing level.
 
 static int current_hash=0, previous_hash=-1, current_freq=0, next_freq=0;
 static int in_computation=1;
+static int MPI_Initialized_Already=0;
 
 static double frequency[NUM_FREQS] = {1.8, 1.6, 1.4, 1.2, 1.0};
-#define GMPI_MIN_COMP_SECONDS (0.1)     // In seconds.
 #define GMPI_MIN_COMP_SECONDS (0.1)     // In seconds.
 #define GMPI_MIN_COMM_SECONDS (0.1)     // In seconds.
 #define GMPI_BLOCKING_BUFFER (0.1)      // In seconds.
@@ -73,7 +73,7 @@ enum{
 static void
 pre_MPI_Init( union shim_parameters *p ){
 
-	char *env_algo, *env_trace, *env_freq;
+	char *env_algo, *env_trace, *env_freq, *hostname;
 	p=p;
 
 	// Using "-mca key value" on the command line, the environment variable
@@ -114,6 +114,15 @@ pre_MPI_Init( union shim_parameters *p ){
 		g_trace |= strstr(env_trace, "pcontrol") ? trace_PCONTROL: 0;
 		//fprintf(stdout,"g_trace=%s %d\n", env_trace, g_trace);
 	}
+#ifdef BLR_DONOTUSEOPT13
+	// Opt13 doesn't shift frequencies very well.
+	hostname=getenv("HOSTNAME");
+	if(hostname && strlen(hostname) > 0){
+		if( strstr(hostname, "opt13") ){
+			g_algo = algo_NONE;
+		}
+	}
+#endif
 
 	// Put a reasonable value in.
 	gettimeofday(&ts_start_computation, NULL);  
@@ -124,6 +133,8 @@ pre_MPI_Init( union shim_parameters *p ){
 	
 	// Set up signal handling.
 	initialize_handler();
+
+	MPI_Initialized_Already=1;
 
 }
 
@@ -288,6 +299,9 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	if(shim_id == GMPI_INIT){ pre_MPI_Init( p ); }
 	if(shim_id == GMPI_FINALIZE){ pre_MPI_Finalize( p ); }
 	
+	// If we aren't initialized yet, stop here.
+	if(!MPI_Initialized_Already){ return; }
+	
 	// Bookkeeping.
 	current_comp_insn[current_freq]=stop_papi();
 	
@@ -320,6 +334,9 @@ shim_pre( int shim_id, union shim_parameters *p ){
 
 void 
 shim_post( int shim_id, union shim_parameters *p ){
+	// If we aren't initialized yet, stop here.
+	if(!MPI_Initialized_Already){ return; }
+	
 	// Kill the timer (may have been set by fermata algo).
 	set_alarm(0.0);
 

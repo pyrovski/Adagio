@@ -20,4 +20,4 @@ sed 's/ \([\(A-Za-z_\)]*\)\[\]\[3\]/ **\1/g' | 	#		\
 			# convert "type var[]" to "type *var"	\
 sed 's/ \([\(A-Za-z_\)]*\)\[\]/ *\1/g' |	#		\
 python ./shim.py
-
+patch < _PATCH.FixWtime.shim_selection.h
