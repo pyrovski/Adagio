@@ -7,6 +7,9 @@
 #include <stdlib.h>	// getenv
 #include <string.h>	// strlen, strstr
 #include <math.h>
+#ifdef BLR_DONOTUSEOPT13
+#include <sys/utsname.h>
+#endif
 #include "shim_enumeration.h"
 #include "shim.h"
 #include "util.h"	// Brings in <stdio.h>, <sys/time.h>, <time.h>
@@ -73,7 +76,11 @@ enum{
 static void
 pre_MPI_Init( union shim_parameters *p ){
 
-	char *env_algo, *env_trace, *env_freq, *hostname;
+#ifdef BLR_DONOTUSEOPT13
+	struct utsname utsname;	// Holds hostname.
+	char  *hostname;
+#endif
+	char *env_algo, *env_trace, *env_freq;
 	p=p;
 
 	// Using "-mca key value" on the command line, the environment variable
@@ -116,9 +123,20 @@ pre_MPI_Init( union shim_parameters *p ){
 	}
 #ifdef BLR_DONOTUSEOPT13
 	// Opt13 doesn't shift frequencies very well.
-	hostname=getenv("HOSTNAME");
+	// hostname=getenv("HOSTNAME"); //This doesn't work for whatever reason.
+	uname(&utsname);
+	fprintf(stderr, "HOSTNAME=%s.\n", utsname.nodename);
+	fflush(NULL);
+	hostname = utsname.nodename;
 	if(hostname && strlen(hostname) > 0){
 		if( strstr(hostname, "opt13") ){
+			fprintf(stderr, "opt13 algo set to algo_NONE.\n");
+			fflush(stderr);	// My but I'm paranoid in my dotage.
+			g_algo = algo_NONE;
+		}
+		if( strstr(hostname, "opt09") ){
+			fprintf(stderr, "opt09 algo set to algo_NONE.\n");
+			fflush(stderr);	// My but I'm paranoid in my dotage.
 			g_algo = algo_NONE;
 		}
 	}
@@ -274,7 +292,7 @@ Log( int shim_id, union shim_parameters *p ){
 		MsgSz
 	);
 
-#ifdef USE_EAGER_LOGGING
+#ifdef BLR_USE_EAGER_LOGGING
 	fflush( logfile );
 #endif
 }

@@ -121,7 +121,7 @@ GreenMPI: Makefile shim.o util.o wpapi.o shift.o cpuid.o meters.o\
 
 shim.o: Makefile shim.c shim.h util.o wpapi.o shift.o cpuid.o 		\
 		$(GENERATED_SHIMFILES) 
-	$(MPICC) -fPIC -DUSE_EAGER_LOGGING -c shim.c
+	$(MPICC) -fPIC -DBLR_DONOTUSEOPT13 -DBLR_USE_EAGER_LOGGING -c shim.c
 	$(MPICC) -fPIC -c shim_functions.c
 
 util.o: Makefile util.c util.h
