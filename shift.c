@@ -40,8 +40,9 @@ shift(int freq_idx){
 
 		sfp = fopen(cpufreq_filename[ 2 ], "w");
 		if(!sfp){
-			fprintf(stderr, "!!! cpufreq_filename[%d]=%s does not exist.  Bye!\n", 
-					cpuid, cpufreq_filename[cpuid]);
+			fprintf(stderr, 
+				"!!! cpufreq_filename[%d]=%s does not exist.  Bye!\n", 
+				cpuid, cpufreq_filename[cpuid]);
 		}
 		assert(sfp);
 		fprintf(sfp, freq_str[ 0 ]);
