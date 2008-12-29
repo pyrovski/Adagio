@@ -18,6 +18,8 @@ set_cpu_affinity(int rank){
 	}
 	rc = sched_setaffinity( 0, sizeof(cpu_set_t), &mask );
 	if(rc < 0){ perror("sched_getaffinity"); }
+	rc = sched_yield();
+	if(rc < 0){ perror("sched_yield"); }
 }
 
 

@@ -30,7 +30,7 @@ MPICC=mpicc
 CFLAGS=-O0 -Wall -g
 LIBDIR=-L$(HOME)/GreenMPI/local/lib
 INCDIR=-I$(HOME)/GreenMPI/local/include
-LIBS=-lc -lm -lunwind -lmd5 -lpapi 
+LIBS=-lc -lm -lunwind -lmd5 -lpapi -lnuma
 GENERATED_SHIMFILES = shim_enumeration.h shim_functions.c shim_parameters.h 	\
 shim_selection.h  shim_str.h  shim_structs.h  shim_union.h			
 
@@ -119,7 +119,7 @@ GreenMPI: Makefile shim.o util.o wpapi.o shift.o cpuid.o meters.o\
 		shim.o shim_functions.o util.o wpapi.o shift.o cpuid.o	\
 		meters.o affinity.o					\
 		$(LIBS)
-	mv libGreenMPI.so ${HOME}/GreenMPI/local/lib
+	cp libGreenMPI.so ${HOME}/GreenMPI/local/lib
 
 shim.o: Makefile shim.c shim.h util.o wpapi.o shift.o cpuid.o 		\
 		$(GENERATED_SHIMFILES) 

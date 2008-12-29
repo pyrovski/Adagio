@@ -7,6 +7,7 @@
 #include <stdlib.h>	// getenv
 #include <string.h>	// strlen, strstr
 #include <math.h>
+#include <numa.h>
 #ifdef BLR_DONOTUSEOPT13
 #include <sys/utsname.h>
 #endif
@@ -163,9 +164,10 @@ post_MPI_Init( union shim_parameters *p ){
 	PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	PMPI_Comm_size(MPI_COMM_WORLD, &size);
 	
-	// Set CPU affinity.
+	// Set CPU affinity and memory preference.
 	set_cpu_affinity( rank );
-
+	numa_set_localalloc();
+	
 	// Start us in a known frequency.
 	shift(0);
 	
