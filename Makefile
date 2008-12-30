@@ -18,11 +18,13 @@ ADAGIO_FLAGS= -mca gmpi_algo adagio
 ANDANTE_FLAGS= -mca gmpi_algo andante 
 FERMATA_FLAGS= -mca gmpi_algo fermata 
 NOSCHED_FLAGS= 
-
+BADNODE_FLAGS= -mca gmpi_badnode opt09,opt13
+NAS_BADNODE_FLAGS= -mca gmpi_badnode opt01,opt09,opt13
 
 # Runtime environment
 NP=32
-MPIRUN=mpirun -np $(NP) -hostfile $(HOSTFILE) $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) 
+MPIRUN=mpirun -np $(NP) -hostfile $(HOSTFILE) $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) $(BADNODE_FLAGS)
+NAS_MPIRUN=mpirun $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) $(NAS_BADNODE_FLAGS)
 
 # Compile environment
 
@@ -37,6 +39,12 @@ shim_selection.h  shim_str.h  shim_structs.h  shim_union.h
 
 all: Makefile harness_pristine harness
 	echo Done
+ft:
+	cd $(HOME)/GreenMPI/src/NPB3.3/NPB3.3-MPI/bin; $(MAKE) ft  "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
+nas:
+	cd $(HOME)/GreenMPI/src/NPB3.3/NPB3.3-MPI/bin; $(MAKE) nas "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
+
+
 umt:
 	cd $(HOME)/GreenMPI/src/umt2k-1.2.2/bin; $(MAKE) umt "MPIRUN=$(MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
 
@@ -123,7 +131,7 @@ GreenMPI: Makefile shim.o util.o wpapi.o shift.o cpuid.o meters.o\
 
 shim.o: Makefile shim.c shim.h util.o wpapi.o shift.o cpuid.o 		\
 		$(GENERATED_SHIMFILES) 
-	$(MPICC) -fPIC -DBLR_DONOTUSEOPT13 -DBLR_USE_EAGER_LOGGING -c shim.c
+	$(MPICC) -fPIC -DBLR_USE_EAGER_LOGGING -c shim.c
 	$(MPICC) -fPIC -c shim_functions.c
 
 util.o: Makefile util.c util.h

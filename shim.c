@@ -8,9 +8,7 @@
 #include <string.h>	// strlen, strstr
 #include <math.h>
 #include <numa.h>
-#ifdef BLR_DONOTUSEOPT13
 #include <sys/utsname.h>
-#endif
 #include "shim_enumeration.h"
 #include "shim.h"
 #include "util.h"	// Brings in <stdio.h>, <sys/time.h>, <time.h>
@@ -31,6 +29,7 @@ static int in_computation=1;
 static int MPI_Initialized_Already=0;
 
 static double frequency[NUM_FREQS] = {1.8, 1.6, 1.4, 1.2, 1.0};
+//static double frequency[NUM_FREQS] = {1.8, 1.6, 1.4, 1.2};
 #define GMPI_MIN_COMP_SECONDS (0.1)     // In seconds.
 #define GMPI_MIN_COMM_SECONDS (0.1)     // In seconds.
 #define GMPI_BLOCKING_BUFFER (0.1)      // In seconds.
@@ -77,11 +76,9 @@ enum{
 static void
 pre_MPI_Init( union shim_parameters *p ){
 
-#ifdef BLR_DONOTUSEOPT13
 	struct utsname utsname;	// Holds hostname.
 	char  *hostname;
-#endif
-	char *env_algo, *env_trace, *env_freq;
+	char *env_algo, *env_trace, *env_freq, *env_badnode;
 	p=p;
 
 	// Using "-mca key value" on the command line, the environment variable
@@ -122,6 +119,20 @@ pre_MPI_Init( union shim_parameters *p ){
 		g_trace |= strstr(env_trace, "pcontrol") ? trace_PCONTROL: 0;
 		//fprintf(stdout,"g_trace=%s %d\n", env_trace, g_trace);
 	}
+
+	env_badnode=getenv("OMPI_MCA_gmpi_badnode");
+	fprintf(stderr,"OMPI_MCA_gmpi_badnode = %s\n", env_badnode);
+	if(env_badnode && strlen(env_badnode) > 0){
+		uname(&utsname);
+		hostname = utsname.nodename;
+		if( strstr( env_badnode, hostname ) ){
+			fprintf(stderr, "%s algo set to algo_NONE.\n", hostname);
+			fflush(stderr);	// My but I'm paranoid in my dotage.
+			g_algo = algo_NONE;
+		}
+	}
+
+/*
 #ifdef BLR_DONOTUSEOPT13
 	// Opt13 doesn't shift frequencies very well.
 	// hostname=getenv("HOSTNAME"); //This doesn't work for whatever reason.
@@ -140,8 +151,14 @@ pre_MPI_Init( union shim_parameters *p ){
 			fflush(stderr);	// My but I'm paranoid in my dotage.
 			g_algo = algo_NONE;
 		}
+		if( strstr(hostname, "opt01") ){
+			fprintf(stderr, "opt01 algo set to algo_NONE.\n");
+			fflush(stderr);	// My but I'm paranoid in my dotage.
+			g_algo = algo_NONE;
+		}
 	}
 #endif
+*/
 
 	// Put a reasonable value in.
 	gettimeofday(&ts_start_computation, NULL);  
