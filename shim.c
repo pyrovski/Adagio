@@ -53,8 +53,9 @@ enum{
 	algo_JITTER  	= 0x020,	// per ncsu.
 	algo_MISER   	= 0x040,	// per vt.
 	algo_CLEAN   	= 0x080,	// Identical to fixedfreq=0.
-	algo_FAKEJOULES = 0x100,	// Pretend power meter present.
-	algo_FAKEFREQ   = 0x200,	// Pretend to change the cpu frequency.
+	mods_FAKEJOULES = 0x100,	// Pretend power meter present.
+	mods_FAKEFREQ   = 0x200,	// Pretend to change the cpu frequency.
+	mods_BIGCOMM	= 0x400,	// Barrier before MPI_Alltoall.
 
 	trace_NONE	= 0x000,
 	trace_TS	= 0x001,	// Timestamp.
@@ -68,6 +69,7 @@ enum{
 	trace_PCONTROL	= 0x080,	// Most recent pcontrol.
 	trace_ALL	= 0xFFF
 	
+	
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -78,7 +80,7 @@ pre_MPI_Init( union shim_parameters *p ){
 
 	struct utsname utsname;	// Holds hostname.
 	char  *hostname;
-	char *env_algo, *env_trace, *env_freq, *env_badnode;
+	char *env_algo, *env_trace, *env_freq, *env_badnode, *env_mods;
 	p=p;
 
 	// Using "-mca key value" on the command line, the environment variable
@@ -96,8 +98,11 @@ pre_MPI_Init( union shim_parameters *p ){
 		g_algo |= strstr(env_algo, "jitter"    ) ? algo_JITTER    : 0;
 		g_algo |= strstr(env_algo, "miser"     ) ? algo_MISER     : 0;
 		g_algo |= strstr(env_algo, "clean"     ) ? algo_CLEAN     : 0;
-		g_algo |= strstr(env_algo, "fakejoules") ? algo_FAKEJOULES: 0;
-		g_algo |= strstr(env_algo, "fakefreq"  ) ? algo_FAKEFREQ  : 0;
+	}
+	env_mods=getenv("OMPI_MCA_gmpi_mods");
+	if(env_mods && strlen(env_mods) > 0){
+		g_algo |= strstr(env_mods, "fakejoules") ? mods_FAKEJOULES: 0;
+		g_algo |= strstr(env_mods, "bigcomm"   ) ? mods_BIGCOMM   : 0;
 	}
 
 	env_freq=getenv("OMPI_MCA_gmpi_freq");
@@ -121,14 +126,11 @@ pre_MPI_Init( union shim_parameters *p ){
 	}
 
 	env_badnode=getenv("OMPI_MCA_gmpi_badnode");
-	fprintf(stderr,"OMPI_MCA_gmpi_badnode = %s\n", env_badnode);
 	if(env_badnode && strlen(env_badnode) > 0){
 		uname(&utsname);
 		hostname = utsname.nodename;
 		if( strstr( env_badnode, hostname ) ){
-			fprintf(stderr, "%s algo set to algo_NONE.\n", hostname);
-			fflush(stderr);	// My but I'm paranoid in my dotage.
-			g_algo = algo_NONE;
+			g_algo |= mods_FAKEFREQ;
 		}
 	}
 
@@ -322,6 +324,41 @@ Log( int shim_id, union shim_parameters *p ){
 ////////////////////////////////////////////////////////////////////////////////
 void 
 shim_pre( int shim_id, union shim_parameters *p ){
+	// ft kludge.
+	// In the normal case, any MPI call on or close to the critical path
+	// will take less than GMPI_BLOCKING_BUFFER.  ft messages are so large,
+	// though, that it takes ~10 seconds to complete an MPI_Alltoall on 32
+	// nodes.  This makes it look like every process than slow down -- 
+	// there's plenty of communiation time -- which inevitably leads to 
+	// the process(es) on the critical path slowing down.
+	//
+	// If we had a reliable way to distinguish blocking time from 
+	// communication time, we might be able to work with this.  However, 
+	// I don't think that even a complex scheme will hold up over 32 
+	// processes trying to communicate with 31 other processes, each
+	// starting at a slightly different time.
+	//
+	// To fix the problem, we're going to stick a barrier in front of the
+	// MPI_Alltoall call.  This will do two things:
+	//
+	// 1)  The communication time for the barrier is much less than 
+	// GMPI_BLOCKING_BUFFER.  Any extra time spent here is real blocking
+	// time, and computation can be slowed to take advantage of this.
+	// Processes on the critical path will see very little communication
+	// time and no blocking time, and thus their computation will not
+	// be slowed.
+	// 
+	// 2)  The task preceding the MPI_Alltoall will take to little time
+	// to be scheduled, leaving the fermata algorithm to kick in to 
+	// pick up the energy savings.
+	
+	// DO NOT MOVE THIS CALL.  This code isn't particularly reentrant,
+	// so this needs to be executed before any bookkeeping occurs.
+	if( (g_algo  &  algo_ANDANTE || g_algo & algo_FERMATA) 
+	&&  (g_algo  &  mods_BIGCOMM) 
+	&&  (shim_id == GMPI_ALLTOALL)
+	  ) { MPI_Barrier( MPI_COMM_WORLD ); }	//NOT PMPI.  
+	
 	// Kill the timer.
 	set_alarm(0.0);
 
@@ -407,7 +444,7 @@ shim_post( int shim_id, union shim_parameters *p ){
 	}
 	// Regardless of computation scheduling algorithm, always shift here.
 	// (Most of the time it should have no effect.)
-	shift( current_freq );
+	if( ! (g_algo & mods_FAKEFREQ) ) { shift( current_freq ); }
 
 	// NOTE:  THIS HAS TO GO LAST.  Otherwise the logfile will be closed
 	// prematurely.
@@ -435,9 +472,9 @@ signal_handler(int signal){
 		current_comp_insn[current_freq]=stop_papi();	//  <---|
 	}							//  	|
 								//	|
-	shift(next_freq);					//	|
-	fprintf(logfile, "==> Signal handler shifting to %d, in_computation=%d\n", 
-			next_freq, in_computation);
+	if( ! (g_algo & mods_FAKEFREQ) ) { shift( next_freq ); }  //      |
+	//fprintf(logfile, "==> Signal handler shifting to %d, in_computation=%d\n", 
+	//		next_freq, in_computation);
 	current_freq = next_freq;				//	|
 	next_freq = 0;						//	|
 								//	|
