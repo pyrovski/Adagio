@@ -1,0 +1,989 @@
+#include <mpi.h>
+#include<stdio.h>
+#include<time.h>
+#include<sys/time.h>
+#include<unistd.h>
+#include<sys/stat.h>
+#include <fcntl.h>
+#include<string.h>
+#include<pthread.h>
+#include<stdlib.h>
+#include <sys/types.h>
+#include <ctype.h>
+#include <math.h>
+
+#include "/osr/users/fpan2/research/src/parts/autoshift/info.h"
+#include "/osr/users/fpan2/research/src/parts/include/util.h"
+#include "/osr/pac/include/agent.h"
+
+//#include "/osr/cluster/include/shared.h"
+
+#define MPI_BUILD_PROFILING
+
+#define PRESEND 1
+#define POSTSEND 2
+#define PREWAIT 3
+#define POSTWAIT 4
+#define PRERECV 5
+#define POSTRECV 6
+#define PREBCAST 7
+#define POSTBCAST 8
+#define PREBARRIER 9
+#define POSTBARRIER 10
+#define PREALLREDUCE 11
+#define POSTALLREDUCE 12
+#define PREALLTOALLV 13
+#define POSTALLTOALLV 14
+#define PREREDUCE 15
+#define POSTREDUCE 16
+#define PREISEND 17
+#define POSTISEND 18
+#define PREREDUCEALL 19
+#define POSTREDUCEALL 20
+#define PREWAITALL 21
+#define POSTWAITALL 22
+#define PREALLTOALL 23
+#define POSTALLTOALL 24
+
+#define ZERO 0.01
+#define DELTA 1.1
+#define INFINITY 999
+
+//#define WRITETRACE(a, b)	writetrace(a,b)
+#define WRITETRACE(a, b)	
+
+#define _X86 1
+#define BLOCKING_CALL 0
+#define NON_BLOCKING 1
+
+#define Z 0.00001
+static int num_waits, zero_wait;
+
+double MIN(double a, double b)
+{
+  ++num_waits;
+  if(b < Z) {
+    ++zero_wait;
+    return a;
+  }
+  if(a < Z) {
+    ++zero_wait;
+    return b;
+  }
+  if(a<b)
+  	return a;
+  else
+  	return b;
+}
+
+#undef Z
+
+static int call_type =1; /////0 - if blocking call, 1 - non blocking call
+double SLACK, THRESHOLD_ITER, THRESHOLD_WT, BIAS;
+int SKIP;
+double impie_init_time=0.0;
+int NODE0=0; //
+int NODE1=1; //
+int NODE2=2;
+int NODE3=3;
+int NODE4=4;
+int NODE5=5;
+int NODE6=6;
+int NODE7=7;
+int RANK; //given by process
+int TRACE=0, SHIFT=0;
+int fd;
+int current_gear;
+int current_uops;
+int current_misses;
+int previous_gear;
+int num_shiftingpoints;
+int num_trace_points;
+double last_iter_time;
+double total_wait_time;
+double slack_table[7] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0}; //table to track the slack
+double ALPHA;
+
+
+
+
+double min_wait_time = INFINITY;
+
+Info info;
+
+struct pair {
+    unsigned long int addr;
+    int gear;
+};
+
+struct pair solutions[200];
+int tracepoint[200];
+
+#ifdef _X86
+
+/*
+#define CALLER_ADDRESS(r) \
+                     asm("push %esi"); \
+			  asm("movl (%ebp), %esi"); \
+			  asm("movl 4(%%esi), %0;" : "=r"(r)); \
+                          asm("popl %esi");
+*/
+
+#define CALLER_ADDRESS(r) asm("movl 4(%%ebp), %0;" :"=r"(r));
+#define MARK_CALL_ADDRESS1(r) asm("movl 4(%%ebp), %0;" :"=r"(r));
+#endif
+
+
+double timer();
+void change_gear(unsigned long int);
+
+int write_to_file(char *buf, int len)
+{
+  write(fd, buf, len);
+  return 0;
+}
+
+//pc call time gear uops misses
+
+int writetrace(unsigned long pc, const char* call)
+{
+  double opr, oprT;   
+    static unsigned long long opsT, refsT;
+  unsigned long long ops, refs, tlb_miss, branch_miss;
+  double tm;
+  char buff[80];
+    int i;
+  if(TRACE && RANK >= NODE0 && RANK <= NODE7) {
+        //if(strlen(call) >= 4 && strncmp(call, "MARK", 4) == 0)
+        ops = refs = tlb_miss = branch_miss = 0;
+        if(strncmp(call, "MARK", 4) == 0 || call[strlen(call)-1] == '1')
+        for(i=0;i<num_trace_points;i++)
+        {
+            if(tracepoint[i] == pc)
+            {
+                readInfo(4, info);
+                ops  = info->counters[0];
+                refs = info->counters[1];
+                tlb_miss = info->counters[2];
+                branch_miss = info->counters[3];
+                break;
+            }
+        }
+      tm=timer();    
+      opsT += ops;
+      refsT += refs;
+
+      opr = refs==0 ? 1000 : ((double)ops)/refs;
+      oprT = refsT==0 ? 1000 : ((double)opsT)/refsT;
+      sprintf(buff, "%lu %s %0.6f %d %llu %llu %llu %llu\n", pc, call, tm, current_gear, ops, refs, tlb_miss, branch_miss);
+
+      //printf("%d: opr %5g (%5g) cyc %llu gear %d\n", marker, opr,oprT,info->cycles, whatGear());
+      //sprintf(buff,"%lu %s %0.6f %d %d %d\n", *pc, call, *tm, *gear, *uops, *misses);
+      write_to_file(buff,strlen(buff));
+    }
+}
+
+double timer() 
+{
+  double tm;
+  struct timeval t;
+  if (gettimeofday(&t, NULL) < 0) {
+          printf("gettimeofday failed\n");
+        exit(-1);
+       }
+  tm=((t.tv_sec + t.tv_usec/(double)1000000));
+   return (tm-impie_init_time);
+}
+
+
+void initmark_() 
+{
+    int pid;
+
+   // current_gear = whatGear();
+   // pid = getpid();
+  /*  info = ckalloc(sizeof(*info));
+    initInfo(pid, 0, 0);
+    pmcEvent(0, 0xc1);
+    pmcEvent(1, 0x41);
+    pmcEvent(2, 0x46);
+    pmcEvent(3, 0xC3);
+    readInfo(4, info); // clear log
+    //fp = fopen("output", "w");*/
+     
+}
+
+
+int MPI_Init(int *argc, char ***argv)
+{
+  int rval;
+  FILE* solution_file;
+  FILE* fd_temp;
+  char choice[30];
+  int i;
+  int addr, number;
+ int tmp; 
+ char tmpstr0[20];
+ char tmpstr1[20];
+ char tmpstr2[20];
+ char tmpstr3[30];
+ char tmpstr4[30];
+ char tmpstr5[30];
+ char tmpstr6[30];
+	    initmark_();
+  rval=PMPI_Init(argc, argv);
+  impie_init_time=timer();
+  fd_temp=fopen("options.dat","r");
+  if(fd_temp<=0)
+  {
+    fprintf(stderr, "error in opening options.dat, needs to be in current directory\n");
+    exit(-1);
+  }
+  
+  fscanf(fd_temp, "%s\n", tmpstr0);
+  tmp = fscanf(fd_temp, "%s\n%s\n%s\n%s\n%s\n%s\n", tmpstr1, tmpstr2, tmpstr3, tmpstr4, tmpstr5, tmpstr6);
+  SLACK=atof(tmpstr1);
+  THRESHOLD_ITER=atof(tmpstr2);
+  THRESHOLD_WT=atof(tmpstr3);
+  ALPHA=atof(tmpstr4);
+  BIAS=atof(tmpstr5);
+  SKIP=atoi(tmpstr6);
+  fclose(fd_temp);
+  
+  ///////////////////////////config.dat
+  fd_temp=fopen("config.dat","r");
+  if(fd_temp<=0)
+  {
+    fprintf(stderr, "error in opening config.dat, needs to be in current directory\n");
+    exit(-1);
+  }
+  
+//0-log 1-shift
+  fscanf(fd_temp,"%s\n",choice);
+
+  if(strcmp(choice, "TRACE") == 0)
+    	TRACE=1;
+  else if(strcmp(choice, "SHIFT") == 0)
+    	SHIFT=1;
+  else if(strcmp(choice, "TRACE_SHIFT")==0 || strcmp(choice, "SHIFT_TRACE") == 0)
+	TRACE=SHIFT=1;
+  else if(strcmp(choice, "SIMPLE") == 0)
+      TRACE = SHIFT = 0;
+  else
+  {
+      fprintf(stderr, "incorrect config file\n");
+      exit(1);
+  }
+  
+    solution_file = fopen("solution.txt", "r");
+    if(solution_file != NULL)
+    {
+    num_shiftingpoints = 0;
+    num_trace_points = 0;
+    while (fscanf(solution_file, "%lu %d", &addr, &number) != EOF)
+    {
+        if(number < 0) 
+        {
+            //print list
+            tracepoint[num_trace_points] = addr;
+            num_trace_points++;
+        }
+        else
+        {
+            solutions[num_shiftingpoints].addr = addr;
+            solutions[num_shiftingpoints].gear = number;
+            num_shiftingpoints++;
+        }
+        //printf("%lu %d\n", solutions[num_shiftingpoints].addr, solutions[num_shiftingpoints].gear);
+    }
+    fclose(solution_file);
+
+    }
+    if(SHIFT)
+      {
+    agent_connect(0, 0);
+    agent_set_pstate(0, 0);
+      }
+     return rval; 
+}  
+
+
+int MPI_Comm_rank(MPI_Comm comm, int *rank)
+{
+    int rval, i;
+    char buff[80], tempbuf[100];
+
+    rval=PMPI_Comm_rank(comm, rank);
+    
+    RANK=*rank;
+    if(RANK==NODE0)
+    {
+	    fd=open("node0.dat",O_WRONLY|O_CREAT|O_TRUNC,0666);
+	    if(fd<0)
+	    {
+		    printf("\nCould not open file- node0\n");
+		    exit(-1);
+ 	    }		    
+		    
+    }
+    if(RANK==NODE1)
+    {
+	    fd=open("node1.dat",O_WRONLY|O_CREAT|O_TRUNC,0666);
+	    if(fd<0)
+	    {
+		    printf("\nCould not open file -node1\n");
+		    exit(-1);
+ 	    }		
+    }
+    if(RANK==NODE2)
+    {
+	    fd=open("node2.dat",O_WRONLY|O_CREAT|O_TRUNC,0666);
+	    if(fd<0)
+	    {
+		    printf("\nCould not open file - node2\n");
+		    exit(-1);
+ 	    }		
+    }
+    if(RANK==NODE3)
+    {
+	    fd=open("node3.dat",O_WRONLY|O_CREAT|O_TRUNC,0666);
+	    if(fd<0)
+	    {
+		    printf("\nCould not open file - node3\n");
+		    exit(-1);
+ 	    }		
+    }
+    if(RANK==NODE4)
+    {
+	    fd=open("node4.dat",O_WRONLY|O_CREAT|O_TRUNC,0666);
+	    if(fd<0)
+	    {
+		    printf("\nCould not open file - node4\n");
+		    exit(-1);
+ 	    }		
+    }
+    if(RANK==NODE5)
+    {
+	    fd=open("node5.dat",O_WRONLY|O_CREAT|O_TRUNC,0666);
+	    if(fd<0)
+	    {
+		    printf("\nCould not open file - node5\n");
+		    exit(-1);
+ 	    }		
+    }
+    if(RANK==NODE6)
+    {
+	    fd=open("node6.dat",O_WRONLY|O_CREAT|O_TRUNC,0666);
+	    if(fd<0)
+	    {
+		    printf("\nCould not open file - node6\n");
+		    exit(-1);
+ 	    }		
+    }
+    if(RANK==NODE7)
+    {
+	    fd=open("node7.dat",O_WRONLY|O_CREAT|O_TRUNC,0666);
+	    if(fd<0)
+	    {
+		    printf("\nCould not open file - node7\n");
+		    exit(-1);
+ 	    }		
+    }
+    
+    
+    
+    /*
+    if(RANK == 1){
+    for(i=0;i<num_shiftingpoints;i++)
+        printf("%lu %d\n", solutions[i].addr, solutions[i].gear);
+    }
+    */
+    //writing first line of trace - with benchmark name, date and time;
+    if(RANK==1)
+    {
+	    printf("\nSLACK: %0.6f THRESHOLD(ITER): %0.6f THRESHOLD(WAIT): %0.6f ALPHA %0.6f SHIFT: %d TRACE: %d BIAS %f SKIP %d\n", SLACK, THRESHOLD_ITER,THRESHOLD_WT, ALPHA, SHIFT, TRACE, BIAS, SKIP);
+    }
+    sprintf(buff, "# node: %d\n", RANK);
+    write_to_file(buff, strlen(buff));
+    sprintf(tempbuf, "%d %0.6f %0.6f %0.6f %0.6f %d \n", 
+	    0, 0, 0, 0,0, 0); 
+    write_to_file(tempbuf, strlen(buff));
+    
+    return rval;
+}
+
+
+void reset_bias(float* downshift, float* upshift, int n)
+{
+	int i;
+	for(i=0;i<n;++i)
+	{
+		upshift[i] = 1.0;
+		downshift[i] = 1.0 + i*0.10;
+	}	
+}
+
+
+//Can take a parameter 
+int mpidummy_(int *n)
+{
+  char tempbuf[200];
+  static int iteration=0;
+  static int current_gear;
+  static double previous_iter_length, previous_total_wait_time, prev_prev_iter_length;
+  double time_compute, slack;
+  float iter_length;
+//  static float downshift[]  {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+  static float downshift[10];
+  static float upshift[] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+	int i;
+  double global_min_slack;
+  int decreased_last_time;
+
+  iteration++;
+  if(iteration==1 )
+   { 	
+     reset_bias( downshift,upshift, 10);
+   }
+  if(iteration%SKIP != 0)
+  	return 0;
+  iter_length=timer() - last_iter_time; //current iteration length
+  time_compute = iter_length - total_wait_time;  //Tc
+ // if(RANK==0) printf("\n[%d] Time compute: %f\n", RANK, time_compute);
+ 
+  //updating slack:  X(i+1) = X(i).A + (1- A)X(now)
+  slack = total_wait_time/iter_length;
+  slack_table[current_gear] = slack_table[current_gear]*ALPHA + (1 - ALPHA)*slack;
+  
+ 
+ //  if(RANK==0) printf("\n[%d] Slack table[%d] %0.6f\n",RANK, current_gear, slack_table[current_gear]); 
+  
+  
+  ///If node's wait time went up, then it is the bottle neck. THRESHOLD ~= 1.01 
+//  printf("\nIteration: %d", iteration);
+  if(iteration!=1 )
+  {
+  
+    MPI_Allreduce(&slack, &global_min_slack, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD); 
+    if(RANK==0) printf("\nIter %d Global Minimum Slack %f", iteration, global_min_slack);
+ 
+    // aztec SLACK = 1.70 * global_min_slack;
+    //SLACK = 1.5 * global_min_slack;
+    //slack = slack - global_min_slack + 0.005;
+   slack = slack - global_min_slack ;
+
+  if(SHIFT ) {
+    char buf[256];
+    static int increased_last_time=0;
+    int increased=0;
+    double wait_ratio, iter_ratio;
+#if 0
+    if (previous_total_wait_time==0)
+      wait_ratio = THRESHOLD_WT;
+    else
+      wait_ratio = total_wait_time/previous_total_wait_time;
+#endif
+
+    wait_ratio = (float)zero_wait/(float)num_waits;
+    
+    if (previous_iter_length == 0)
+      iter_ratio = THRESHOLD_ITER;
+    else if (prev_prev_iter_length == 0)
+      iter_ratio = iter_length/previous_iter_length;
+    else {
+      iter_ratio = iter_length/previous_iter_length;
+      if (iter_ratio < iter_length/prev_prev_iter_length)
+         iter_ratio = iter_length/prev_prev_iter_length;
+    }
+
+/*    if (previous_iter_length == 0)
+      iter_ratio = THRESHOLD_ITER;
+    else 
+      iter_ratio = iter_length/previous_iter_length; */
+   
+    sprintf(buf, "[%f, %f, %f, %f min wait: %f]",wait_ratio,iter_ratio,iter_length,slack, min_wait_time*1000000); 
+//was previously 1.5
+    if(iter_ratio >= 1.5)
+    {
+	int i;
+//	current_gear=0;
+//	agent_set_pstate(0, current_gear);
+//	reset_bias(downshift, upshift, 10);  
+	printf("[%d] Reset to %d %s\n", RANK, current_gear, buf);
+    }
+    //if (iter_ratio >= THRESHOLD_ITER) {
+      // speed up if iter increased AND 
+      // I was the cause (my wait time didn't increase)
+      // @@@@ maybe do this only if I decreased my gear last iter
+    else if (iter_ratio < THRESHOLD_ITER && slack< 0.25*SLACK/upshift[current_gear] && decreased_last_time==0/* || min_wait_time < 0.0001*/){
+  
+        if(current_gear != 0) 
+	   {
+		agent_set_pstate(0,--current_gear);
+		printf("[%d] speedup to %d %s %f\n", RANK, current_gear, buf, upshift[current_gear+1]);
+		upshift[current_gear+1]*=BIAS;
+ 		increased_last_time=1;
+		decreased_last_time=0;
+	  }	
+        else {
+		printf("[%d] no speedup %d %s\n", RANK, current_gear, buf);
+		increased_last_time=0;
+		decreased_last_time=0;
+           }
+          }
+    ////is no reason to increase, then consider reducing
+        else if (
+	      //time_compute > slack_table[current_gear] &&
+	      iter_length > 0.1 &&
+	      increased_last_time == 0 &&
+	      slack > SLACK * downshift[current_gear]
+	      // slack > slack_table[current_gear] * 0.5
+	      //   && min_wait_time > 0.0001 
+	     ) {
+	      if( current_gear!=6 )
+	      {
+	      downshift[current_gear]*=BIAS;
+	      agent_set_pstate(0, ++current_gear);
+      	      printf("[%d] slowdown to %d %s %f\n", RANK, current_gear, buf, downshift[current_gear -1]);
+	      increased_last_time=0;
+	      decreased_last_time=1;
+              } 
+	    else
+	    {
+		printf("[%d] no slowdown %d %s\n", RANK, current_gear, buf);
+		increased_last_time=0;
+		decreased_last_time=0;
+	    }	
+       }
+      else {
+         printf("[%d] NO CHANGE %d %s\n", RANK, current_gear, buf);
+	 increased_last_time=0;
+    }
+//    increased_last_time = increased;
+//    increased_last_time=1;
+  }
+  else {
+    printf("[%d] NO SHIFT [%f] min wait: %f slack %f\n", RANK, iter_length, min_wait_time*1000000, slack+global_min_slack);
+  }
+ } //skips first iteration
+  //writing trace
+  sprintf(tempbuf, "%d %0.6f %0.6f %0.6f %0.6f %d \n", 
+	    *n, total_wait_time, previous_total_wait_time, iter_length, 
+	    previous_iter_length, current_gear); 
+
+  write_to_file(tempbuf, strlen(tempbuf));
+ 
+  //initialize for next iteration
+  prev_prev_iter_length = previous_iter_length;
+  num_waits = zero_wait = 0;
+  previous_iter_length=iter_length; 
+  previous_total_wait_time = total_wait_time;
+  total_wait_time=0; iter_length=0; 
+  last_iter_time=timer();
+  min_wait_time = INFINITY;
+  call_type = NON_BLOCKING;
+  return 0;
+  
+}
+
+/*
+int mpidummyslack_(int *n)
+{
+  
+  float iter_length;
+  float slack;
+  int i;
+  static float previous_total_wait_time;
+  static float previous_iter_length;
+  static float downshift[] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+  float wait_ratio, iter_ratio; 
+  char buf[100];
+  iter_length=timer() - last_iter_time; //current iteration length
+  //time_compute = iter_length - total_wait_time;  //Tc
+  slack = total_wait_time/iter_length;
+  if (previous_total_wait_time==0)
+      wait_ratio = THRESHOLD_WT;
+   else
+      wait_ratio = total_wait_time/previous_total_wait_time;
+  
+  if (previous_iter_length == 0)
+      iter_ratio = THRESHOLD_ITER;
+  else
+      iter_ratio = iter_length/previous_iter_length;
+
+
+  sprintf(buf, "[%f, %f, %f, %f Downshift: ", wait_ratio,iter_ratio,iter_length,slack);
+  for(i=0; i< 10; ++i)
+  {
+    sprintf(buf + strlen(buf), "%f ", downshift[i]);
+  }
+
+  if(slack < SLACK) 
+    {	
+     if (slack < ZERO)  ///reset
+       {
+	int i;
+	current_gear=0;
+	agent_set_pstate(0, current_gear);
+	for(i=0;i<10;++i)
+		downshift[i] = 1.0;
+	printf("[%d] Reset to %d %s\n", RANK, current_gear, buf);
+       }
+     else
+       {
+ 	if (current_gear != 0)
+	{
+	  	agent_set_pstate(0,--current_gear);
+		printf("[%d] Speedup to %d %s\n", RANK, current_gear, buf);
+		downshift[current_gear -1]*=DELTA; //currently set to 1.1
+	}
+	else
+	{
+		printf("[%d] No change %d %s\n", RANK, current_gear, buf);
+	}
+	
+       }
+     }
+   else
+     {
+        if( slack > SLACK*downshift[current_gear])
+       	{
+	   if(current_gear!=6)
+	   {
+	   agent_set_pstate(0, ++current_gear);
+           printf("[%d] Slowdown to %d %s\n", RANK, current_gear, buf);
+	   }
+	   else
+	   {
+		printf("[%d] No change %d %s\n", RANK, current_gear, buf);
+	   }
+	}
+       else
+	{
+           printf("[%d] NO CHANGE %d %s\n", RANK, current_gear, buf);
+	}
+     }
+
+  previous_iter_length=iter_length; 
+  previous_total_wait_time = total_wait_time;
+  total_wait_time=0; iter_length=0; 
+  last_iter_time=timer();
+
+}
+
+*/
+
+//Post
+int MPI_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request)
+{
+  int rval;
+  unsigned long int addr=0;
+  call_type = NON_BLOCKING;
+  CALLER_ADDRESS(addr);
+  rval=PMPI_Isend(buf, count, datatype, dest, tag, comm, request);
+  WRITETRACE(addr, "ISend1");
+  change_gear(addr);
+  return rval;
+
+}  
+
+
+//Pre and Post
+int MPI_Wait(MPI_Request *request, MPI_Status *status)
+{
+  int rval;
+  unsigned long int addr=0;
+  double t; double wait_time;
+  CALLER_ADDRESS(addr);
+  t=timer(); 
+  WRITETRACE(addr, "Wait0");
+  rval=PMPI_Wait(request, status);
+  wait_time = timer() - t;
+//  printf("\n%g\n", wait_time);
+  total_wait_time=total_wait_time + wait_time;
+  if(call_type == NON_BLOCKING) /// implies last call was not blocking
+    min_wait_time = MIN(min_wait_time, wait_time);
+  WRITETRACE(addr, "Wait1");
+  call_type = BLOCKING_CALL;
+  change_gear(addr);
+
+  return rval;
+}  
+
+
+
+//Pre and Post
+int MPI_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype , MPI_Op op, MPI_Comm comm)
+{
+  int rval;
+  static int iter;
+  float wait_time;
+  unsigned long int addr=0;
+  double t=timer();
+  CALLER_ADDRESS(addr);
+  WRITETRACE(addr, "Allred0");
+  rval=PMPI_Allreduce(sendbuf, recvbuf, count, datatype, op, comm);
+  wait_time= (timer() -t);
+  total_wait_time=total_wait_time + wait_time;
+  if(call_type == NON_BLOCKING)
+   	min_wait_time = MIN(min_wait_time, wait_time);
+  WRITETRACE(addr, "Allred1");
+  
+  change_gear(addr);
+//statement below has to uncommented for EP
+// mpidummy_(&iter);  
+  call_type = BLOCKING_CALL;
+  return rval;
+
+}  
+
+
+
+//Pre and Post
+int MPI_Alltoall(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, MPI_Comm comm)
+{
+  int rval;
+  float wait_time;
+  unsigned long int addr=0;
+  double t=timer();
+  
+  CALLER_ADDRESS(addr);
+  WRITETRACE(addr, "Alltoall0");
+  rval=PMPI_Alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcnt, recvtype, comm);
+  wait_time = timer() -t;
+  total_wait_time=total_wait_time + wait_time;
+  if(call_type == NON_BLOCKING) 
+   	min_wait_time = MIN(min_wait_time, wait_time);
+  call_type = BLOCKING_CALL;
+  WRITETRACE(addr, "Alltoall1");
+  change_gear(addr);
+  return rval;
+}  
+
+
+//Pre and Post
+int MPI_Alltoallv(void *sendbuf, int *sendcnts, int *sdispls, MPI_Datatype sendtype, void *recvbuf, int *recvcnts, int *rdispls, MPI_Datatype recvtype, MPI_Comm comm)
+{
+  int rval;
+  unsigned long int addr=0;
+  float wait_time;
+  double t=timer();
+  CALLER_ADDRESS(addr);
+  WRITETRACE(addr, "Alltoallv0");
+  rval=PMPI_Alltoallv(sendbuf, sendcnts, sdispls, sendtype, recvbuf, recvcnts, rdispls, recvtype, comm);
+  wait_time = timer() -t;
+  total_wait_time=total_wait_time+ wait_time;
+  if(call_type == NON_BLOCKING) 
+   	min_wait_time = MIN(min_wait_time, wait_time);
+  call_type = BLOCKING_CALL;
+  WRITETRACE(addr, "Alltoallv1");
+  change_gear(addr);
+  return rval;
+}  
+
+
+
+//Post
+int MPI_Send(void *buf, int count, MPI_Datatype datatype, int dest, int tag,MPI_Comm comm)
+{
+  int rval;
+  unsigned long int addr=0;
+  CALLER_ADDRESS(addr);
+  call_type = NON_BLOCKING;
+  rval=PMPI_Send(buf, count, datatype, dest, tag, comm);
+  WRITETRACE(addr, "Send1");
+  change_gear(addr);
+  return rval;
+}  
+
+
+
+
+//Pre and Post
+int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status)
+{
+  int rval;
+  unsigned long int addr=0;
+  double wait_time;
+  double t = timer();
+  CALLER_ADDRESS(addr);
+  WRITETRACE(addr, "Recv0");
+  rval=PMPI_Recv(buf,count,datatype, source, tag, comm, status);
+  wait_time = timer() -t;
+  total_wait_time=total_wait_time + wait_time;
+  if(call_type == NON_BLOCKING) 
+   	min_wait_time = MIN(min_wait_time, wait_time);
+  call_type = BLOCKING_CALL;
+  WRITETRACE(addr, "Recv1");
+  change_gear(addr);
+  return rval;
+}  
+
+
+
+
+
+//Pre and Post
+int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status  array_of_statuses[])
+{
+  int rval;
+  unsigned long int addr=0;
+  float wait_time;
+  double t=timer();
+  CALLER_ADDRESS(addr);
+  WRITETRACE(addr, "Waitall0");
+  rval=PMPI_Waitall(count, array_of_requests, array_of_statuses);
+  wait_time =  timer() -t;
+  total_wait_time=total_wait_time + wait_time;
+  if(call_type == NON_BLOCKING) 
+   	min_wait_time =MIN(min_wait_time, wait_time);
+  call_type = BLOCKING_CALL;
+  WRITETRACE(addr, "Waitall1");
+  change_gear(addr);
+  return rval;
+}  
+
+
+//Pre and Post
+int MPI_Barrier(MPI_Comm comm)
+{
+  int rval;
+  unsigned long int addr=0;
+  double wait_time;
+  double t =timer();
+  CALLER_ADDRESS(addr);
+  WRITETRACE(addr, "Barrier0");
+  rval=PMPI_Barrier(comm);
+  wait_time = timer() -t;
+  total_wait_time=total_wait_time + wait_time;
+  if(call_type == NON_BLOCKING) 
+   	min_wait_time = MIN(min_wait_time, wait_time);
+  call_type = BLOCKING_CALL;
+  WRITETRACE(addr, "Barrier1");
+  change_gear(addr);
+  return rval;
+}  
+
+
+
+
+//Post
+int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm)
+{
+  int rval;
+  unsigned long int addr=0;
+  CALLER_ADDRESS(addr);
+  call_type = NON_BLOCKING;
+  WRITETRACE(addr, "Bcast0");
+  rval=PMPI_Bcast(buffer, count, datatype, root, comm);
+  WRITETRACE(addr, "Bcast1");
+  change_gear(addr);
+  return rval;
+}  
+
+
+int MPI_Finalize(void)
+{
+ int i,j, k,gear=0, phase=1,rval;
+ char buf[256];
+//each node prints the slack table 
+ i = sprintf(buf, "[%d] Slack Table:", RANK);
+ for(j=0;j<6;++j)
+ {
+   k = sprintf(buf+i, " %0.6f", slack_table[j]);
+   i += k;
+ }	
+ printf("%s\n", buf);
+ rval= PMPI_Finalize();
+ if(SHIFT)
+ {
+    agent_set_pstate(0, 0);
+    agent_disconnect(); 
+ }
+ return rval;
+} 
+
+/*
+void markop_(int* marker, int* id)
+{
+}*/
+
+void markop_(int* marker, int* id)
+{
+  unsigned long int addr = 0;
+  char name[20];
+
+  
+  MARK_CALL_ADDRESS1(addr);
+
+  //sprintf(name, "MARK%d", *marker);
+  WRITETRACE(addr, name);
+
+/*
+change_gear(addr);
+ 
+  
+ if(SHIFT)
+ {
+    if(*marker == 4 && RANK%2==0)
+    {
+      set_device_pstate(0, 2);
+      current_gear = 2;
+    }
+    if(*marker == 5 && RANK%2==1)
+    {
+      set_device_pstate(0, 2);
+      current_gear = 2;
+    }
+  
+  else if(*marker == 3)
+  {
+      set_device_pstate(0, 0);
+      current_gear = 0;
+  }
+ } 
+ */
+
+
+  /* sp
+ if(SHIFT)
+ {
+    if(*marker == 4)
+    {
+      set_device_pstate(0, 0);
+      current_gear = 0;
+    }
+  
+  else if(*marker == 2)
+  {
+      set_device_pstate(0,1);
+      current_gear = 1;
+  }
+ }
+*/
+}
+
+
+void change_gear(unsigned long int addr)
+{
+/*    int i;
+    int new_gear;
+
+  if(SHIFT)
+    {
+      for(i=0;i<num_shiftingpoints;i++)
+	  {
+	    if(addr == solutions[i].addr)
+	      {
+		    new_gear = solutions[i].gear;
+            //printf("new gear for node %d: %d\n", RANK, new_gear);
+            set_device_pstate(0, new_gear);
+            //printf("out of shift\n");
+            current_gear = new_gear;
+		    break;
+	      }
+        
+	    //fprintf(stderr, "no matching pc:%lu?\n", addr);
+	  }
+    }*/
+}

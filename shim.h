@@ -13,7 +13,7 @@ void Log( int shim_id, union shim_parameters *p );
 
 
 // Schedule entry
-enum{ NUM_FREQ=5, NUM_FREQS=5, SLOWEST_FREQ=4 };
+enum{ NUM_FREQ=5,  NUM_FREQS=5,__SLOWEST_FREQ=4, __FASTEST_FREQ=0 };
 //enum{ NUM_FREQ=4, NUM_FREQS=4, SLOWEST_FREQ=3 };
 struct entry{
 	double observed_comm_seconds;

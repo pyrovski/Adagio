@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include "meters.h"
-#include "util.h"
+#include "gettimeofday_helpers.h"
 
 long long int
 mark_joules(int rank, int size){

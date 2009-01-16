@@ -1,5 +1,5 @@
---- shim_selection.h.orig	2008-12-28 21:54:09.300685996 -0500
-+++ shim_selection.h	2008-12-28 21:57:02.590616190 -0500
+--- shim_selection.h.orig	2009-01-15 22:23:56.584037945 -0500
++++ shim_selection.h	2009-01-15 22:25:22.044038233 -0500
 @@ -41,7 +41,7 @@
  #define USE_MPI_CARTDIM_GET
  #define USE_MPI_CLOSE_PORT
@@ -68,7 +68,7 @@
  #define USE_MPI_INFO_FREE
  #define USE_MPI_INFO_GET
  #define USE_MPI_INFO_GET_NKEYS
-@@ -195,10 +195,10 @@
+@@ -195,16 +195,16 @@
  #define USE_MPI_KEYVAL_CREATE
  #define USE_MPI_KEYVAL_FREE
  #define USE_MPI_LOOKUP_NAME
@@ -81,6 +81,13 @@
  #define USE_MPI_OP_FREE
  #define USE_MPI_PACK_EXTERNAL
  #define USE_MPI_PACK_EXTERNAL_SIZE
+ #define USE_MPI_PACK
+ #define USE_MPI_PACK_SIZE
+-#define USE_MPI_PCONTROL
++//#define USE_MPI_PCONTROL
+ #define USE_MPI_PROBE
+ #define USE_MPI_PUBLISH_NAME
+ #define USE_MPI_PUT
 @@ -214,8 +214,8 @@
  #define USE_MPI_REDUCE
  #define USE_MPI_REDUCE_SCATTER

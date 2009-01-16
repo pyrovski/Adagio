@@ -11,7 +11,9 @@
 #include <sys/utsname.h>
 #include "shim_enumeration.h"
 #include "shim.h"
-#include "util.h"	// Brings in <stdio.h>, <sys/time.h>, <time.h>
+#include "gettimeofday_helpers.h"
+#include "stacktrace.h"
+#include "log.h"
 #include "wpapi.h"	// PAPI wrappers.
 #include "shift.h"	// shift, enums.  Brings in machine.h.
 #include "affinity.h"	// Setting cpu affinity.
@@ -21,7 +23,7 @@ static struct timeval ts_start_communication, ts_start_computation,
 			ts_stop_communication, ts_stop_computation;
 
 static int g_algo;	// which algorithm(s) to use.
-static int g_freq;	// frequency to use with fixedfreq.
+static int g_freq;	// frequency to use with fixedfreq.  
 static int g_trace;	// tracing level.  
 
 static int current_hash=0, previous_hash=-1, current_freq=0, next_freq=0;
@@ -29,11 +31,12 @@ static int in_computation=1;
 static int MPI_Initialized_Already=0;
 
 static double frequency[NUM_FREQS] = {1.8, 1.6, 1.4, 1.2, 1.0};
-//static double frequency[NUM_FREQS] = {1.8, 1.6, 1.4, 1.2};
 #define GMPI_MIN_COMP_SECONDS (0.1)     // In seconds.
 #define GMPI_MIN_COMM_SECONDS (0.1)     // In seconds.
 #define GMPI_BLOCKING_BUFFER (0.1)      // In seconds.
 
+static int FASTEST_FREQ = __FASTEST_FREQ;
+static int SLOWEST_FREQ = __SLOWEST_FREQ;
 
 FILE *logfile = NULL;
 
@@ -134,34 +137,13 @@ pre_MPI_Init( union shim_parameters *p ){
 		}
 	}
 
-/*
-#ifdef BLR_DONOTUSEOPT13
-	// Opt13 doesn't shift frequencies very well.
-	// hostname=getenv("HOSTNAME"); //This doesn't work for whatever reason.
-	uname(&utsname);
-	fprintf(stderr, "HOSTNAME=%s.\n", utsname.nodename);
-	fflush(NULL);
-	hostname = utsname.nodename;
-	if(hostname && strlen(hostname) > 0){
-		if( strstr(hostname, "opt13") ){
-			fprintf(stderr, "opt13 algo set to algo_NONE.\n");
-			fflush(stderr);	// My but I'm paranoid in my dotage.
-			g_algo = algo_NONE;
-		}
-		if( strstr(hostname, "opt09") ){
-			fprintf(stderr, "opt09 algo set to algo_NONE.\n");
-			fflush(stderr);	// My but I'm paranoid in my dotage.
-			g_algo = algo_NONE;
-		}
-		if( strstr(hostname, "opt01") ){
-			fprintf(stderr, "opt01 algo set to algo_NONE.\n");
-			fflush(stderr);	// My but I'm paranoid in my dotage.
-			g_algo = algo_NONE;
-		}
+	// To bound miser, we assume top gear is 1 instead of 0.
+	// We also allow fermata to be used.
+	if(g_algo & algo_MISER){
+		g_algo |= algo_FERMATA;
+		FASTEST_FREQ = 1;
 	}
-#endif
-*/
-
+	
 	// Put a reasonable value in.
 	gettimeofday(&ts_start_computation, NULL);  
 	gettimeofday(&ts_stop_computation, NULL);  
@@ -188,7 +170,7 @@ post_MPI_Init( union shim_parameters *p ){
 	numa_set_localalloc();
 	
 	// Start us in a known frequency.
-	shift(0);
+	shift(FASTEST_FREQ);
 	
 	// Fire up the logfile.
 	if(g_trace){logfile = initialize_logfile( rank );}
@@ -203,7 +185,7 @@ pre_MPI_Finalize( union shim_parameters *p ){
 	p=p;
 	mark_joules(rank, size);
 	PMPI_Barrier( MPI_COMM_WORLD );
-	// Leave us in a known frequency.
+	// Leave us in a known frequency.  This should always be 0.
 	shift(0);
 	
 }
@@ -531,26 +513,26 @@ schedule_computation( int idx ){
 	// WARNING:  The actual shift to the value placed in current_freq
 	// happens after this function returns.  The default case is to 
 	// run at the highest frequency (0).  
-	current_freq = 0;
+	current_freq = FASTEST_FREQ;
 
 	//fprintf( logfile, "==> schedule_computation called with idx=%d\n", idx);
 	// If we have no data to work with, go home.
 	if( idx==0 ){ return; }
 
 	// On the first time through, establish worst-case slowdown rates.
-	if( schedule[ idx ].seconds_per_insn[ 0 ] == 0.0 ){
+	if( schedule[ idx ].seconds_per_insn[ FASTEST_FREQ ] == 0.0 ){
 		//fprintf( logfile, "==> schedule_computation First time through.\n");
-		if( schedule[ idx ].observed_comp_seconds[ 0 ] <= GMPI_MIN_COMP_SECONDS ){
+		if( schedule[ idx ].observed_comp_seconds[ FASTEST_FREQ ] <= GMPI_MIN_COMP_SECONDS ){
 			//fprintf( logfile, "==> schedule_computation min_seconds violation.\n");
 			return;
 		}
-		schedule[ idx ].seconds_per_insn[ 0 ] = 
-			schedule[ idx ].observed_comp_seconds[ 0 ]/
-			schedule[ idx ].observed_comp_insn[ 0 ];
-		for( i=1; i<NUM_FREQS; i++ ){
+		schedule[ idx ].seconds_per_insn[ FASTEST_FREQ ] = 
+			schedule[ idx ].observed_comp_seconds[ FASTEST_FREQ ]/
+			schedule[ idx ].observed_comp_insn[ FASTEST_FREQ ];
+		for( i=FASTEST_FREQ+1; i<NUM_FREQS; i++ ){
 			schedule[ idx ].seconds_per_insn[ i ] = 
-				schedule[ idx ].seconds_per_insn[ 0 ] *
-				( frequency[ 0 ]  / frequency[ i ] );
+				schedule[ idx ].seconds_per_insn[ FASTEST_FREQ ] *
+				( frequency[ FASTEST_FREQ ]  / frequency[ i ] );
 		}
 		/*
 		for( i=0; i<NUM_FREQS; i++ ){
@@ -561,7 +543,7 @@ schedule_computation( int idx ){
 	}
 
 	// On subsequent execution, only update where we have data.
-	for( i=0; i<NUM_FREQS; i++ ){
+	for( i=FASTEST_FREQ; i<NUM_FREQS; i++ ){
 		if( schedule[ idx ].observed_comp_seconds[ i ] > GMPI_MIN_COMP_SECONDS ){
 			schedule[ idx ].seconds_per_insn[ i ] = 
 				schedule[ idx ].observed_comp_seconds[ i ]/
@@ -600,7 +582,7 @@ schedule_computation( int idx ){
 	// Create the schedule.
 	
 	// If the fastest frequency isn't fast enough, use f0 all the time.
-	if( I * schedule[ idx ].seconds_per_insn[ 0 ] >= d ){
+	if( I * schedule[ idx ].seconds_per_insn[ FASTEST_FREQ ] >= d ){
 		//fprintf( logfile, "==> schedule_computation GO FASTEST.\n");
 		//fprintf( logfile, "==>     I=%lf\n", I);
 		//fprintf( logfile, "==>   SPI=%lf\n",   
@@ -608,7 +590,7 @@ schedule_computation( int idx ){
 		//fprintf( logfile, "==> I*SPI=%lf\n", 
 		//		I*schedule[ idx ].seconds_per_insn[0]);
 		//fprintf( logfile, "==>     d=%lf\n", d);
-		current_freq = 0;
+		current_freq = FASTEST_FREQ;
 	}
 	// If the slowest frequency isn't slow enough, use that.
 	else if( I * schedule[ idx ].seconds_per_insn[ SLOWEST_FREQ ] <= d ){
@@ -623,7 +605,7 @@ schedule_computation( int idx ){
 	}
 	// Find the slowest frequency that allows the work to be completed in time.
 	else{
-		for( i=SLOWEST_FREQ-1; i>0; i-- ){
+		for( i=SLOWEST_FREQ-1; i>FASTEST_FREQ; i-- ){
 			if( I * schedule[ idx ].seconds_per_insn[ i ] < d ){
 				// We have a winner.
 				p = 

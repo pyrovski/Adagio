@@ -18,6 +18,7 @@ ADAGIO_FLAGS= -mca gmpi_algo adagio
 ANDANTE_FLAGS= -mca gmpi_algo andante 
 FERMATA_FLAGS= -mca gmpi_algo fermata 
 NOSCHED_FLAGS= 
+MISER_FLAGS= -mca gmpi_algo miser
 BADNODE_FLAGS= -mca gmpi_badnode opt09,opt13
 NAS_BADNODE_FLAGS= -mca gmpi_badnode opt01,opt09,opt13
 NAS_EXTRA_FLAGS= -mca gmpi_mods bigcomm
@@ -44,7 +45,8 @@ ft:
 	cd $(HOME)/GreenMPI/src/NPB3.3/NPB3.3-MPI/bin; $(MAKE) ft  "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)" 
 nas:
 	cd $(HOME)/GreenMPI/src/NPB3.3/NPB3.3-MPI/bin; $(MAKE) nas "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
-
+miser:
+	cd $(HOME)/GreenMPI/src/NPB3.3/NPB3.3-MPI/bin; $(MAKE) miser_test "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)" "MISER_FLAGS=$(MISER_FLAGS)"
 
 umt:
 	cd $(HOME)/GreenMPI/src/umt2k-1.2.2/bin; $(MAKE) umt "MPIRUN=$(MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
@@ -121,22 +123,32 @@ clean:
 
 # Adagio libraries.
 
-GreenMPI: Makefile shim.o util.o wpapi.o shift.o cpuid.o meters.o\
-	affinity.o $(GENERATED_SHIMFILES)  
+GreenMPI: Makefile shim.o wpapi.o shift.o cpuid.o meters.o\
+	affinity.o log.o stacktrace.o gettimeofday_helpers.o \
+	$(GENERATED_SHIMFILES)  
 	$(MPICC) $(CFLAGS) $(LIBDIR) -shared -Wl,-soname,libGreenMPI.so \
 		-o libGreenMPI.so 					\
-		shim.o shim_functions.o util.o wpapi.o shift.o cpuid.o	\
-		meters.o affinity.o					\
+		shim.o shim_functions.o wpapi.o shift.o cpuid.o		\
+		meters.o affinity.o log.o stacktrace.o 			\
+		gettimeofday_helpers.o					\
 		$(LIBS)
 	cp libGreenMPI.so ${HOME}/GreenMPI/local/lib
 
-shim.o: Makefile shim.c shim.h util.o wpapi.o shift.o cpuid.o 		\
+shim.o: Makefile shim.c shim.h log.o stacktrace.o 			\
+		gettimeofday_helpers.o wpapi.o shift.o cpuid.o 		\
 		$(GENERATED_SHIMFILES) 
 	$(MPICC) -fPIC -DBLR_USE_EAGER_LOGGING -c shim.c
 	$(MPICC) -fPIC -c shim_functions.c
 
-util.o: Makefile util.c util.h
-	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c util.c
+log.o: Makefile log.c log.h
+	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c log.c
+
+stacktrace.o: Makefile stacktrace.c stacktrace.h
+	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c stacktrace.c
+
+gettimeofday_helpers.o: Makefile gettimeofday_helpers.c gettimeofday_helpers.h
+	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c gettimeofday_helpers.c
+
 
 wpapi.o: Makefile wpapi.c wpapi.h
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c wpapi.c
@@ -147,7 +159,7 @@ shift.o: Makefile shift.c shift.h cpuid.o
 cpuid.o: Makefile cpuid.c cpuid.h 
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c cpuid.c
 
-meters.o: Makefile meters.c meters.h util.o 
+meters.o: Makefile meters.c meters.h gettimeofday_helpers.o 
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c meters.c
 
 affinity.o: Makefile affinity.c affinity.h 

@@ -1,0 +1,54 @@
+#
+# Project makefile, the default 'make' will build everything necessary
+#
+# $Id: Makefile,v 1.4 2004/04/21 19:36:01 mefemal Exp $
+
+CC=gcc
+MPI_CC=mpic++
+
+# Select your CPU scaling system
+#  Mark's lpagent:
+#CPU_SCALE_LIB=-lagent
+#  Tyler's ssdaemon:
+CPU_SCALE_LIB=-lsscaling
+
+# For debugging, comment this out otherwise
+# DEBUG=-D_IMPIE_DEBUG
+
+# If your LAM install is non-standard, modify the following
+#MPI_INC=-I/opt/lam-7.0.4/include -I/osr/pac/include
+#MPI_LIB=-L/opt/lam-7.0.4/lib -L/osr/pac/lib -lagent
+#MPI_INC=-I/osr/users/mefemal/mpich-1.2.5/include
+#MPI_LIB=-L/osr/users/mefemal/mpich-1.2.5/lib
+
+#EFLAGS=-Wall -g
+EFLAGS=-O2
+MPI_LIB=-L/osr/pac/lib 
+MPI_INC=-I/osr/pac/include
+
+CFLAGS=$(EFLAGS) $(DEBUG) -D_X86
+
+# =========================================================================
+
+all:	impie.c impie.h  mark.c mark.h util.c util.h info.c info.h pmc.c pmc.h gear.c gear.h
+	$(CC) $(CFLAGS) $(MPI_INC) -fPIC -c mark.c
+	$(CC) $(CFLAGS) $(MPI_INC) -fPIC -c util.c
+	$(CC) $(CFLAGS) $(MPI_INC) -fPIC -c info.c
+	$(CC) $(CFLAGS) $(MPI_INC)  -fPIC -c `cat impie-flags.txt` impie.c
+	$(CC) $(CFLAGS) $(MPI_INC)  -fPIC -c pmc.c
+	$(CC) $(CFLAGS) $(MPI_INC)  -fPIC -c gear.c
+	$(CC) $(CFLAGS) -ldl -shared -o libmpijack.so impie.o  mark.o util.o info.o pmc.o gear.o -L/osr/pac/lib $(CPU_SCALE_LIB)
+	#ar ruv libimpie.a impie.o  mark.o util.o info.o pmc.o gear.o #/osr/pac/lib/libagent.a
+#	$(CC) $(CFLAGS) $(MPI_INC) $(MPI_LIB) -fPIC -c sample.c
+#	$(CC) $(CFLAGS) -shared -o libsample.so sample.o
+	chmod 777 libmpijack.so
+#	cp libmpijack*.so /osr/pac/lib
+
+again: clean all
+
+test:
+	$(MPI_CC) $(CFLAGS) $(MPI_INC) $(MPI_LIB) hello.c -o hello -lpthread
+
+clean:
+	rm -f *.o *.a *.so hello
+

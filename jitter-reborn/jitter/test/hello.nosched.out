@@ -1,0 +1,2559 @@
+Running ./hello.nosched on opt15
+Running ./hello.nosched on opt06
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt14
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+Running ./hello.nosched on opt04
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+Running ./hello.nosched on opt14
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+Running ./hello.nosched on opt09
+Running ./hello.nosched on opt15
+Running ./hello.nosched on opt02
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   26.15 Joules=       139934 AvgWatts=167.20
+[1] SLACK: 0.100 GEAR: 0
+[7] SLACK: 0.100 GEAR: 0
+[0] SLACK: 0.100 GEAR: 0
+[3] SLACK: 0.100 GEAR: 0
+[9] SLACK: 0.100 GEAR: 0
+[5] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt13
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+Running ./hello.nosched on opt06
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+Running ./hello.nosched on opt12
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   20.17 Joules=       106582 AvgWatts=165.14
+[1] SLACK: 0.100 GEAR: 0
+[5] SLACK: 0.100 GEAR: 0
+[7] SLACK: 0.100 GEAR: 0
+[0] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[9] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[3] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt15
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+Running ./hello.nosched on opt11
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+Running ./hello.nosched on opt02
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+Running ./hello.nosched on opt04
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+Running ./hello.nosched on opt11
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   27.16 Joules=       146258 AvgWatts=168.27
+[7] SLACK: 0.100 GEAR: 0
+[1] SLACK: 0.100 GEAR: 0
+[5] SLACK: 0.100 GEAR: 0
+[3] SLACK: 0.100 GEAR: 0
+[9] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[0] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt12
+Running ./hello.nosched on opt15
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+Running ./hello.nosched on opt10
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+Running ./hello.nosched on opt14
+Running ./hello.nosched on opt03
+Running ./hello.nosched on opt06
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   21.19 Joules=       112780 AvgWatts=166.32
+[0] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[7] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[1] SLACK: 0.100 GEAR: 0
+[3] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[5] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[9] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt13
+Running ./hello.nosched on opt15
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+Running ./hello.nosched on opt08
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+Running ./hello.nosched on opt02
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+Running ./hello.nosched on opt09
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   21.19 Joules=       112498 AvgWatts=165.93
+[9] SLACK: 0.100 GEAR: 0
+[5] SLACK: 0.100 GEAR: 0
+[0] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[7] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[1] SLACK: 0.100 GEAR: 0
+[3] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt11
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+Running ./hello.nosched on opt11
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+Running ./hello.nosched on opt14
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+Running ./hello.nosched on opt04
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+Running ./hello.nosched on opt12
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+Running ./hello.nosched on opt02
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   21.16 Joules=       111884 AvgWatts=165.22
+[1] SLACK: 0.100 GEAR: 0
+[3] SLACK: 0.100 GEAR: 0
+[0] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[7] SLACK: 0.100 GEAR: 0
+[9] SLACK: 0.100 GEAR: 0
+[5] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt14
+Running ./hello.nosched on opt13
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt12
+Running ./hello.nosched on opt14
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+Running ./hello.nosched on opt04
+Running ./hello.nosched on opt12
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+Running ./hello.nosched on opt03
+Running ./hello.nosched on opt05
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+Running ./hello.nosched on opt13
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   21.19 Joules=       112666 AvgWatts=166.19
+[1] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[0] SLACK: 0.100 GEAR: 0
+[7] SLACK: 0.100 GEAR: 0
+[5] SLACK: 0.100 GEAR: 0
+[9] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[3] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt15
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+Running ./hello.nosched on opt15
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   21.16 Joules=       112284 AvgWatts=165.82
+[1] SLACK: 0.100 GEAR: 0
+[3] SLACK: 0.100 GEAR: 0
+[0] SLACK: 0.100 GEAR: 0
+[5] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[7] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[9] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt11
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+Running ./hello.nosched on opt12
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+Running ./hello.nosched on opt08
+Running ./hello.nosched on opt09
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   21.16 Joules=       111530 AvgWatts=164.69
+[1] SLACK: 0.100 GEAR: 0
+[7] SLACK: 0.100 GEAR: 0
+[5] SLACK: 0.100 GEAR: 0
+[3] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[9] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[0] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt15
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt13
+Running ./hello.nosched on opt11
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   20.18 Joules=       106338 AvgWatts=164.68
+[0] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[9] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[5] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[7] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[1] SLACK: 0.100 GEAR: 0
+[3] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt14
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+Running ./hello.nosched on opt13
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt05
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+Running ./hello.nosched on opt12
+Running ./hello.nosched on opt01
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+Running ./hello.nosched on opt05
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   20.17 Joules=       106540 AvgWatts=165.10
+[1] SLACK: 0.100 GEAR: 0
+[0] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[3] SLACK: 0.100 GEAR: 0
+[7] SLACK: 0.100 GEAR: 0
+[5] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[9] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt15
+Running ./hello.nosched on opt09
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+Running ./hello.nosched on opt02
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   21.18 Joules=       111906 AvgWatts=165.11
+[0] SLACK: 0.100 GEAR: 0
+[5] SLACK: 0.100 GEAR: 0
+[3] SLACK: 0.100 GEAR: 0
+[9] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[1] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+[7] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt13
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+Running ./hello.nosched on opt04
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+Running ./hello.nosched on opt14
+Running ./hello.nosched on opt01
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt11
+Running ./hello.nosched on opt13
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   21.21 Joules=       112880 AvgWatts=166.32
+[1] SLACK: 0.100 GEAR: 0
+[0] SLACK: 0.100 GEAR: 0
+[3] SLACK: 0.100 GEAR: 0
+[7] SLACK: 0.100 GEAR: 0
+[5] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[9] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt15
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+Running ./hello.nosched on opt11
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt05
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+Running ./hello.nosched on opt14
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+Running ./hello.nosched on opt05
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   21.19 Joules=       111588 AvgWatts=164.56
+[0] SLACK: 0.100 GEAR: 0
+[3] SLACK: 0.100 GEAR: 0
+[1] SLACK: 0.100 GEAR: 0
+[5] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[9] SLACK: 0.100 GEAR: 0
+[7] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt15
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt04
+Running ./hello.nosched on opt15
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt04
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+mpirun: killing job...
+
+mpirun noticed that job rank 0 with PID 20363 on node opt00 exited on signal 15 (Terminated). 
+31 additional processes aborted (not shown)
+Running ./hello.nosched on opt08
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+Running ./hello.nosched on opt12
+Running ./hello.nosched on opt10
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+Running ./hello.nosched on opt01
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   21.16 Joules=       113020 AvgWatts=166.92
+[1] SLACK: 0.100 GEAR: 0
+[3] SLACK: 0.100 GEAR: 0
+[5] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[9] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[7] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[0] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt15
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+Running ./hello.nosched on opt06
+Running ./hello.nosched on opt04
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+Running ./hello.nosched on opt07
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   21.16 Joules=       110826 AvgWatts=163.70
+[3] SLACK: 0.100 GEAR: 0
+[1] SLACK: 0.100 GEAR: 0
+[5] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[7] SLACK: 0.100 GEAR: 0
+[9] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[0] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt14
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+Running ./hello.nosched on opt11
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   20.18 Joules=       106552 AvgWatts=165.04
+[1] SLACK: 0.100 GEAR: 0
+[3] SLACK: 0.100 GEAR: 0
+[5] SLACK: 0.100 GEAR: 0
+[7] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[9] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[0] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt15
+Running ./hello.nosched on opt15
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+Running ./hello.nosched on opt02
+Running ./hello.nosched on opt12
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+Running ./hello.nosched on opt11
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt01
+Running ./hello.nosched on opt03
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+Running ./hello.nosched on opt01
+Running ./hello.nosched on opt03
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+Running ./hello.nosched on opt10
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   21.16 Joules=       111958 AvgWatts=165.32
+[1] SLACK: 0.100 GEAR: 0
+[3] SLACK: 0.100 GEAR: 0
+[9] SLACK: 0.100 GEAR: 0
+[7] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[5] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[0] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt15
+Running ./hello.nosched on opt15
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt15
+JITTER: MPI_Init
+Running ./hello.nosched on opt14
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+Running ./hello.nosched on opt10
+Running ./hello.nosched on opt14
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt12
+Running ./hello.nosched on opt10
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt09
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt07
+Running ./hello.nosched on opt13
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+Running ./hello.nosched on opt11
+JITTER: MPI_Init
+Running ./hello.nosched on opt04
+Running ./hello.nosched on opt03
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt05
+JITTER: MPI_Init
+Running ./hello.nosched on opt08
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+JITTER: MPI_Init
+Running ./hello.nosched on opt03
+JITTER: MPI_Init
+Running ./hello.nosched on opt02
+JITTER: MPI_Init
+Running ./hello.nosched on opt01
+JITTER: MPI_Init
+Running ./hello.nosched on opt06
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+Running ./hello.nosched on opt00
+JITTER: MPI_Init
+
+SLACK: 0.100000 THRESHOLD(ITER): 1.050000 THRESHOLD(WAIT): 0.000000 ALPHA 0.500000 SHIFT: 1 TRACE: 999999999 BIAS 2.000000 SKIP 1 TRACE_JITTER 0 TRACE_OPM 0
+QQQ Size=  32  Seconds=   21.19 Joules=       111810 AvgWatts=164.91
+[5] SLACK: 0.100 GEAR: 0
+[3] SLACK: 0.100 GEAR: 0
+[0] SLACK: 0.100 GEAR: 0
+[7] SLACK: 0.100 GEAR: 0
+[11] SLACK: 0.100 GEAR: 0
+[17] SLACK: 0.100 GEAR: 0
+[19] SLACK: 0.100 GEAR: 0
+[9] SLACK: 0.100 GEAR: 0
+[25] SLACK: 0.100 GEAR: 0
+[21] SLACK: 0.100 GEAR: 0
+[13] SLACK: 0.100 GEAR: 0
+[2] SLACK: 0.100 GEAR: 0
+[1] SLACK: 0.100 GEAR: 0
+[6] SLACK: 0.100 GEAR: 0
+[10] SLACK: 0.100 GEAR: 0
+[15] SLACK: 0.100 GEAR: 0
+[16] SLACK: 0.100 GEAR: 0
+[18] SLACK: 0.100 GEAR: 0
+[8] SLACK: 0.100 GEAR: 0
+[23] SLACK: 0.100 GEAR: 0
+[24] SLACK: 0.100 GEAR: 0
+[20] SLACK: 0.100 GEAR: 0
+[12] SLACK: 0.100 GEAR: 0
+[27] SLACK: 0.100 GEAR: 0
+[31] SLACK: 0.100 GEAR: 0
+[29] SLACK: 0.100 GEAR: 0
+[4] SLACK: 0.100 GEAR: 0
+[14] SLACK: 0.100 GEAR: 0
+[26] SLACK: 0.100 GEAR: 0
+[30] SLACK: 0.100 GEAR: 0
+[28] SLACK: 0.100 GEAR: 0
+[22] SLACK: 0.100 GEAR: 0
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt00
+Finished ./hello.nosched on opt01
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt03
+Finished ./hello.nosched on opt04
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt05
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt06
+Finished ./hello.nosched on opt07
+Finished ./hello.nosched on opt08
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt09
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt02
+Finished ./hello.nosched on opt11
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt10
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt12
+Finished ./hello.nosched on opt13
+Finished ./hello.nosched on opt15
+Finished ./hello.nosched on opt14
+Finished ./hello.nosched on opt15

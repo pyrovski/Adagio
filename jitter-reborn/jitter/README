@@ -1,0 +1,43 @@
+This is a quick and dirty README for the cleaned up (but not quite working) Jitter, 2 April 2008, by Tyler Bletsch.
+
+Ideally, you should be able to get this going by doing the following:
+  (1) Set the paths in Makefile appropriately
+  (2) Set the environment variable LD_LIBRARY_PATH to a place that has a 64-bit libssdaemon.so 
+  (3) Just type "make" and get libmpijack.so.  
+  (4) Link it into your MPI apps as follows:
+      $ mpicc -L /path/to/my/libmpijack -lmpijack -o myprogram myprogram.c
+
+You can build a test program with "make hello" - this binary will be written to the "test" subdirectory, where some sample jitter config files live.  A typical run should look like:
+
+  $ ./hello
+  Running ./hello on opt16
+  Hello world, I am 0 of 1
+  <Some JITTER initializaiton output>
+  Finished ./hello on opt16
+  <Some JITTER end-of-run output>
+
+It doesn't quite work, now, though.  Details:
+
+If I compile libmpijack.so with gcc, it crashes when attempting to run an MPI function from within the impie.c code.  Here's a run with the MPI test program "hello" that comes with jitter:
+
+  $ ./hello
+  Running ./hello on opt16
+  Hello world, I am 0 of 1
+  MPI process rank 0 (n0, p8880) caught a SIGSEGV in MPI_Barrier.
+  Rank (0, MPI_COMM_WORLD): Call stack within LAM:
+  Rank (0, MPI_COMM_WORLD):  - MPI_Barrier()
+  Rank (0, MPI_COMM_WORLD):  - main()
+
+I believe this is because the library isn't being linked to the MPI libraries, because I'm not using mpicc.  When I use mpicc, however, I can't compile my shared library against the static LAM MPI libraries:
+
+  $ mpicc -Wall -g -fPIC -ldl -shared -o libmpijack.so -L/osr/pac/lib64   -I/osr/pac/include -lsscaling impie.c
+  /usr/bin/ld: /osr/users/tkbletsc/lammpi//lib/libmpi.a(barrier.o): relocation R_X86_64_32 against `a local symbol' can not be used when making a shared object; recompile with -fPIC
+  /osr/users/tkbletsc/lammpi//lib/libmpi.a: could not read symbols: Bad value
+  collect2: ld returned 1 exit status
+  mpicc: No such file or directory
+
+Some things to play with:
+
+- Shared MPI libraries?
+- Changing the compiler used in libmpijack.so to $(MPI_CC) versus $(CC)
+- Adding/removing -fPIC or other options in EFLAGS or CFLAGS

@@ -1,0 +1,39 @@
+#
+# Project makefile, the default 'make' will build everything necessary
+#
+# $Id: Makefile,v 1.4 2004/04/21 19:36:01 mefemal Exp $
+
+CC=gcc
+MPI_CC=mpicc
+
+# For debugging, comment this out otherwise
+# DEBUG=-D_IMPIE_DEBUG
+
+# If your LAM install is non-standard, modify the following
+MPI_INC=-I/opt/lam-7.0.4/include -I/osr/pac/include
+MPI_LIB=-L/opt/lam-7.0.4/lib
+#MPI_INC=-I/osr/users/mefemal/mpich-1.2.5/include
+#MPI_LIB=-L/osr/users/mefemal/mpich-1.2.5/lib
+
+#EFLAGS=-Wall -g
+EFLAGS=-Wall -O2
+
+CFLAGS=$(EFLAGS) $(DEBUG) -D_X86
+
+# =========================================================================
+
+all:	impie.c plugin.c impie.h plugin.h mark.c
+	$(CC) $(CFLAGS) $(MPI_INC) -fPIC -c mark.c
+	$(CC) $(CFLAGS) $(MPI_INC) -fPIC -c plugin.c
+	$(CC) $(CFLAGS) $(MPI_INC) -fPIC -c trace.c
+	$(CC) $(CFLAGS) $(MPI_INC) $(MPI_LIB) -fPIC -c impie.c
+	$(CC) $(CFLAGS) -ldl -shared -o libimpie.so impie.o plugin.o trace.o
+	$(CC) $(CFLAGS) $(MPI_INC) $(MPI_LIB) -fPIC -c sample.c
+	$(CC) $(CFLAGS) -shared -o libsample.so sample.o
+
+test:
+	$(MPI_CC) $(CFLAGS) $(MPI_INC) $(MPI_LIB) hello.c -o hello -lpthread
+
+clean:
+	rm -f *.o *.a *.so hello
+

@@ -1,0 +1,11 @@
+rm -f *.o *.a *.so hello
+gcc -O2  -D_X86 -I/osr/pac/include -fPIC -c mark.c
+gcc -O2  -D_X86 -I/osr/pac/include -fPIC -c util.c
+gcc -O2  -D_X86 -I/osr/pac/include -fPIC -c info.c
+gcc -O2  -D_X86 -I/osr/pac/include  -fPIC -c `cat impie-flags.txt` impie.c
+gcc -O2  -D_X86 -I/osr/pac/include  -fPIC -c pmc.c
+gcc -O2  -D_X86 -I/osr/pac/include  -fPIC -c gear.c
+gcc -O2  -D_X86 -ldl -shared -o libmpijack.so impie.o  mark.o util.o info.o pmc.o gear.o -L/osr/pac/lib -lagent
+#ar ruv libimpie.a impie.o  mark.o util.o info.o pmc.o gear.o #/osr/pac/lib/libagent.a
+chmod 777 libmpijack.so
+cp libmpijack*.so /osr/pac/lib

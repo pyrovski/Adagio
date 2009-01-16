@@ -1,0 +1,3 @@
+mpibody is an MPI-based n-body solver by Tyler Bletsch
+Run it without arguments for help, see mpibody.c's #defines for configuration.
+

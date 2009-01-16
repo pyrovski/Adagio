@@ -1,0 +1,143 @@
+/**
+ Jitter implementation
+ by Nandini Kappiah
+ cleaned and modified by Tyler Bletsch
+*/
+
+#include <mpi.h>
+#include <stdio.h>
+#include <time.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <ctype.h>
+#include <math.h>
+#include <sys/times.h>
+
+#include "impie.h"
+
+/**
+ * We don't want to use the CALLER_ADDRESS any more, so it's just a no-op now.
+ * To restore it, bring back platform.h and comment this out. -tkbletsc
+ */
+#define CALLER_ADDRESS(r) r=0;
+/* #include "platform.h" */
+
+/**
+ * Set the mechanism for power scaling
+ * 0 = Power scaling disabled
+ * 1 = Mark's lpagent
+ * 2 = Tyler's ssdaemon
+ */
+#define CPU_SCALING_MECHANISM 2
+
+#if CPU_SCALING_MECHANISM==1
+#	include "/osr/pac/include/agent.h"
+#elif CPU_SCALING_MECHANISM==2
+#	include <sscaling.h>
+#endif
+
+#define MPI_BUILD_PROFILING
+
+// Do the (necessary) all-reduce?  Disable for profiling purposes
+#define JITTER_ALLREDUCE 1
+
+// Printf a bunch of stuff?
+#define DEBUG_OUTPUT 1
+
+// Write the gears selected at end of run to gears-used.txt
+#define OUTPUT_GEARSET_AT_END 1
+
+/**
+ * Set to 0 for full, normal operation
+ * Set to 1 for "with data collection", i.e. each MPI call has a pre- and post-
+ *   hook, but no JITTER calculations are done with the dummy call.
+ * Set to 2 for "without data collection", i.e. each MPI call just drops right
+ *   to the PMPI call
+ */
+#define BENCH_DATA_COLLECTION 0
+
+// Put a WHEREAMI to output the host and line number
+#define WHEREAMI { char b[256]; FILE* f=popen("hostname","r"); fgets(b,255,f); b[strlen(b)-1]=0; fclose(f); printf("[%s] L %d\n",b,__LINE__); }
+
+
+// This should be 6, unless you're doing something special (5 on opt)
+#define LOWEST_GEAR 5
+
+#define WINDOW_SIZE 5
+double SLACK, THRESHOLD_ITER, THRESHOLD_WT, BIAS;
+int SKIP;
+int prog_start_time=0;
+int TRACE_JITTER, TRACE_OPM, RANK=-1, SHIFT=0;
+int MANUAL=0; // Manual mode allows direct specification of gears in config.dat
+int MANUAL_GEARS[256]; // Gear for nodes, max 256 nodes for now
+//int TRACE=0;
+//int fd;
+//static FILE* fpStats;
+int current_gear ,  current_uops, current_misses, previous_gear, num_shiftingpoints, num_trace_points;
+double last_iter_time, total_wait_time=0;
+double slack_table[7] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0}; //table to track the slack
+double ALPHA;
+double min_wait_time = INFINITY;
+int call_type = 1; /////0 - if blocking call, 1 - non blocking call
+double impie_init_time=0.0;
+double total_send_time=0.0;
+int NO_OF_CALLS=0;
+
+double jitter_time;
+int iteration=0;
+
+//static int num_waits, zero_wait;
+
+//static float downshift[10];
+//static float upshift[] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+
+/*
+double MIN(double a, double b) {
+	++num_waits;
+	if (b < Z) {
+		++zero_wait;
+		return a;
+	}
+	if (a < Z) {
+		++zero_wait;
+		return b;
+	}
+	if (a<b)
+		return a;
+	else
+		return b;
+}
+*/
+double timer() {
+	double tm;
+	struct timeval t;
+	if (gettimeofday(&t, NULL) < 0) {
+		printf("gettimeofday failed\n");
+		exit(-1);
+	}
+	tm=((t.tv_sec + t.tv_usec/(double)1000000));
+	return(tm-impie_init_time);
+}
+
+/*
+static void jit_die(char* msg) {
+	char buf[256];
+	sprintf(buf,"[%d] %s",RANK,msg);
+	perror(buf);
+	exit(-1);
+}
+*/
+int MPI_Finalize(void) {
+	int rval;
+	MPI_Barrier(MPI_COMM_WORLD);
+	rval= PMPI_Finalize();
+	return rval;
+} 
+
+
