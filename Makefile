@@ -150,7 +150,7 @@ log.o: Makefile log.c log.h
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c log.c
 
 stacktrace.o: Makefile stacktrace.c stacktrace.h
-	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c stacktrace.c -I/usr/include/openssl
+	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c stacktrace.c -I../../local/include
 
 gettimeofday_helpers.o: Makefile gettimeofday_helpers.c gettimeofday_helpers.h
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c gettimeofday_helpers.c
