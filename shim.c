@@ -422,7 +422,7 @@ shim_post( int shim_id, union shim_parameters *p ){
 	if(g_algo & algo_ANDANTE){
 		schedule_computation( schedule[current_hash].following_entry );
 	}else{
-		current_freq = 0;	// Default case.
+		current_freq = FASTEST_FREQ;	// Default case.
 	}
 	// Regardless of computation scheduling algorithm, always shift here.
 	// (Most of the time it should have no effect.)
