@@ -2,7 +2,7 @@
 gcc -E ${MPI_INCLUDE_PATH}/mpi.h | 	# Preprocess 		\
 tr -d "\n" | 		# remove all carriage returns		\
 tr -s " " | 		# remove all excess whitespace		\
-tr ";" "\n" | 		# replace ';' with CR (each statement 	\
+tr ";" "\n" | 		# replace ';' with NL (each statement 	\
 			#   now takes one line)			\
 grep " MPI_"  | 	# Find all the lines that have MPI_	\
 grep -v "^#" | 		# ...that aren't comments...		\
