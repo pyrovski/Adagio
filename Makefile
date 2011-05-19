@@ -125,7 +125,7 @@ harness.o: Makefile $(GENERATED_SHIMFILES) harness.c
 	$(MPICC) $(CFLAGS) -c harness.c
 
 clean:
-	rm -f harness *.o $(GENERATED_SHIMFILES)
+	rm -f harness *.o $(GENERATED_SHIMFILES) *~
 
 # Adagio libraries.
 
