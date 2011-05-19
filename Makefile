@@ -150,7 +150,7 @@ log.o: Makefile log.c log.h
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c log.c
 
 stacktrace.o: Makefile stacktrace.c stacktrace.h
-	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c stacktrace.c
+	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c stacktrace.c -I../../local/include
 
 gettimeofday_helpers.o: Makefile gettimeofday_helpers.c gettimeofday_helpers.h
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c gettimeofday_helpers.c
@@ -175,7 +175,7 @@ affinity.o: Makefile affinity.c affinity.h
 $(GENERATED_SHIMFILES): Makefile shim.py shim.sh
 	echo $(SHELL)
 	rm -f $(GENERATED_SHIMFILES)
-	./shim.sh
+	MPI_INCLUDE_PATH=/usr/include ./shim.sh
 	chmod 440 $(GENERATED_SHIMFILES)
 
 
