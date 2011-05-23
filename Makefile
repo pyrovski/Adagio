@@ -175,7 +175,7 @@ affinity.o: Makefile affinity.c affinity.h
 $(GENERATED_SHIMFILES): Makefile shim.py shim.sh
 	echo $(SHELL)
 	rm -f $(GENERATED_SHIMFILES)
-	MPI_INCLUDE_PATH=/usr/include ./shim.sh
+	./shim.sh
 	chmod 440 $(GENERATED_SHIMFILES)
 
 
