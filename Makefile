@@ -45,7 +45,7 @@ shim_selection.h  shim_str.h  shim_structs.h  shim_union.h
 
 
 all: Makefile harness_pristine harness
-	echo Done
+	@echo Done
 ft:
 	cd $(HOME)/GreenMPI/src/NPB3.3/NPB3.3-MPI/bin; $(MAKE) ft  "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)" 
 nas:
