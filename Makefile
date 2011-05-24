@@ -1,4 +1,5 @@
 # WARNING:  $(HOSTFILE) and ${MPI_INCLUDE_PATH} must be defined elsewhere.
+# $(installDest) can optionally be set in the file installPath
 #
 # greenMPI mca parameters, remember that these can be comma-seperataed with no spaces,
 #   e.g. -mca gmpi_algo fermata,jitter -mca gmpi_trace ts,file,line,fn 
@@ -6,6 +7,10 @@
 # 	none fermata andante adagio allegro fixedfreq jitter miser clean fakejoules fakefreq
 # gmpi_trace:
 # 	none all ts file line fn comp comm rank pcontrol
+
+-include installPath
+installDest ?= /usr/local
+
 #GMPI_FLAGS=-mca gmpi_algo fermata -mca gmpi_trace all
 GMPI_FLAGS= -mca gmpi_trace all
 #MCA_REQUIRED_FLAGS=-mca btl self,tcp -mca mpi_paffinity_alone 1 -mca mpi_maffinity libnuma
@@ -114,7 +119,7 @@ test: Makefile rank
 
 # Harness code.
 
-harness: Makefile harness.o GreenMPI
+harness: Makefile harness.o libGreenMPI.so
 	$(MPICC) $(CFLAGS) $(LIBDIR) $(INCDIR)  -o harness 	\
 	harness.o -lGreenMPI
 
@@ -125,11 +130,11 @@ harness.o: Makefile $(GENERATED_SHIMFILES) harness.c
 	$(MPICC) $(CFLAGS) -c harness.c
 
 clean:
-	rm -f harness *.o $(GENERATED_SHIMFILES) *~
+	rm -f harness *.o $(GENERATED_SHIMFILES) *~ libGreenMPI.so
 
 # Adagio libraries.
 
-GreenMPI: Makefile shim.o wpapi.o shift.o cpuid.o meters.o\
+libGreenMPI.so: Makefile shim.o wpapi.o shift.o cpuid.o meters.o\
 	affinity.o log.o stacktrace.o gettimeofday_helpers.o \
 	$(GENERATED_SHIMFILES)  
 	$(MPICC) $(CFLAGS) $(LIBDIR) -shared -Wl,-soname,libGreenMPI.so \
@@ -138,7 +143,8 @@ GreenMPI: Makefile shim.o wpapi.o shift.o cpuid.o meters.o\
 		meters.o affinity.o log.o stacktrace.o 			\
 		gettimeofday_helpers.o					\
 		$(LIBS)
-	cp libGreenMPI.so ${HOME}/GreenMPI/local/lib
+install: libGreenMPI.so
+	cp libGreenMPI.so $(installDest)/lib/
 
 shim.o: Makefile shim.c shim.h log.o stacktrace.o 			\
 		gettimeofday_helpers.o wpapi.o shift.o cpuid.o 		\
