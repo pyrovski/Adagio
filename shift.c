@@ -1,3 +1,7 @@
+/*!
+  @todo get info on CPUs, cores, and frequencies from system
+ */
+
 #include <assert.h>
 #include <stdio.h>
 #include "shift.h"
