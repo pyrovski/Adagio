@@ -3,7 +3,7 @@
  * The two global functions here, shim_pre() and shim_post, are called from the
  * shim_functions file when an MPI call is intercepted.
  */
-
+#include "shift.h"
 #include "shim_parameters.h"
 void shim_pre( int shim_id, union shim_parameters *p );
 void shim_post( int shim_id, union shim_parameters *p );
@@ -13,8 +13,6 @@ void Log( int shim_id, union shim_parameters *p );
 
 
 // Schedule entry
-enum{ NUM_FREQ=5,  NUM_FREQS=5,__SLOWEST_FREQ=4, __FASTEST_FREQ=0 };
-//enum{ NUM_FREQ=4, NUM_FREQS=4, SLOWEST_FREQ=3 };
 struct entry{
 	double observed_comm_seconds;
 	double observed_comp_seconds[NUM_FREQS];

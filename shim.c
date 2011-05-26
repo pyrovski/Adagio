@@ -15,7 +15,7 @@
 #include "stacktrace.h"
 #include "log.h"
 #include "wpapi.h"	// PAPI wrappers.
-#include "shift.h"	// shift, enums.  Brings in machine.h.
+#include "shift.h"	// shift, enums.  
 #include "affinity.h"	// Setting cpu affinity.
 static int rank, size;
 

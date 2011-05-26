@@ -13,7 +13,6 @@ static int current_freq=0;
 
 
 
-
 int
 shift(int freq_idx){
 #ifdef BLR_USE_SHIFT
@@ -22,8 +21,9 @@ shift(int freq_idx){
 		"/sys/devices/system/cpu/cpu1/cpufreq/scaling_setspeed",
 		"/sys/devices/system/cpu/cpu2/cpufreq/scaling_setspeed",
 		"/sys/devices/system/cpu/cpu3/cpufreq/scaling_setspeed"};
-	static char *freq_str[]=
-		{"1800000", "1600000", "1400000", "1200000", "1000000"};
+	static char *freq_str[]= // in kHz
+		{"2801000", "2800000", "2667000", "2533000", "2400000", "2267000", "2133000", "2000000", "1867000", "1733000", "1600000"};
+		//{"1800000", "1600000", "1400000", "1200000", "1000000"};
 	FILE *sfp;
 #endif
 	static int prev_freq_idx[4]={0, 0, 0, 0};
