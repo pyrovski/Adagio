@@ -16,6 +16,7 @@ static int current_freq=0;
 int
 shift(int freq_idx){
 #ifdef BLR_USE_SHIFT
+	char filename[100];
 	char *cpufreq_filename[] = {
 		"/sys/devices/system/cpu/cpu0/cpufreq/scaling_setspeed",
 		"/sys/devices/system/cpu/cpu1/cpufreq/scaling_setspeed",
@@ -32,6 +33,17 @@ shift(int freq_idx){
 	int temp_cpuid;
 	if(!shift_initialized){
 		cpuid = get_cpuid();
+		
+		// enable userspace governor
+		snprintf(filename, 100, "%s%u%s", "/sys/devices/system/cpu/cpu", cpuid, "/cpufreq/scaling_governor");
+		sfp = fopen(filename, "w");
+		if(!sfp){
+			fprintf(stderr, "!!! unable to open governor selector %s\n", filename);
+		}
+		assert(sfp);
+		fprintf(sfp, "%s", "userspace");
+		fclose(sfp);
+
 		// Shift both processors to top gear.  This is clumsy, but
 		// we can clean it up later.
 		sfp = fopen(cpufreq_filename[ 1 ], "w");
@@ -63,7 +75,7 @@ shift(int freq_idx){
 	}
 	prev_freq_idx[ cpuid ] = freq_idx;
 	
-	assert( (freq_idx >= 0) && (freq_idx <= 4) );
+	assert( (freq_idx >= 0) && (freq_idx < NUM_FREQS) );
 	
 	//Make the change
 #ifdef BLR_USE_SHIFT
