@@ -1,4 +1,5 @@
 #ifndef BLR_CPUID_H
 #define BLR_CPUID_H
-int get_cpuid(void);
+#include <sched.h>
+#define get_cpuid() sched_getcpu()
 #endif
