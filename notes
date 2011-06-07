@@ -1,0 +1,9 @@
+get virtual cpu to physical core mapping:
+  cat /proc/cpuinfo  | 
+  egrep 'core id|processor' | 
+  cut -d: -f2|
+  tr -d ' '
+	   
+  available frequencies, assuming heterogeneous scaling:
+  /sys/devices/system/cpu/cpu0/
+  cpufreq/scaling_available_frequencies

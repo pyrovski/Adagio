@@ -46,6 +46,9 @@ print_help(){
 	if( g_rank == 0 ){
 		fprintf(stdout, "\t--help      -h  Print this message.                \n");
 		fprintf(stdout, "\t--test_rank -r  Test:  Print rank, size, then exit.\n");
+		fprintf(stdout, "\t--test_hash -H  Test:  Sanity check (scratchpad).  \n");
+		fprintf(stdout, "\t--test_ping -p  Test:  Sanity check (scratchpad).  \n");
+		fprintf(stdout, "\t--test_spin -S  Test:  Sanity check (scratchpad).  \n");
 		fprintf(stdout, "\t--test_sane -s  Test:  Sanity check (scratchpad).  \n");
 		fprintf(stdout, "\t--version   -v  Print version information.         \n");
 	}

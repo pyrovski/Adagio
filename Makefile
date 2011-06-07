@@ -9,7 +9,7 @@
 # 	none all ts file line fn comp comm rank pcontrol
 
 -include installPath
-installDest ?= /usr/local
+installDest ?= $(HOME)/local
 
 #GMPI_FLAGS=-mca gmpi_algo fermata -mca gmpi_trace all
 GMPI_FLAGS= -mca gmpi_trace all
@@ -36,8 +36,14 @@ NAS_MPIRUN=mpirun $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) $(NAS_BADNODE_FLAGS) $(NAS
 # Compile environment
 
 MPICC=mpicc
-CFLAGS=-O0 -Wall -g
-LIBDIR=-L$(HOME)/local/lib
+ifeq ($(dbg),1)
+DBG=-D_DEBUG -g 
+OPT_FLAGS = -O0
+else
+OPT_FLAGS = -O3
+endif
+CFLAGS=-Wall $(DBG) $(OPT_FLAGS)
+LIBDIR=-L. -L$(HOME)/local/lib
 INCDIR=-I$(HOME)/local/include
 LIBS=-lc -lm -lunwind -lmd5 -lpapi -lnuma
 GENERATED_SHIMFILES = shim_enumeration.h shim_functions.c shim_parameters.h 	\
@@ -45,25 +51,25 @@ shim_selection.h  shim_str.h  shim_structs.h  shim_union.h
 
 
 all: Makefile harness_pristine harness
-	echo Done
+	@echo Done
 ft:
-	cd $(HOME)/GreenMPI/src/NPB3.3/NPB3.3-MPI/bin; $(MAKE) ft  "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)" 
+	cd ../NPB3.3/NPB3.3-MPI/bin; $(MAKE) ft  "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)" 
 nas:
-	cd $(HOME)/GreenMPI/src/NPB3.3/NPB3.3-MPI/bin; $(MAKE) nas "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
+	cd ../NPB3.3/NPB3.3-MPI/bin; $(MAKE) nas "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
 miser:
-	cd $(HOME)/GreenMPI/src/NPB3.3/NPB3.3-MPI/bin; $(MAKE) miser_test "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)" "MISER_FLAGS=$(MISER_FLAGS)"
+	cd ../NPB3.3/NPB3.3-MPI/bin; $(MAKE) miser_test "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)" "MISER_FLAGS=$(MISER_FLAGS)"
 
 umt:
-	cd $(HOME)/GreenMPI/src/umt2k-1.2.2/bin; $(MAKE) umt "MPIRUN=$(MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
+	cd ../umt2k-1.2.2/bin; $(MAKE) umt "MPIRUN=$(MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
 
 umt_jitter:
-	cd $(HOME)/GreenMPI/src/umt2k-1.2.2/bin; $(MAKE) jitter "MPIRUN=$(MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
+	cd ../umt2k-1.2.2/bin; $(MAKE) jitter "MPIRUN=$(MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
 
 paradis:
-	cd $(HOME)/GreenMPI/src/ParaDiS/blr; $(MAKE) paradis "MPIRUN=$(MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)" "MISER_FLAGS=$(MISER_FLAGS)"
+	cd ../ParaDiS/blr; $(MAKE) paradis "MPIRUN=$(MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)" "MISER_FLAGS=$(MISER_FLAGS)"
 
 paradis_jitter:
-	cd $(HOME)/GreenMPI/src/ParaDiS/blr; $(MAKE) jitter "MPIRUN=$(MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
+	cd ../ParaDiS/blr; $(MAKE) jitter "MPIRUN=$(MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
 
 # Test runs
 spin: Makefile harness 
@@ -130,16 +136,16 @@ harness.o: Makefile $(GENERATED_SHIMFILES) harness.c
 	$(MPICC) $(CFLAGS) -c harness.c
 
 clean:
-	rm -f harness *.o $(GENERATED_SHIMFILES) *~ libGreenMPI.so
+	rm -f harness harness_pristine *.o $(GENERATED_SHIMFILES) *~ libGreenMPI.so
 
 # Adagio libraries.
 
-libGreenMPI.so: Makefile shim.o wpapi.o shift.o cpuid.o meters.o\
+libGreenMPI.so: Makefile shim.o wpapi.o shift.o meters.o\
 	affinity.o log.o stacktrace.o gettimeofday_helpers.o \
 	$(GENERATED_SHIMFILES)  
 	$(MPICC) $(CFLAGS) $(LIBDIR) -shared -Wl,-soname,libGreenMPI.so \
 		-o libGreenMPI.so 					\
-		shim.o shim_functions.o wpapi.o shift.o cpuid.o		\
+		shim.o shim_functions.o wpapi.o shift.o 		\
 		meters.o affinity.o log.o stacktrace.o 			\
 		gettimeofday_helpers.o					\
 		$(LIBS)
@@ -147,7 +153,7 @@ install: libGreenMPI.so
 	cp libGreenMPI.so $(installDest)/lib/
 
 shim.o: Makefile shim.c shim.h log.o stacktrace.o 			\
-		gettimeofday_helpers.o wpapi.o shift.o cpuid.o 		\
+		gettimeofday_helpers.o wpapi.o shift.o  		\
 		$(GENERATED_SHIMFILES) 
 	$(MPICC) -fPIC -DBLR_USE_EAGER_LOGGING -c shim.c $(INCDIR)
 	$(MPICC) -fPIC -c shim_functions.c
@@ -165,11 +171,8 @@ gettimeofday_helpers.o: Makefile gettimeofday_helpers.c gettimeofday_helpers.h
 wpapi.o: Makefile wpapi.c wpapi.h
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c wpapi.c
 
-shift.o: Makefile shift.c shift.h cpuid.o
+shift.o: Makefile shift.c shift.h 
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c shift.c
-
-cpuid.o: Makefile cpuid.c cpuid.h 
-	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c cpuid.c
 
 meters.o: Makefile meters.c meters.h gettimeofday_helpers.o 
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c meters.c
@@ -183,5 +186,3 @@ $(GENERATED_SHIMFILES): Makefile shim.py shim.sh
 	rm -f $(GENERATED_SHIMFILES)
 	./shim.sh
 	chmod 440 $(GENERATED_SHIMFILES)
-
-
