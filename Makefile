@@ -135,12 +135,15 @@ harness_pristine: Makefile harness.o
 harness.o: Makefile $(GENERATED_SHIMFILES) harness.c
 	$(MPICC) $(CFLAGS) -c harness.c
 
+cpuid.o: Makefile cpuid.c cpuid.h
+	$(MPICC) $(CFLAGS) -c cpuid.c
+
 clean:
 	rm -f harness harness_pristine *.o $(GENERATED_SHIMFILES) *~ libGreenMPI.so
 
 # Adagio libraries.
 
-libGreenMPI.so: Makefile shim.o wpapi.o shift.o meters.o\
+libGreenMPI.so: Makefile shim.o wpapi.o shift.o meters.o cpuid.o\
 	affinity.o log.o stacktrace.o gettimeofday_helpers.o \
 	$(GENERATED_SHIMFILES)  
 	$(MPICC) $(CFLAGS) $(LIBDIR) -shared -Wl,-soname,libGreenMPI.so \
