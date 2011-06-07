@@ -20,7 +20,7 @@ sed 's/ \([\(A-Za-z_\)]*\)\[\]\[3\]/ **\1/g' | 	#		\
 			# convert "type var[]" to "type *var"	\
 sed 's/ \([\(A-Za-z_\)]*\)\[\]/ *\1/g' |
 cut -d' ' -f2-  |        # remove __attribute__ tags     	\
-python ./shim.py
+python ./shim.py || exit
 patch < _PATCH_knockouts.shim_selection.h
 
 #gcc -E ${MPI_INCLUDE_PATH}/mpi.h | tr -d "\n" | tr -s " " | tr ";" "\n" | grep MPI_ | egrep -v '^#|^typedef|^enum|^struct| OMPI| PMPI_' | grep '(' | sed -e 's/\* /\*/'  -e 's/ \([\(A-Za-z_\)]*\)\[\]\[3\]/ **\1/g' -e 's/ \([\(A-Za-z_\)]*\)\[\]/ *\1/g' | cut -d' ' -f2-
