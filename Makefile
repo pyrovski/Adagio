@@ -53,11 +53,11 @@ shim_selection.h  shim_str.h  shim_structs.h  shim_union.h
 all: Makefile harness_pristine harness
 	@echo Done
 ft:
-	cd ../NPB3.3/NPB3.3-MPI/bin; $(MAKE) ft  "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)" 
+	$(MAKE) -C ../NPB3.3/NPB3.3-MPI/bin ft  "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)" 
 nas:
-	cd ../NPB3.3/NPB3.3-MPI/bin; $(MAKE) nas "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
+	$(MAKE) -C ../NPB3.3/NPB3.3-MPI/bin nas "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
 miser:
-	cd ../NPB3.3/NPB3.3-MPI/bin; $(MAKE) miser_test "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)" "MISER_FLAGS=$(MISER_FLAGS)"
+	$(MAKE) -C ../NPB3.3/NPB3.3-MPI/bin miser_test "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)" "MISER_FLAGS=$(MISER_FLAGS)"
 
 umt:
 	cd ../umt2k-1.2.2/bin; $(MAKE) umt "MPIRUN=$(MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
@@ -136,7 +136,7 @@ harness.o: Makefile $(GENERATED_SHIMFILES) harness.c
 	$(MPICC) $(CFLAGS) -c harness.c
 
 cpuid.o: Makefile cpuid.c cpuid.h
-	$(MPICC) $(CFLAGS) -c cpuid.c
+	$(MPICC) $(CFLAGS) -c cpuid.c -fPIC
 
 clean:
 	rm -f harness harness_pristine *.o $(GENERATED_SHIMFILES) *~ libGreenMPI.so
@@ -148,7 +148,7 @@ libGreenMPI.so: Makefile shim.o wpapi.o shift.o meters.o cpuid.o\
 	$(GENERATED_SHIMFILES)  
 	$(MPICC) $(CFLAGS) $(LIBDIR) -shared -Wl,-soname,libGreenMPI.so \
 		-o libGreenMPI.so 					\
-		shim.o shim_functions.o wpapi.o shift.o 		\
+		cpuid.o shim.o shim_functions.o wpapi.o shift.o 	\
 		meters.o affinity.o log.o stacktrace.o 			\
 		gettimeofday_helpers.o					\
 		$(LIBS)

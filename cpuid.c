@@ -26,4 +26,9 @@ uint64_t getcpu(unsigned *cpu, unsigned *node)
   return 0;
 }
 
-//uint32_t 
+uint32_t get_cpuid(){
+  uint32_t cpu;
+  if(getcpu(&cpu, 0))
+    return -1;
+  return cpu;
+}
