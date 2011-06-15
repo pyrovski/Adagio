@@ -150,7 +150,7 @@ libGreenMPI.so: Makefile shim.o wpapi.o shift.o meters.o cpuid.o\
 		-o libGreenMPI.so 					\
 		shim.o shim_functions.o wpapi.o shift.o 		\
 		meters.o affinity.o log.o stacktrace.o 			\
-		gettimeofday_helpers.o					\
+		gettimeofday_helpers.o cpuid.o				\
 		$(LIBS)
 install: libGreenMPI.so
 	cp libGreenMPI.so $(installDest)/lib/
