@@ -6,6 +6,7 @@
 #include "meters.h"
 #include "gettimeofday_helpers.h"
 
+#ifdef HAVE_POWER_METERS
 long long int
 mark_joules(int rank, int size){
 	
@@ -62,3 +63,8 @@ mark_joules(int rank, int size){
 	return total_joules;
 
 }
+#else
+long long int mark_joules(int rank, int size){
+  return -1;
+}
+#endif
