@@ -129,13 +129,18 @@ pre_MPI_Init( union shim_parameters *p ){
 	}
 
 	env_badnode=getenv("OMPI_MCA_gmpi_badnode");
+	uname(&utsname);
+	hostname = utsname.nodename;
 	if(env_badnode && strlen(env_badnode) > 0){
-		uname(&utsname);
-		hostname = utsname.nodename;
 		if( strstr( env_badnode, hostname ) ){
 			g_algo |= mods_FAKEFREQ;
 		}
 	}
+	
+	/*! setup shared memory and interprocess semaphore
+	  @todo how to abort application in pre-MPI_Init?
+	 */
+	setup_shm(hostname);
 
 	// To bound miser, we assume top gear is 1 instead of 0.
 	// We also allow fermata to be used.
