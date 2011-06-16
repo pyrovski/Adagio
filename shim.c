@@ -137,11 +137,6 @@ pre_MPI_Init( union shim_parameters *p ){
 		}
 	}
 	
-	/*! setup shared memory and interprocess semaphore
-	  @todo how to abort application in pre-MPI_Init?
-	 */
-	setup_shm(hostname);
-
 	// To bound miser, we assume top gear is 1 instead of 0.
 	// We also allow fermata to be used.
 	if(g_algo & algo_MISER){
@@ -171,9 +166,17 @@ post_MPI_Init( union shim_parameters *p ){
 	PMPI_Comm_size(MPI_COMM_WORLD, &size);
 	
 	// Set CPU affinity and memory preference.
+	//! @todo this needs to be done by MPI or srun
 	set_cpu_affinity( rank );
 	numa_set_localalloc();
 	
+	/*! setup shared memory and interprocess semaphore
+	  @todo get socket from hwloc or similar
+	 */
+	unsigned socket = -1;
+	setup_shm(*((struct MPI_Init_p*)p)->argv, socket, rank);
+
+
 	// Start us in a known frequency.
 	shift(FASTEST_FREQ);
 	
