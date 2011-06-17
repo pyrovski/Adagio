@@ -7,8 +7,8 @@ get_cpuid(void){
   int a,b,c,d;
   int apic_id;
 
-#define cpuid( in, a, b, c, d ) \
-  asm ( "cpuid" :                                     \
+#define cpuid( in, a, b, c, d )					\
+  asm ( "cpuid" :						\
 	"=a" (a), "=b" (b), "=c" (c), "=d" (d) : "a" (in));
 #define INITIAL_APIC_ID_BITS  0xFF000000
 
