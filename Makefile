@@ -136,7 +136,7 @@ harness_pristine: Makefile harness.o
 	$(MPICC) $(CFLAGS) -o harness_pristine harness.o 
 
 harness_static: Makefile harness.o $(objects)
-	$(MPICC) $(CFLAGS) -o $@ harness.o $(objects) $(LIBS)
+	$(MPICC) $(CFLAGS) -o $@ harness.o $(objects) $(LIBDIR) $(LIBS)
 
 harness.o: Makefile $(GENERATED_SHIMFILES) harness.c
 	$(MPICC) $(CFLAGS) -c harness.c
