@@ -45,7 +45,7 @@ endif
 CFLAGS=-Wall $(DBG) $(OPT_FLAGS)
 LIBDIR=-L. -L$(HOME)/local/lib
 INCDIR=-I$(HOME)/local/include
-LIBS=-lc -lm -lunwind -lmd5 -lpapi -lnuma
+LIBS=-lc -lm -lunwind -lmd5 -lpapi -lnuma -lrt
 GENERATED_SHIMFILES = shim_enumeration.h shim_functions.c shim_parameters.h 	\
 shim_selection.h  shim_str.h  shim_structs.h  shim_union.h			
 
@@ -138,19 +138,22 @@ harness.o: Makefile $(GENERATED_SHIMFILES) harness.c
 cpuid.o: Makefile cpuid.c cpuid.h
 	$(MPICC) $(CFLAGS) -c cpuid.c -fPIC
 
+shm.o: Makefile shm.c shm.h
+	$(MPICC) $(CFLAGS) -c shm.c -fPIC
+
 clean:
 	rm -f harness harness_pristine *.o $(GENERATED_SHIMFILES) *~ libGreenMPI.so
 
 # Adagio libraries.
 
-libGreenMPI.so: Makefile shim.o wpapi.o shift.o meters.o cpuid.o\
+libGreenMPI.so: Makefile shim.o wpapi.o shift.o meters.o cpuid.o shm.o\
 	affinity.o log.o stacktrace.o gettimeofday_helpers.o \
 	$(GENERATED_SHIMFILES)  
 	$(MPICC) $(CFLAGS) $(LIBDIR) -shared -Wl,-soname,libGreenMPI.so \
 		-o libGreenMPI.so 					\
 		cpuid.o shim.o shim_functions.o wpapi.o shift.o 	\
 		meters.o affinity.o log.o stacktrace.o 			\
-		gettimeofday_helpers.o					\
+		gettimeofday_helpers.o cpuid.o shm.o			\
 		$(LIBS)
 install: libGreenMPI.so
 	cp libGreenMPI.so $(installDest)/lib/

@@ -1,34 +1,24 @@
-#include <stdint.h>
+#include <stdio.h>
+#include "cpuid.h"
 
-static inline uint64_t native_read_tscp(uint32_t *aux)
-{
-  unsigned long low, high;
-  asm volatile(".byte 0x0f,0x01,0xf9"
-	       : "=a" (low), "=d" (high), "=c" (*aux));
-  return low | ((uint64_t)high << 32);
-}
+int
+get_cpuid(void){
+  //Return value should be in the range 0-3.
+  int a,b,c,d;
+  int apic_id;
 
-uint64_t getcpu(unsigned *cpu, unsigned *node)
-{
-  uint32_t p;
+#define cpuid( in, a, b, c, d ) \
+  asm ( "cpuid" :                                     \
+	"=a" (a), "=b" (b), "=c" (c), "=d" (d) : "a" (in));
+#define INITIAL_APIC_ID_BITS  0xFF000000
 
-  //if (*vdso_vgetcpu_mode == VGETCPU_RDTSCP) {
-  /* Load per CPU data from RDTSCP */
-  native_read_tscp(&p);
-  //} else {
-  /* Load per CPU data from GDT */
-  //asm("lsl %1,%0" : "=r" (p) : "r" (__PER_CPU_SEG));
-  //}
-  if (cpu)
-    *cpu = p & 0xfff;
-  if (node)
-    *node = p >> 12;
-  return 0;
-}
+  //Figure out which core we're on.
+  cpuid( 1, a, b, c, d );
+  a=a; b=b; c=c; d=d;
+  apic_id = ( b & INITIAL_APIC_ID_BITS ) >> 24;
+  
 
-uint32_t get_cpuid(){
-  uint32_t cpu;
-  if(getcpu(&cpu, 0))
-    return -1;
-  return cpu;
+#undef cpuid
+#undef INITAL_APIC_ID_BITS
+  return apic_id;
 }

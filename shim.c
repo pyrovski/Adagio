@@ -129,14 +129,14 @@ pre_MPI_Init( union shim_parameters *p ){
 	}
 
 	env_badnode=getenv("OMPI_MCA_gmpi_badnode");
+	uname(&utsname);
+	hostname = utsname.nodename;
 	if(env_badnode && strlen(env_badnode) > 0){
-		uname(&utsname);
-		hostname = utsname.nodename;
 		if( strstr( env_badnode, hostname ) ){
 			g_algo |= mods_FAKEFREQ;
 		}
 	}
-
+	
 	// To bound miser, we assume top gear is 1 instead of 0.
 	// We also allow fermata to be used.
 	if(g_algo & algo_MISER){
@@ -166,9 +166,17 @@ post_MPI_Init( union shim_parameters *p ){
 	PMPI_Comm_size(MPI_COMM_WORLD, &size);
 	
 	// Set CPU affinity and memory preference.
+	//! @todo this needs to be done by MPI or srun
 	set_cpu_affinity( rank );
 	numa_set_localalloc();
 	
+	/*! setup shared memory and interprocess semaphore
+	  @todo get socket from hwloc or similar
+	 */
+	unsigned socket = -1;
+	shm_setup(*((struct MPI_Init_p*)p)->argv, socket, rank);
+
+
 	// Start us in a known frequency.
 	shift(FASTEST_FREQ);
 	
@@ -187,7 +195,7 @@ pre_MPI_Finalize( union shim_parameters *p ){
 	PMPI_Barrier( MPI_COMM_WORLD );
 	// Leave us in a known frequency.  This should always be 0.
 	shift(0);
-	
+	shm_teardown();
 }
 	
 static void
