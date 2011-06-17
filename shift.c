@@ -52,7 +52,7 @@ shift(int freq_idx){
 				cpuid, cpufreq_filename[cpuid]);
 		}
 		assert(sfp);
-		fprintf(sfp, freq_str[ 0 ]);
+		fprintf(sfp, "%s", freq_str[ 0 ]);
 		fclose(sfp);
 
 		sfp = fopen(cpufreq_filename[ 2 ], "w");
@@ -62,7 +62,7 @@ shift(int freq_idx){
 				cpuid, cpufreq_filename[cpuid]);
 		}
 		assert(sfp);
-		fprintf(sfp, freq_str[ 0 ]);
+		fprintf(sfp, "%s", freq_str[ 0 ]);
 		fclose(sfp);
 
 		shift_initialized=1;
@@ -85,7 +85,7 @@ shift(int freq_idx){
 			cpuid, cpufreq_filename[cpuid]);
 	}
 	assert(sfp);
-	fprintf(sfp, freq_str[ freq_idx ]);
+	fprintf(sfp, "%s", freq_str[ freq_idx ]);
 	fclose(sfp);
 #endif
 	current_freq = freq_idx;
