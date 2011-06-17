@@ -63,7 +63,7 @@ int shm_setup(char **argv, unsigned socket, int rank){
     exit(1);
   }
 
-  sem = sem_open(name, O_CREAT);
+  sem = sem_open(name, O_CREAT, S_IRWXU, 1);
   if(sem == SEM_FAILED){
     perror("sem_open");
     exit(1);
