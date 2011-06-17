@@ -12,7 +12,8 @@
 static int current_freq=0;
 
 
-
+/*! @todo this needs to read frequency scaling info at runtime
+ */
 int
 shift(int freq_idx){
 #ifdef BLR_USE_SHIFT
