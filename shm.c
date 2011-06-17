@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <string.h>
 
 static int shm_fd = -1;
 static sem_t *sem = 0;
@@ -45,11 +46,17 @@ static int shm_update(int rank){
 
 int shm_setup(char **argv, unsigned socket, int rank){
   char name[NAME_MAX - 4];
+  char *runName;
   int status;
 
   assert(argv && argv[0]);
-
-  status = snprintf(name, NAME_MAX - 4, "/%s.%u", argv[0], socket);
+  
+  // use part of name after last '/'
+  runName = strrchr(argv[0], '/');
+  runName = runName ? runName + 1 : argv[0];
+  runName = runName ? runName : argv[0];
+  
+  status = snprintf(name, NAME_MAX - 4, "/%s.%u", runName, socket);
   shm_fd = shm_open(name, O_RDWR | O_CREAT, S_IRWXU);
   if(shm_fd < 0){
     perror("shm_open");
@@ -75,7 +82,7 @@ int shm_setup(char **argv, unsigned socket, int rank){
   close and unlink shared memory segment and semaphore
   this should be easier in Finalize since we have a communicator for each socket
  */
-shm_teardown(){
+int shm_teardown(){
   //! @todo
   return 0;
 }
