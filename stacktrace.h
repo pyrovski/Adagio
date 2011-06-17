@@ -1,1 +1,1 @@
-int hash_stacktrace(int fid);
+int hash_backtrace(int fid);

@@ -2,8 +2,7 @@
 #include "md5.h"
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
-int
-hash_backtrace(int fid) {
+int hash_backtrace(int fid) {
 	unw_cursor_t cursor; unw_context_t uc;
 	unw_word_t ip, sp;
 

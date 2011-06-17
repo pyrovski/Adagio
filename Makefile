@@ -159,13 +159,13 @@ libGreenMPI.so: Makefile shim.o wpapi.o shift.o meters.o cpuid.o shm.o\
 		-o libGreenMPI.so 					\
 		$(objects) $(LIBS)
 install: libGreenMPI.so
-	cp libGreenMPI.so $(installDest)/lib/
+	install -m 0744 libGreenMPI.so $(installDest)/lib/
 
 shim.o: Makefile shim.c shim.h log.o stacktrace.o 			\
 		gettimeofday_helpers.o wpapi.o shift.o  		\
 		$(GENERATED_SHIMFILES) 
-	$(MPICC) -fPIC -DBLR_USE_EAGER_LOGGING -c shim.c $(INCDIR)
-	$(MPICC) -fPIC -c shim_functions.c
+	$(MPICC) $(CFLAGS) -fPIC -DBLR_USE_EAGER_LOGGING -c shim.c $(INCDIR)
+	$(MPICC) $(CFLAGS) -fPIC -c shim_functions.c
 
 log.o: Makefile log.c log.h
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c log.c

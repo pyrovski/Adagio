@@ -17,6 +17,24 @@
 #include "wpapi.h"	// PAPI wrappers.
 #include "shift.h"	// shift, enums.  
 #include "affinity.h"	// Setting cpu affinity.
+#include "shm.h"        // shared memory
+#include "meters.h"     // power meters
+
+// MPI_Init
+static void pre_MPI_Init 	( union shim_parameters *p );
+static void post_MPI_Init	( union shim_parameters *p );
+// MPI_Finalize
+static void pre_MPI_Finalize 	( union shim_parameters *p );
+static void post_MPI_Finalize	( union shim_parameters *p );
+
+// Scheduling
+static void schedule_communication	( int idx );
+static void schedule_computation  	( int idx );
+static void initialize_handler    	(void);
+static void signal_handler        	( int signal);
+static void set_alarm			( double s );
+
+
 static int rank, size;
 
 static struct timeval ts_start_communication, ts_start_computation,

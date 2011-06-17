@@ -22,16 +22,3 @@ struct entry{
 };
 
 
-// MPI_Init
-static void pre_MPI_Init 	( union shim_parameters *p );
-static void post_MPI_Init	( union shim_parameters *p );
-// MPI_Finalize
-static void pre_MPI_Finalize 	( union shim_parameters *p );
-static void post_MPI_Finalize	( union shim_parameters *p );
-
-// Scheduling
-static void schedule_communication	( int idx );
-static void schedule_computation  	( int idx );
-static void initialize_handler    	(void);
-static void signal_handler        	( int signal);
-static void set_alarm			( double s );
