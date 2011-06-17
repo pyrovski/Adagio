@@ -123,6 +123,9 @@ rank: Makefile harness
 
 test: Makefile rank
 
+objects = shim.o shim_functions.o wpapi.o shift.o meters.o affinity.o log.o \
+stacktrace.o gettimeofday_helpers.o cpuid.o shm.o
+
 # Harness code.
 
 harness: Makefile harness.o libGreenMPI.so
@@ -131,6 +134,9 @@ harness: Makefile harness.o libGreenMPI.so
 
 harness_pristine: Makefile harness.o
 	$(MPICC) $(CFLAGS) -o harness_pristine harness.o 
+
+harness_static: Makefile harness.o $(objects)
+	$(MPICC) $(CFLAGS) -o $@ harness.o $(objects) $(LIBS)
 
 harness.o: Makefile $(GENERATED_SHIMFILES) harness.c
 	$(MPICC) $(CFLAGS) -c harness.c
@@ -151,10 +157,7 @@ libGreenMPI.so: Makefile shim.o wpapi.o shift.o meters.o cpuid.o shm.o\
 	$(GENERATED_SHIMFILES)  
 	$(MPICC) $(CFLAGS) $(LIBDIR) -shared -Wl,-soname,libGreenMPI.so \
 		-o libGreenMPI.so 					\
-		shim.o shim_functions.o wpapi.o shift.o 	\
-		meters.o affinity.o log.o stacktrace.o 			\
-		gettimeofday_helpers.o cpuid.o shm.o			\
-		$(LIBS)
+		$(objects) $(LIBS)
 install: libGreenMPI.so
 	cp libGreenMPI.so $(installDest)/lib/
 
