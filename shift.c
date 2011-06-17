@@ -31,9 +31,10 @@ shift(int freq_idx){
 	static int prev_freq_idx[4]={0, 0, 0, 0};
 	static int cpuid = -1;
 	static int shift_initialized=0;
+	static int socket, local;
 	int temp_cpuid;
 	if(!shift_initialized){
-		cpuid = get_cpuid();
+		get_cpuid(&cpuid, &socket, &local);
 		
 		// enable userspace governor
 		snprintf(filename, 100, "%s%u%s", "/sys/devices/system/cpu/cpu", cpuid, "/cpufreq/scaling_governor");
@@ -68,7 +69,7 @@ shift(int freq_idx){
 
 		shift_initialized=1;
 	}
-	temp_cpuid = get_cpuid();
+	get_cpuid(&temp_cpuid, &socket, &local);
 	assert( temp_cpuid == cpuid );
 
 	if( freq_idx == prev_freq_idx[ cpuid ] ){

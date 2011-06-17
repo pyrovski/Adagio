@@ -533,7 +533,7 @@ schedule_communication( int idx ){
 
 static void
 schedule_computation( int idx ){
-	int i, first_freq=0; 
+	int i; 
 	double p=0.0, d=0.0, I=0.0, seconds_until_interrupt=0.0;
 
 	// WARNING:  The actual shift to the value placed in current_freq
