@@ -7,5 +7,6 @@ typedef struct {
 } shm_ranks_t;
 
 
-int setup_shm(char ** argv, unsigned socket, int rank);
+int shm_setup(char ** argv, unsigned socket, int rank);
+int shm_teardown();
 #endif

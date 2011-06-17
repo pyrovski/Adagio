@@ -174,7 +174,7 @@ post_MPI_Init( union shim_parameters *p ){
 	  @todo get socket from hwloc or similar
 	 */
 	unsigned socket = -1;
-	setup_shm(*((struct MPI_Init_p*)p)->argv, socket, rank);
+	shm_setup(*((struct MPI_Init_p*)p)->argv, socket, rank);
 
 
 	// Start us in a known frequency.
@@ -195,7 +195,7 @@ pre_MPI_Finalize( union shim_parameters *p ){
 	PMPI_Barrier( MPI_COMM_WORLD );
 	// Leave us in a known frequency.  This should always be 0.
 	shift(0);
-	
+	shm_teardown();
 }
 	
 static void

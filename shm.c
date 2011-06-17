@@ -43,7 +43,7 @@ static int shm_update(int rank){
   return 0;
 }
 
-int setup_shm(char **argv, unsigned socket, int rank){
+int shm_setup(char **argv, unsigned socket, int rank){
   char name[NAME_MAX - 4];
   int status;
 
@@ -68,5 +68,14 @@ int setup_shm(char **argv, unsigned socket, int rank){
    */
   shm_update(rank);
 
+  return 0;
+}
+
+/*!
+  close and unlink shared memory segment and semaphore
+  this should be easier in Finalize since we have a communicator for each socket
+ */
+shm_teardown(){
+  //! @todo
   return 0;
 }
