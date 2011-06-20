@@ -29,7 +29,7 @@ NAS_BADNODE_FLAGS= -mca gmpi_badnode opt01,opt09,opt13
 NAS_EXTRA_FLAGS= -mca gmpi_mods bigcomm
 
 # Runtime environment
-NP=32
+NP ?=32
 MPIRUN=mpirun -np $(NP) -hostfile $(HOSTFILE) $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) $(BADNODE_FLAGS)
 NAS_MPIRUN=mpirun $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) $(NAS_BADNODE_FLAGS) $(NAS_EXTRA_FLAGS) 
 
@@ -73,55 +73,51 @@ paradis_jitter:
 
 # Test runs
 spin: Makefile harness 
-	# Andante
+# Andante
 	echo -n "Andante " >> spin.results
 	$(MPIRUN) $(ANDANTE_FLAGS) $(NUMA_FLAGS) ./harness --test_spin >> spin.results 2>&1 
 	cat runtime* > spin.andante
-	rm -rf runtime*
-	# Fermata
+	rm -f runtime*
+# Fermata
 	echo -n "Fermata " >> spin.results
 	$(MPIRUN) $(FERMATA_FLAGS) $(NUMA_FLAGS) ./harness --test_spin >> spin.results 2>&1
 	cat runtime* > spin.fermata
-	rm -rf runtime*
-	# Adagio
+	rm -f runtime*
+# Adagio
 	echo -n "Adagio  " >> spin.results
 	$(MPIRUN) $(ADAGIO_FLAGS) $(NUMA_FLAGS) ./harness --test_spin >> spin.results 2>&1
 	cat runtime* > spin.adagio
-	rm -rf runtime*
-	# Nosched
+	rm -f runtime*
+# Nosched
 	echo -n "Nosched " >> spin.results
 	$(MPIRUN) $(NOSCHED_FLAGS) $(NUMA_FLAGS) ./harness --test_spin >> spin.results 2>&1
 	cat runtime* > spin.nosched
-	rm -rf runtime*
+	rm -f runtime*
+
 ping: Makefile harness
-	$(MPIRUN) -np $(NP) -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
-		./harness -v -h --test_ping 
+	$(MPIRUN) ./harness -v -h --test_ping 
 	cat runtime* > ping.normal
-	rm -rf runtime*
-	$(MPIRUN) -np 2 -hostfile $(HOSTFILE) $(MCA_REQUIRED_FLAGS) $(GMPI_FLAGS) \
-		./harness -v -h --test_ping 
+	rm -f runtime*
+	$(MPIRUN) -np 2 ./harness -v -h --test_ping 
 	cat runtime* > ping.eager
-	rm -rf runtime*
+	rm -f runtime*
 
 hash: Makefile harness 
-	$(MPIRUN) -np $(NP) -hostfile $(HOSTFILE) $(MCA_FLAGS) $(GMPI_FLAGS) \
-		./harness -v -h --test_hash
+	$(MPIRUN) ./harness -v -h --test_hash
 	cat runtime* > hash.runtime
-	rm -rf runtime*
+	rm -f runtime*
 
 sane: Makefile harness 
-	$(MPIRUN) -np $(NP) -hostfile $(HOSTFILE) $(MCA_FLAGS) $(GMPI_FLAGS) \
-		./harness -v -h
+	$(MPIRUN) ./harness -v -h
 	cat runtime* > sane.runtime
-	rm -rf runtime*
+	rm -f runtime*
 
 rank: Makefile harness 
-	$(MPIRUN) -np $(NP) -hostfile $(HOSTFILE) $(MCA_FLAGS) $(GMPI_FLAGS) \
-		./harness -v -h --test_rank
+	$(MPIRUN) ./harness -v -h --test_rank
 	cat runtime* > rank.runtime
-	rm -rf runtime*
+	rm -f runtime*
 
-test: Makefile rank
+test: Makefile rank hash sane ping spin
 
 objects = shim.o shim_functions.o wpapi.o shift.o meters.o affinity.o log.o \
 stacktrace.o gettimeofday_helpers.o cpuid.o shm.o
