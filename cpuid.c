@@ -19,6 +19,8 @@
 
 #define MAX_LINE 256
 
+//#define VERBOSE
+
 int whitespace(char c)
 {
   if ((c=='\t') || (c==' ') || (c=='\n') || (c==EOF))
@@ -75,9 +77,9 @@ typedef struct mcsup_nodeconfig_d
   int **map_socket_to_core;  /* length: sockets, cores_per_socket */
 } mcsup_nodeconfig_t;
 
-static mcsup_nodeconfig_t mcsup_nodeconfig;
+static mcsup_nodeconfig_t config;
 
-int parse_proc_cpuinfo(mcsup_nodeconfig_t *config)
+int parse_proc_cpuinfo()
 {
   char line[MAX_LINE];
   FILE *cpuinfo;
@@ -87,7 +89,7 @@ int parse_proc_cpuinfo(mcsup_nodeconfig_t *config)
   if (cpuinfo==NULL)
     return MCSUP_ERR_FILEIO;
 
-  config->cores=0;
+  config.cores=0;
   while (!(feof(cpuinfo)))
     {
       err=readline(cpuinfo,line,MAX_LINE);
@@ -96,21 +98,21 @@ int parse_proc_cpuinfo(mcsup_nodeconfig_t *config)
 
       if (strncmp(line,"processor",9)==0)
 	{
-	  config->cores++;
+	  config.cores++;
 	}
     }
 
-  config->map_core_to_socket=(int*)malloc(config->cores*sizeof(int));
-  config->map_core_to_local=(int*)malloc(config->cores*sizeof(int));
+  config.map_core_to_socket=(int*)malloc(config.cores*sizeof(int));
+  config.map_core_to_local=(int*)malloc(config.cores*sizeof(int));
 
-    if ((config->map_core_to_socket==NULL)||
-      (config->map_core_to_local==NULL))
+    if ((config.map_core_to_socket==NULL)||
+      (config.map_core_to_local==NULL))
     return MCSUP_ERR_NOMEM;
 
-  for (i=0; i<config->cores; i++)
+  for (i=0; i<config.cores; i++)
     {
-      config->map_core_to_socket[i]=-1;
-      config->map_core_to_local[i]=-1;
+      config.map_core_to_socket[i]=-1;
+      config.map_core_to_local[i]=-1;
     }
 
 
@@ -129,14 +131,14 @@ int parse_proc_cpuinfo(mcsup_nodeconfig_t *config)
       if (strncmp(line,"processor",9)==0)
 	{
 	  core=atoi(strchr(line,':')+2);
-	  if ((core<0) || (core>=config->cores))
+	  if ((core<0) || (core>=config.cores))
 	    return MCSUP_ERR_IDOUTOFRANGE;
 	}
 
       if (strncmp(line,"physical id",11)==0)
 	{
 	  if (core>=0)
-	    config->map_core_to_socket[core]=atoi(strchr(line,':')+2);
+	    config.map_core_to_socket[core]=atoi(strchr(line,':')+2);
 	  else
 	    return MCSUP_ERR_PARSEERROR;
 	}
@@ -144,7 +146,7 @@ int parse_proc_cpuinfo(mcsup_nodeconfig_t *config)
       if (strncmp(line,"core id",7)==0)
 	{
 	  if (core>=0)
-	    config->map_core_to_local[core]=atoi(strchr(line,':')+2);
+	    config.map_core_to_local[core]=atoi(strchr(line,':')+2);
 	  else
 	    return MCSUP_ERR_PARSEERROR;
 	}
@@ -152,27 +154,29 @@ int parse_proc_cpuinfo(mcsup_nodeconfig_t *config)
 
   fclose(cpuinfo);
 
-  config->sockets=0;
-  config->cores_per_socket=0;
-
-  for (i=0; i<config->cores; i++)
+  config.sockets=0;
+  config.cores_per_socket=0; // assume all sockets have the same number of cores
+  for (i=0; i<config.cores; i++)
     {
-      if (config->map_core_to_socket[i]+1>config->sockets)
-	config->sockets=config->map_core_to_socket[i]+1;
-      if (config->map_core_to_local[i]+1>config->cores_per_socket)
-	config->cores_per_socket=config->map_core_to_local[i]+1;
+      if (config.map_core_to_socket[i]+1>config.sockets)
+	config.sockets=config.map_core_to_socket[i]+1;
+      if(config.map_core_to_socket[i] == 0)
+	config.cores_per_socket++;
     }
 
-  config->map_socket_to_core=(int**)malloc(sizeof(int*)*config->sockets);
-  for (i=0; i<config->sockets; i++)
+  /*! @todo bug here.  config.cores = 8, but config.sockets = 1 and 
+    config.cores_per_socket = 4, so there will be memory corruption.
+   */
+  config.map_socket_to_core=(int**)malloc(sizeof(int*)*config.sockets);
+  for (i=0; i<config.sockets; i++)
     {
-      config->map_socket_to_core[i]=(int*)malloc(sizeof(int)*config->cores_per_socket);
+      config.map_socket_to_core[i]=(int*)malloc(sizeof(int)*config.cores_per_socket);
       core=0;
-      for (j=0; j<config->cores; j++)
+      for (j=0; j<config.cores; j++)
 	{
-	  if (config->map_core_to_socket[j]==i)
+	  if (config.map_core_to_socket[j]==i)
 	    {
-	      config->map_socket_to_core[i][core]=j;
+	      config.map_socket_to_core[i][core]=j;
 	      core++;
 	    }
 	}
@@ -180,18 +184,18 @@ int parse_proc_cpuinfo(mcsup_nodeconfig_t *config)
 
 #ifdef VERBOSE
   printf("Found %i cores, %i sockets, %i cores per socket\n",
-	 config->cores,config->sockets,config->cores_per_socket);
+	 config.cores,config.sockets,config.cores_per_socket);
   printf("Mapping of cores to sockets:\n");
-  for (i=0; i<config->cores; i++)
+  for (i=0; i<config.cores; i++)
     {
-      printf("\tCore %2i -> Socket %2i\n",i,config->map_core_to_socket[i]);
+      printf("\tCore %2i -> Socket %2i\n",i,config.map_core_to_socket[i]);
     }
   printf("Mapping of sockets to cores:\n");
-  for (i=0; i<config->sockets; i++)
+  for (i=0; i<config.sockets; i++)
     {
       printf("\tSocket %2i ->",i);
-      for (j=0; j<config->cores_per_socket; j++)
-	printf(" %i",config->map_socket_to_core[i][j]);
+      for (j=0; j<config.cores_per_socket; j++)
+	printf(" %i",config.map_socket_to_core[i][j]);
       printf("\n");
     }
 #endif
@@ -207,6 +211,10 @@ int get_cpuid(int *core, int *socket, int *local){
   assert(core);
   assert(socket);
   assert(local);
+  assert(config.map_socket_to_core);
+  assert(config.map_core_to_socket);
+  assert(config.map_core_to_local);
+
 
 #define cpuid( in, a, b, c, d )					\
   asm ( "cpuid" :						\
@@ -218,8 +226,8 @@ int get_cpuid(int *core, int *socket, int *local){
   a=a; b=b; c=c; d=d;
   
   *core = ( b & INITIAL_APIC_ID_BITS ) >> 24;
-  *socket=mcsup_nodeconfig.map_core_to_socket[*core];
-  *local=mcsup_nodeconfig.map_core_to_local[*core];
+  *socket=config.map_core_to_socket[*core];
+  *local=config.map_core_to_local[*core];
   
 #undef cpuid
 #undef INITAL_APIC_ID_BITS
