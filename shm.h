@@ -6,7 +6,8 @@ typedef struct {
   // list of int ranks follows...
 } shm_ranks_t;
 
+extern MPI_Comm comm_socket;
 
-int shm_setup(char ** argv, unsigned socket, int rank);
+int shm_setup(char ** argv, int rank);
 int shm_teardown();
 #endif

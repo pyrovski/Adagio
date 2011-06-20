@@ -208,9 +208,6 @@ int get_cpuid(int *core, int *socket, int *local){
   //Return value should be in the range 0-3.
   int a,b,c,d;
 
-  assert(core);
-  assert(socket);
-  assert(local);
   assert(config.map_socket_to_core);
   assert(config.map_core_to_socket);
   assert(config.map_core_to_local);
@@ -225,8 +222,11 @@ int get_cpuid(int *core, int *socket, int *local){
   cpuid( 1, a, b, c, d );
   a=a; b=b; c=c; d=d;
   
-  *core = ( b & INITIAL_APIC_ID_BITS ) >> 24;
-  *socket=config.map_core_to_socket[*core];
+  if(core)
+    *core = ( b & INITIAL_APIC_ID_BITS ) >> 24;
+  if(socket)
+    *socket=config.map_core_to_socket[*core];
+  if(local)
   *local=config.map_core_to_local[*core];
   
 #undef cpuid

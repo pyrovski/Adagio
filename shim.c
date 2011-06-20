@@ -193,11 +193,8 @@ post_MPI_Init( union shim_parameters *p ){
 	numa_set_localalloc();
 	
 	/*! setup shared memory and interprocess semaphore
-	  @todo get socket from hwloc or similar
 	 */
-	unsigned socket = -1;
-	shm_setup(*((struct MPI_Init_p*)p)->argv, socket, rank);
-
+	shm_setup(*((struct MPI_Init_p*)p)->argv, rank);
 
 	// Start us in a known frequency.
 	shift(FASTEST_FREQ);
