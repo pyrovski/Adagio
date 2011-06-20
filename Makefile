@@ -148,7 +148,7 @@ shm.o: Makefile shm.c shm.h
 	$(MPICC) $(CFLAGS) -c shm.c -fPIC
 
 clean:
-	rm -f harness harness_pristine *.o $(GENERATED_SHIMFILES) *~ libGreenMPI.so
+	rm -f harness harness_pristine harness_static *.o $(GENERATED_SHIMFILES) *~ libGreenMPI.so
 
 # Adagio libraries.
 
