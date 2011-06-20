@@ -19,6 +19,7 @@
 #include "affinity.h"	// Setting cpu affinity.
 #include "shm.h"        // shared memory
 #include "meters.h"     // power meters
+#include "cpuid.h"
 
 // MPI_Init
 static void pre_MPI_Init 	( union shim_parameters *p );
@@ -166,6 +167,9 @@ pre_MPI_Init( union shim_parameters *p ){
 	gettimeofday(&ts_start_computation, NULL);  
 	gettimeofday(&ts_stop_computation, NULL);  
 	
+	// initialize mcsup
+	parse_proc_cpuinfo();
+
 	// Pretend computation started here.
 	start_papi();	
 	
