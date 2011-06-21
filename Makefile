@@ -141,7 +141,7 @@ cpuid.o: Makefile cpuid.c cpuid.h
 	$(MPICC) $(CFLAGS) -c cpuid.c -fPIC
 
 shm.o: Makefile shm.c shm.h
-	$(MPICC) $(CFLAGS) -c shm.c -fPIC
+	$(MPICC) $(CFLAGS) $(INCDIR) -c shm.c -fPIC
 
 clean:
 	rm -f harness harness_pristine harness_static *.o $(GENERATED_SHIMFILES) *~ libGreenMPI.so
