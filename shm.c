@@ -14,14 +14,20 @@
 #include "md5.h"
 
 MPI_Comm comm_socket;
+int socket_rank;
+int socket_size;
 
 static int shm_fd = -1;
 static sem_t *sem = 0;
+static char shm_name[NAME_MAX - 4];
 
 /*! @todo how does ftruncate affect memory-mapped shared objects? 
   @todo error checking
+  This function would be useful if we wanted to void a collective operation
+  or two (a global barrier and MPI_Comm_split).  We can always use it later.
  */
-static int shm_update(int rank){
+/*
+static int shm_update(){
   assert(shm_fd >= 0);
   assert(sem);
   int status;
@@ -49,11 +55,14 @@ static int shm_update(int rank){
     status = write(shm_fd, &rank, sizeof(int));
   }
   status = sem_post(sem);
+
+  //! @todo create MPI group for the socket
+
   return 0;
 }
+*/
 
 int shm_setup(char **argv, int rank){
-  char name[NAME_MAX - 4];
   char *runName;
   int status, socket = -1, core = -1, local = -1;
 
@@ -66,25 +75,20 @@ int shm_setup(char **argv, int rank){
   
   status = get_cpuid(&core, &socket, &local);
 
-  status = snprintf(name, NAME_MAX - 4, "/%s.%u", runName, socket);
-  shm_fd = shm_open(name, O_RDWR | O_CREAT, S_IRWXU);
+  status = snprintf(shm_name, NAME_MAX - 4, "/%s.%u", runName, socket);
+  shm_fd = shm_open(shm_name, O_RDWR | O_CREAT, S_IRWXU);
   if(shm_fd < 0){
     perror("shm_open");
     exit(1);
   }
 
-  sem = sem_open(name, O_CREAT, S_IRWXU, 1);
+  sem = sem_open(shm_name, O_CREAT, S_IRWXU, 1);
   if(sem == SEM_FAILED){
     perror("sem_open");
     exit(1);
   }
 
-  /* 
-     lock semaphore, resize shared object, increment count, 
-     and place rank in list
-   */
-  shm_update(rank);
-
+  // alternatively, shm_update() could be used here
   PMPI_Barrier(MPI_COMM_WORLD);
 
   MPI_Comm comm_node;
@@ -101,6 +105,18 @@ int shm_setup(char **argv, int rank){
 
   PMPI_Comm_split(MPI_COMM_WORLD, digestInt, rank, &comm_node);
   PMPI_Comm_split(comm_node, socket, core, &comm_socket);
+  PMPI_Comm_rank(comm_socket, &socket_rank);
+  PMPI_Comm_size(comm_socket, &socket_size);
+
+  /* 
+     lock semaphore, resize shared object
+   */
+  if(!socket_rank){
+    status = sem_wait(sem);
+    status = ftruncate(shm_fd, getpagesize());
+    status = sem_post(sem);
+  }
+  PMPI_Barrier(comm_socket);
 
   return 0;
 }
@@ -111,5 +127,16 @@ int shm_setup(char **argv, int rank){
  */
 int shm_teardown(){
   //! @todo
+
+  close(shm_fd);
+  sem_wait(sem);
+  if(!socket_rank)
+    shm_unlink(shm_name);
+  sem_post(sem);
+  
+  sem_close(sem);
+  if(!socket_rank)
+    sem_unlink(shm_name);
+  
   return 0;
 }
