@@ -75,6 +75,7 @@ typedef struct mcsup_nodeconfig_d
   int *map_core_to_socket;   /* length: cores */
   int *map_core_to_local;    /* length: cores */
   int **map_socket_to_core;  /* length: sockets, cores_per_socket */
+  int *map_core_to_per_socket_core; /* length: cores */
 } mcsup_nodeconfig_t;
 
 static mcsup_nodeconfig_t config;
@@ -104,6 +105,7 @@ int parse_proc_cpuinfo()
 
   config.map_core_to_socket=(int*)malloc(config.cores*sizeof(int));
   config.map_core_to_local=(int*)malloc(config.cores*sizeof(int));
+  config.map_core_to_per_socket_core=(int*)malloc(config.cores*sizeof(int));
 
     if ((config.map_core_to_socket==NULL)||
       (config.map_core_to_local==NULL))
@@ -113,6 +115,7 @@ int parse_proc_cpuinfo()
     {
       config.map_core_to_socket[i]=-1;
       config.map_core_to_local[i]=-1;
+      config.map_core_to_per_socket_core[i] = -1;
     }
 
 
@@ -121,7 +124,7 @@ int parse_proc_cpuinfo()
     return MCSUP_ERR_FILEIO;
 
   core=-1;
-
+  
   while (!(feof(cpuinfo)))
     {
       readline(cpuinfo,line,MAX_LINE);
@@ -164,18 +167,17 @@ int parse_proc_cpuinfo()
 	config.cores_per_socket++;
     }
 
-  /*! @todo bug here.  config.cores = 8, but config.sockets = 1 and 
-    config.cores_per_socket = 4, so there will be memory corruption.
-   */
   config.map_socket_to_core=(int**)malloc(sizeof(int*)*config.sockets);
   for (i=0; i<config.sockets; i++)
     {
       config.map_socket_to_core[i]=(int*)malloc(sizeof(int)*config.cores_per_socket);
       core=0;
+      int coreCount = 0;
       for (j=0; j<config.cores; j++)
 	{
 	  if (config.map_core_to_socket[j]==i)
 	    {
+	      config.map_core_to_per_socket_core[j] = coreCount++;
 	      config.map_socket_to_core[i][core]=j;
 	      core++;
 	    }

@@ -10,8 +10,20 @@
 #include <unistd.h>
 #include <string.h>
 #include <mpi.h>
+#include <stdint.h>
 #include "cpuid.h"
 #include "md5.h"
+#include "shm.h"
+
+
+/*! This represents selected frequencies for each core on a socket 
+  for a given time period.
+  Reference the freqs[] array by config.map_core_to_per_socket_core[core]
+ */
+typedef struct{
+  int8_t freq_index[MAX_CORES_PER_SOCKET]; // 0-based frequency index
+  struct timeval tStart;
+} freq_select_t;
 
 MPI_Comm comm_socket;
 int socket_rank;
@@ -138,5 +150,13 @@ int shm_teardown(){
   if(!socket_rank)
     sem_unlink(shm_name);
   
+  return 0;
+}
+
+/*! @todo
+  Mark an entry in shared memory with an attempted frequency transition.
+  This may have no effect on the actual frequency.
+ */
+int shm_mark_freq(unsigned freq_idx){
   return 0;
 }
