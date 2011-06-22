@@ -76,57 +76,13 @@ int shift_parse_freqs(){
 	return 0;
 }
 
-int shift_init(){
-	 char filename[100];
-	 FILE *sfp;
-
-	 /*! @todo
-	   A single process on each socket should set governors for all 
-	   cores on the socket.  Otherwise, if not all cores 
-	   are participating, there could be interference in 
-	   frequency selection.
-	 */
-
-	 get_cpuid(&my_core, &my_socket, &my_local);
-
-
-	 // Shift both processors to top gear.  This is clumsy, but
-	 // we can clean it up later.
-	 snprintf(filename, 100, "%s%u%s%s", cpufreq_path[0], my_core, 
-		  cpufreq_path[1], cpufreq_speed);
-	 sfp = fopen(filename, "w");
-	 if(!sfp){
-		 fprintf(stderr, "!!! %s does not exist.  Bye!\n", 
-			 filename);
-	 }
-	 assert(sfp);
-	 fprintf(sfp, "%u", freqs[ 0 ]);
-	 fclose(sfp);
-
-	 /*! @todo figure out what was going on here
-	   sfp = fopen(cpufreq_filename[ 2 ], "w");
-	   if(!sfp){
-	   fprintf(stderr, 
-	   "!!! cpufreq_filename[%d]=%s does not exist.  Bye!\n", 
-	   cpuid, cpufreq_filename[cpuid]);
-	   }
-	   assert(sfp);
-	   fprintf(sfp, "%s", freq_str[ 0 ]);
-	   fclose(sfp);
-	 */
-
-	 shift_initialized=1;
-	 return 0;
- }
-
  int shift_core(int core, int freq_idx){
  #ifdef BLR_USE_SHIFT
 	 char filename[100];
 	 FILE *sfp;
  #endif
 	 int temp_cpuid;
-	 if(!shift_initialized)
-		 shift_init();
+	 assert(shift_initialized);
 
 	 get_cpuid(&temp_cpuid, &my_socket, &my_local);
 	 assert( temp_cpuid == my_core );
@@ -162,4 +118,15 @@ int shift_socket(int sock, int freq_idx){
 	 for(core_index = 0; core_index < config.cores_per_socket; core_index++)
 		 shift_core(config.map_socket_to_core[sock][core_index], freq_idx);
 	 return 0;
+}
+
+int shift_init_socket(int socket, const char *governor_str){
+	assert(socket >= 0);
+	assert(socket < config.sockets);
+	assert(governor_str);
+
+	shift_set_socket_governor(socket, governor_str);
+	shift_socket(socket, 0); // set all cores on socket to highest frequency
+	shift_initialized = 1;
+	return 0;
 }

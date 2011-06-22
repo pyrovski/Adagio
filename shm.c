@@ -119,13 +119,18 @@ int shm_setup(char **argv, int rank){
 
   /* 
      lock semaphore, resize shared object
-   */
+     
+     A single process on each socket should set governors for all 
+     cores on the socket.  Otherwise, if not all cores 
+     are participating, there could be interference in 
+     frequency selection.
+     
+  */
   if(!socket_rank){
     status = sem_wait(sem);
     status = ftruncate(shm_fd, getpagesize());
     status = sem_post(sem);
-    shift_set_socket_governor(my_socket, "userspace");
-    shift_socket(my_socket, 0); // set all cores on socket to highest frequency
+    shift_init_socket(my_socket, "userspace");
   }
   PMPI_Barrier(comm_socket);
 
