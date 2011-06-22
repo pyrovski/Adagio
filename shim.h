@@ -13,13 +13,15 @@ void Log( int shim_id, union shim_parameters *p );
 
 
 // Schedule entry
+/*! @todo this structure may need to change to accommodate multiple frequencies
+  per task
+ */
 struct entry{
 	double observed_comm_seconds;
 
-  //! @todo allocate
-	double *observed_comp_seconds;
-	double *observed_comp_insn;
-	double *seconds_per_insn;
+	double observed_comp_seconds[MAX_NUM_FREQUENCIES];
+	double observed_comp_insn[MAX_NUM_FREQUENCIES];
+	double seconds_per_insn[MAX_NUM_FREQUENCIES];
 	int following_entry;
 };
 

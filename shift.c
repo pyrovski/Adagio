@@ -20,7 +20,7 @@ static const char cpufreq_governor[] = "scaling_governor";
 static const char cpufreq_speed[] = "scaling_setspeed";
 static const char cpufreq_frequencies[] = "scaling_available_frequencies";
 static int freqs[MAX_NUM_FREQUENCIES];// in kHz, fastest to slowest
-static int *prev_freq_idx;
+static int prev_freq_idx[MAX_NUM_FREQUENCIES];
 static int shift_initialized=0;
 
 int shift_parse_freqs(){

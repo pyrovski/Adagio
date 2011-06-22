@@ -18,7 +18,7 @@
 
 /*! This represents selected frequencies for each core on a socket 
   for a given time period.
-  Reference the freqs[] array by config.map_core_to_per_socket_core[core]
+  Reference the freq_index[] array by config.map_core_to_per_socket_core[core]
  */
 typedef struct{
   int8_t freq_index[MAX_CORES_PER_SOCKET]; // 0-based frequency index
