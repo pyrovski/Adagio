@@ -37,7 +37,7 @@ NAS_MPIRUN=mpirun $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) $(NAS_BADNODE_FLAGS) $(NAS
 
 MPICC=mpicc
 ifeq ($(dbg),1)
-DBG=-D_DEBUG -g 
+DBG=-D_DEBUG -g -pg
 OPT_FLAGS = -O0
 else
 OPT_FLAGS = -O3

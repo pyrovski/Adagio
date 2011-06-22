@@ -133,6 +133,7 @@ int shm_setup(char **argv, int rank){
     shift_init_socket(my_socket, "userspace");
   }
   PMPI_Barrier(comm_socket);
+  shift_set_initialized(1);
 
   return 0;
 }

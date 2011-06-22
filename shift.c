@@ -126,7 +126,11 @@ int shift_init_socket(int socket, const char *governor_str){
 	assert(governor_str);
 
 	shift_set_socket_governor(socket, governor_str);
-	shift_socket(socket, 0); // set all cores on socket to highest frequency
 	shift_initialized = 1;
+	shift_socket(socket, 0); // set all cores on socket to highest frequency
 	return 0;
+}
+
+void shift_set_initialized(int init){
+	shift_initialized = init;
 }
