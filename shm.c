@@ -125,6 +125,7 @@ int shm_setup(char **argv, int rank){
     status = sem_wait(sem);
     status = ftruncate(shm_fd, getpagesize());
     status = sem_post(sem);
+    shift_set_socket_governor(my_socket, "userspace");
     shift_socket(my_socket, 0); // set all cores on socket to highest frequency
   }
   PMPI_Barrier(comm_socket);
@@ -134,7 +135,6 @@ int shm_setup(char **argv, int rank){
 
 /*!
   close and unlink shared memory segment and semaphore
-  this should be easier in Finalize since we have a communicator for each socket
  */
 int shm_teardown(){
 

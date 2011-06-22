@@ -21,7 +21,33 @@ static const char cpufreq_speed[] = "scaling_setspeed";
 static const char cpufreq_frequencies[] = "scaling_available_frequencies";
 static int freqs[MAX_NUM_FREQUENCIES];// in kHz, fastest to slowest
 static int prev_freq_idx[MAX_NUM_FREQUENCIES];
-static int shift_initialized=0;
+static int shift_initialized = 0;
+
+int shift_set_socket_governor(int socket, const char *governor_str){
+	char filename[100];
+	FILE *sfp;
+
+	assert(socket >= 0);
+	assert(socket < config.sockets);
+	assert(governor_str);
+
+	int core_index;
+	for(core_index = 0; core_index < config.cores_per_socket; core_index++){
+		snprintf(filename, 100, "%s%u%s%s", cpufreq_path[0], 
+			 config.map_socket_to_core[socket][core_index], 
+			 cpufreq_path[1], cpufreq_governor);
+		sfp = fopen(filename, "w");
+		if(!sfp){
+			fprintf(stderr, 
+				"!!! unable to open governor selector %s\n", 
+				filename);
+		}
+		assert(sfp);
+		fprintf(sfp, "%s", governor_str);
+		fclose(sfp);
+	}
+	return 0;
+}
 
 int shift_parse_freqs(){
 	char filename[100];
@@ -37,13 +63,11 @@ int shift_parse_freqs(){
 	int status;
 
 	while(!feof(sfp) && !ferror(sfp) && NUM_FREQS < MAX_NUM_FREQUENCIES){
-		status = fscanf(sfp, "%u", &freqs[NUM_FREQS]);
+		status = fscanf(sfp, "%u", &freqs[NUM_FREQS++]);
 		if(status != 1){
 			NUM_FREQS--;
 			break;
 		}
-		else
-			NUM_FREQS++;
 	}
 	fclose(sfp);
 
@@ -65,20 +89,6 @@ int shift_init(){
 
 	 get_cpuid(&my_core, &my_socket, &my_local);
 
-	 // enable userspace governor
-	 if(!socket_rank){
-		 snprintf(filename, 100, "%s%u%s%s", cpufreq_path[0], my_core, 
-			  cpufreq_path[1], cpufreq_governor);
-		 sfp = fopen(filename, "w");
-		 if(!sfp){
-			 fprintf(stderr, 
-				 "!!! unable to open governor selector %s\n", 
-				 filename);
-		 }
-		 assert(sfp);
-		 fprintf(sfp, "%s", "userspace");
-		 fclose(sfp);
-	 }
 
 	 // Shift both processors to top gear.  This is clumsy, but
 	 // we can clean it up later.
@@ -115,9 +125,9 @@ int shift_init(){
 	 FILE *sfp;
  #endif
 	 int temp_cpuid;
-	 if(!shift_initialized){
+	 if(!shift_initialized)
 		 shift_init();
-	 }
+
 	 get_cpuid(&temp_cpuid, &my_socket, &my_local);
 	 assert( temp_cpuid == my_core );
 
