@@ -120,6 +120,13 @@ pre_MPI_Init( union shim_parameters *p ){
 		g_algo |= strstr(env_algo, "jitter"    ) ? algo_JITTER    : 0;
 		g_algo |= strstr(env_algo, "miser"     ) ? algo_MISER     : 0;
 		g_algo |= strstr(env_algo, "clean"     ) ? algo_CLEAN     : 0;
+#ifdef _DEBUG
+		printf("g_algo=%s %d\n", env_algo, g_algo);
+#endif
+	} else {
+#ifdef _DEBUG
+	  printf("g_algo empty\n");
+#endif
 	}
 	env_mods=getenv("OMPI_MCA_gmpi_mods");
 	if(env_mods && strlen(env_mods) > 0){
@@ -130,6 +137,9 @@ pre_MPI_Init( union shim_parameters *p ){
 	env_freq=getenv("OMPI_MCA_gmpi_freq");
 	if(env_freq && strlen(env_freq) > 0){
 		g_freq = atoi(env_freq);	//FIXME make this a little more idiotproof.
+#ifdef _DEBUG
+		printf("g_freq=%s %d\n", env_freq, g_freq);
+#endif
 	}
 
 	env_trace=getenv("OMPI_MCA_gmpi_trace");
@@ -144,7 +154,10 @@ pre_MPI_Init( union shim_parameters *p ){
 		g_trace |= strstr(env_trace, "comm"    ) ? trace_COMM  	: 0;
 		g_trace |= strstr(env_trace, "rank"    ) ? trace_RANK  	: 0;
 		g_trace |= strstr(env_trace, "pcontrol") ? trace_PCONTROL: 0;
-		//fprintf(stdout,"g_trace=%s %d\n", env_trace, g_trace);
+#ifdef _DEBUG
+	printf("g_trace=%s %d\n", env_trace, g_trace);
+	printf("g_trace=%s %d\n", env_trace, g_trace);
+#endif
 	}
 
 	env_badnode=getenv("OMPI_MCA_gmpi_badnode");
@@ -158,6 +171,7 @@ pre_MPI_Init( union shim_parameters *p ){
 	
 	// To bound miser, we assume top gear is 1 instead of 0.
 	// We also allow fermata to be used.
+	//! @todo this needs to change to 2 on platforms supporting Turboboost
 	if(g_algo & algo_MISER){
 		g_algo |= algo_FERMATA;
 		FASTEST_FREQ = 1;
@@ -390,6 +404,7 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	if(!MPI_Initialized_Already){ return; }
 	
 	// Bookkeeping.
+	//! @todo this count may correspond to multiple frequencies
 	current_comp_insn[current_freq]=stop_papi();
 	
 	// Write the schedule entry.  MUST COME BEFORE LOGGING.
@@ -485,9 +500,14 @@ signal_handler(int signal){
 		current_comp_insn[current_freq]=stop_papi();	//  <---|
 	}							//  	|
 								//	|
-	if( ! (g_algo & mods_FAKEFREQ) ) { shift_core( my_core, next_freq ); }  //      |
-	//fprintf(logfile, "==> Signal handler shifting to %d, in_computation=%d\n", 
-	//		next_freq, in_computation);
+	if( ! (g_algo & mods_FAKEFREQ) ) {                      //      |
+	  shift_core( my_core, next_freq );
+	}                                                       //      |
+#ifdef _DEBUG
+	fprintf(logfile, 
+		"==> Signal handler shifting to %d, in_computation=%d\n", 
+		next_freq, in_computation);
+#endif
 	current_freq = next_freq;				//	|
 	next_freq = 0;						//	|
 								//	|
