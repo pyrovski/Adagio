@@ -14,6 +14,7 @@
 #include "cpuid.h"
 #include "md5.h"
 #include "shm.h"
+#include "shift.h"
 
 /*! This represents selected frequencies for each core on a socket 
   for a given time period.

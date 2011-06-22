@@ -63,8 +63,8 @@ FILE *logfile = NULL;
 static struct entry schedule[8192];
 
 //! @todo allocate
-static double current_comp_seconds[MAX_NUM_FREQS];
-static double current_comp_insn[MAX_NUM_FREQS];
+static double current_comp_seconds[MAX_NUM_FREQUENCIES];
+static double current_comp_insn[MAX_NUM_FREQUENCIES];
 
 enum{ 
 	// To run without library overhead, use the .pristine binary.
