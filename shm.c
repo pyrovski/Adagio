@@ -99,7 +99,6 @@ int shm_setup(char **argv, int rank){
   }
 
   // alternatively, shm_update() could be used here
-  PMPI_Barrier(MPI_COMM_WORLD);
 
   MPI_Comm comm_node;
   char hostname[NAME_MAX];
