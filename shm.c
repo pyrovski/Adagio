@@ -160,6 +160,7 @@ int shm_teardown(){
   Mark an entry in shared memory with an attempted frequency transition.
   This may have no effect on the actual frequency.
  */
-int shm_mark_freq(unsigned freq_idx){
+int shm_mark_freq(int freq_idx){
+  
   return 0;
 }

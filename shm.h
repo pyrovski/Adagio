@@ -19,5 +19,5 @@ extern int socket_size;
 int shm_setup(char ** argv, int rank);
 int shm_teardown();
 
-int shm_mark_freq(unsigned freq_idx);
+int shm_mark_freq(int freq_idx);
 #endif

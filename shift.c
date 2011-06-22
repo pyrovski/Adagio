@@ -83,16 +83,17 @@ int shift_parse_freqs(){
  #endif
 	 int temp_cpuid;
 	 assert(shift_initialized);
+	 assert( (freq_idx >= 0) && (freq_idx < NUM_FREQS) );
 
-	 get_cpuid(&temp_cpuid, &my_socket, &my_local);
+	 get_cpuid(&temp_cpuid, 0, 0);
 	 assert( temp_cpuid == my_core );
+
+	 shm_mark_freq(freq_idx);
 
 	 if( freq_idx == prev_freq_idx[ my_core ] ){
 		 return freq_idx;
 	 }
 	 prev_freq_idx[ my_core ] = freq_idx;
-
-	 assert( (freq_idx >= 0) && (freq_idx < NUM_FREQS) );
 
 	 //Make the change
  #ifdef BLR_USE_SHIFT
@@ -114,6 +115,7 @@ int shift_parse_freqs(){
 int shift_socket(int sock, int freq_idx){
 	 assert(sock >= 0);
 	 assert(sock < config.sockets);
+	 
 	 int core_index;
 	 for(core_index = 0; core_index < config.cores_per_socket; core_index++)
 		 shift_core(config.map_socket_to_core[sock][core_index], freq_idx);
