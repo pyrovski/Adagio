@@ -1,6 +1,5 @@
 /* -*- Mode: C; tab-width: 8; c-basic-offset: 8 -*- */
 /*!
-  @todo get info on CPUs, cores, and frequencies from system
   @todo allow configuration of Turboboost
 */
 
@@ -12,18 +11,48 @@
 #define BLR_USE_SHIFT
 //#undef BLR_USE_SHIFT
 
- int NUM_FREQS, SLOWEST_FREQ, FASTEST_FREQ;
+int NUM_FREQS, SLOWEST_FREQ, FASTEST_FREQ = 0;
 
- static int current_freq=0;
- static const char *cpufreq_path[] = {"/sys/devices/system/cpu/cpu",
-				      "/cpufreq/"};
- static const char cpufreq_governor[] = "scaling_governor";
- static const char cpufreq_speed[] = "scaling_setspeed";
- static int *freqs;// in kHz, fastest to slowest
- static int *prev_freq_idx;
- static int shift_initialized=0;
+static int current_freq=0;
+static const char *cpufreq_path[] = {"/sys/devices/system/cpu/cpu",
+				     "/cpufreq/"};
+static const char cpufreq_governor[] = "scaling_governor";
+static const char cpufreq_speed[] = "scaling_setspeed";
+static const char cpufreq_frequencies[] = "scaling_available_frequencies";
+static int freqs[MAX_NUM_FREQUENCIES];// in kHz, fastest to slowest
+static int *prev_freq_idx;
+static int shift_initialized=0;
 
- int shift_init(){
+int shift_parse_freqs(){
+	char filename[100];
+	FILE *sfp;
+	
+	sprintf(filename, "%s%u%s%s", cpufreq_path[0], 0, cpufreq_path[1], 
+		cpufreq_frequencies);
+	
+	sfp = fopen(filename, "r");
+
+	assert(sfp);
+
+	int status;
+
+	while(!feof(sfp) && !ferror(sfp) && NUM_FREQS < MAX_NUM_FREQUENCIES){
+		status = fscanf(sfp, "%u", &freqs[NUM_FREQS]);
+		if(status != 1){
+			NUM_FREQS--;
+			break;
+		}
+		else
+			NUM_FREQS++;
+	}
+	fclose(sfp);
+
+	SLOWEST_FREQ = NUM_FREQS - 1;
+
+	return 0;
+}
+
+int shift_init(){
 	 char filename[100];
 	 FILE *sfp;
 
@@ -32,8 +61,6 @@
 	   cores on the socket.  Otherwise, if not all cores 
 	   are participating, there could be interference in 
 	   frequency selection.
-
-	   @todo set NUM_FREQS, SLOWEST_FREQ, FASTEST_FREQ
 	 */
 
 	 get_cpuid(&my_core, &my_socket, &my_local);
@@ -81,8 +108,7 @@
 	 shift_initialized=1;
 	 return 0;
  }
- /*! @todo this needs to read frequency scaling info at runtime
-  */
+
  int shift_core(int core, int freq_idx){
  #ifdef BLR_USE_SHIFT
 	 char filename[100];

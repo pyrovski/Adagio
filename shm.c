@@ -67,8 +67,6 @@ static int shm_update(){
   }
   status = sem_post(sem);
 
-  //! @todo create MPI group for the socket
-
   return 0;
 }
 */
@@ -138,7 +136,6 @@ int shm_setup(char **argv, int rank){
   this should be easier in Finalize since we have a communicator for each socket
  */
 int shm_teardown(){
-  //! @todo
 
   close(shm_fd);
   sem_wait(sem);

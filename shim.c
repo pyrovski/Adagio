@@ -50,7 +50,7 @@ static int in_computation=1;
 static int MPI_Initialized_Already=0;
 
 //! @todo populate
-static double *frequencies;
+static double frequencies[MAX_NUM_FREQUENCIES];
 
 #define GMPI_MIN_COMP_SECONDS (0.1)     // In seconds.
 #define GMPI_MIN_COMM_SECONDS (0.1)     // In seconds.
@@ -63,8 +63,8 @@ FILE *logfile = NULL;
 static struct entry schedule[8192];
 
 //! @todo allocate
-static double *current_comp_seconds;
-static double *current_comp_insn;
+static double current_comp_seconds[MAX_NUM_FREQS];
+static double current_comp_insn[MAX_NUM_FREQS];
 
 enum{ 
 	// To run without library overhead, use the .pristine binary.
@@ -171,6 +171,10 @@ pre_MPI_Init( union shim_parameters *p ){
 	
 	// initialize mcsup
 	parse_proc_cpuinfo();
+
+	// get list of available frequencies
+	// assume all processors support the same options
+	shift_parse_freqs();
 
 	// Pretend computation started here.
 	start_papi();	
