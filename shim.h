@@ -15,9 +15,11 @@ void Log( int shim_id, union shim_parameters *p );
 // Schedule entry
 struct entry{
 	double observed_comm_seconds;
-	double observed_comp_seconds[NUM_FREQS];
-	double observed_comp_insn[NUM_FREQS];
-	double seconds_per_insn[NUM_FREQS];
+
+  //! @todo allocate
+	double *observed_comp_seconds;
+	double *observed_comp_insn;
+	double *seconds_per_insn;
 	int following_entry;
 };
 

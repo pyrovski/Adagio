@@ -49,20 +49,22 @@ static int current_hash=0, previous_hash=-1, current_freq=0, next_freq=0;
 static int in_computation=1;
 static int MPI_Initialized_Already=0;
 
-static double frequency[NUM_FREQS] = {1.8, 1.6, 1.4, 1.2, 1.0};
+//! @todo populate
+static double *frequencies;
+
 #define GMPI_MIN_COMP_SECONDS (0.1)     // In seconds.
 #define GMPI_MIN_COMM_SECONDS (0.1)     // In seconds.
 #define GMPI_BLOCKING_BUFFER (0.1)      // In seconds.
 
-static int FASTEST_FREQ = __FASTEST_FREQ;
-static int SLOWEST_FREQ = __SLOWEST_FREQ;
-
 FILE *logfile = NULL;
 
 // Don't change this without altering the hash function.
+//! @todo change hash function?
 static struct entry schedule[8192];
-static double current_comp_seconds[NUM_FREQS];
-static double current_comp_insn[NUM_FREQS];
+
+//! @todo allocate
+static double *current_comp_seconds;
+static double *current_comp_insn;
 
 enum{ 
 	// To run without library overhead, use the .pristine binary.
@@ -189,7 +191,7 @@ post_MPI_Init( union shim_parameters *p ){
 	
 	// Set CPU affinity and memory preference.
 	//! @todo this needs to be done by MPI or srun
-	set_cpu_affinity( rank );
+	//set_cpu_affinity( rank );
 	numa_set_localalloc();
 	
 	/*! setup shared memory and interprocess semaphore
@@ -197,7 +199,7 @@ post_MPI_Init( union shim_parameters *p ){
 	shm_setup(*((struct MPI_Init_p*)p)->argv, rank);
 
 	// Start us in a known frequency.
-	shift(FASTEST_FREQ);
+	shift_core(my_core, FASTEST_FREQ);
 	
 	// Fire up the logfile.
 	if(g_trace){logfile = initialize_logfile( rank );}
@@ -213,7 +215,7 @@ pre_MPI_Finalize( union shim_parameters *p ){
 	mark_joules(rank, size);
 	PMPI_Barrier( MPI_COMM_WORLD );
 	// Leave us in a known frequency.  This should always be 0.
-	shift(0);
+	shift_core(my_core, 0);
 	shm_teardown();
 }
 	
@@ -453,7 +455,7 @@ shim_post( int shim_id, union shim_parameters *p ){
 	}
 	// Regardless of computation scheduling algorithm, always shift here.
 	// (Most of the time it should have no effect.)
-	if( ! (g_algo & mods_FAKEFREQ) ) { shift( current_freq ); }
+	if( ! (g_algo & mods_FAKEFREQ) ) { shift_core( my_core, current_freq ); }
 
 	// NOTE:  THIS HAS TO GO LAST.  Otherwise the logfile will be closed
 	// prematurely.
@@ -481,7 +483,7 @@ signal_handler(int signal){
 		current_comp_insn[current_freq]=stop_papi();	//  <---|
 	}							//  	|
 								//	|
-	if( ! (g_algo & mods_FAKEFREQ) ) { shift( next_freq ); }  //      |
+	if( ! (g_algo & mods_FAKEFREQ) ) { shift_core( my_core, next_freq ); }  //      |
 	//fprintf(logfile, "==> Signal handler shifting to %d, in_computation=%d\n", 
 	//		next_freq, in_computation);
 	current_freq = next_freq;				//	|
@@ -559,7 +561,7 @@ schedule_computation( int idx ){
 		for( i=FASTEST_FREQ+1; i<NUM_FREQS; i++ ){
 			schedule[ idx ].seconds_per_insn[ i ] = 
 				schedule[ idx ].seconds_per_insn[ FASTEST_FREQ ] *
-				( frequency[ FASTEST_FREQ ]  / frequency[ i ] );
+				( frequencies[ FASTEST_FREQ ]  / frequencies[ i ] );
 		}
 		/*
 		for( i=0; i<NUM_FREQS; i++ ){

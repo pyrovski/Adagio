@@ -5,6 +5,8 @@
 #include <errno.h>
 #include "affinity.h"
 
+//! @todo this needs to be done by MPI or srun
+/*
 void
 set_cpu_affinity(int rank){
 	int rc;
@@ -21,5 +23,4 @@ set_cpu_affinity(int rank){
 	rc = sched_yield();
 	if(rc < 0){ perror("sched_yield"); }
 }
-
-
+*/

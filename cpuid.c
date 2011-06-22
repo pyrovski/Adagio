@@ -4,6 +4,8 @@
 #include <assert.h>
 #include "cpuid.h"
 
+int my_core, my_socket, my_local;
+
 /*-----------------------------------------------------------------------*/
 /* adapted from                                                          */
 /* Multicore/NUMA support library                                        */
@@ -20,6 +22,8 @@
 #define MAX_LINE 256
 
 //#define VERBOSE
+
+mcsup_nodeconfig_t config;
 
 int whitespace(char c)
 {
@@ -66,19 +70,6 @@ int readline(FILE *fd, char *line, int len)
   line[pos]=(char) 0;
   return MCSUP_OK;
 }
-
-typedef struct mcsup_nodeconfig_d 
-{
-  int sockets;
-  int cores;
-  int cores_per_socket;
-  int *map_core_to_socket;   /* length: cores */
-  int *map_core_to_local;    /* length: cores */
-  int **map_socket_to_core;  /* length: sockets, cores_per_socket */
-  int *map_core_to_per_socket_core; /* length: cores */
-} mcsup_nodeconfig_t;
-
-static mcsup_nodeconfig_t config;
 
 int parse_proc_cpuinfo()
 {

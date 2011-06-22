@@ -1,5 +1,6 @@
 #ifndef SHM_H
 #define SHM_H
+#include <mpi.h>
 
 #define MAX_CORES_PER_SOCKET 8
 
@@ -11,6 +12,9 @@ typedef struct {
 */
 
 extern MPI_Comm comm_socket;
+extern int socket_rank;
+extern int socket_size;
+
 
 int shm_setup(char ** argv, int rank);
 int shm_teardown();

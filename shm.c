@@ -15,7 +15,6 @@
 #include "md5.h"
 #include "shm.h"
 
-
 /*! This represents selected frequencies for each core on a socket 
   for a given time period.
   Reference the freqs[] array by config.map_core_to_per_socket_core[core]
@@ -76,18 +75,18 @@ static int shm_update(){
 
 int shm_setup(char **argv, int rank){
   char *runName;
-  int status, socket = -1, core = -1, local = -1;
+  int status;
 
   assert(argv && argv[0]);
   
   // use part of name after last '/'
   runName = strrchr(argv[0], '/');
   runName = runName ? runName + 1 : argv[0];
-  runName = runName ? runName : argv[0];
+  runName = *runName ? runName : argv[0];
   
-  status = get_cpuid(&core, &socket, &local);
+  status = get_cpuid(&my_core, &my_socket, &my_local);
 
-  status = snprintf(shm_name, NAME_MAX - 4, "/%s.%u", runName, socket);
+  status = snprintf(shm_name, NAME_MAX - 4, "/%s.%u", runName, my_socket);
   shm_fd = shm_open(shm_name, O_RDWR | O_CREAT, S_IRWXU);
   if(shm_fd < 0){
     perror("shm_open");
@@ -116,7 +115,7 @@ int shm_setup(char **argv, int rank){
   int digestInt = abs(*(int*)digest); // first few bytes should be unique...
 
   PMPI_Comm_split(MPI_COMM_WORLD, digestInt, rank, &comm_node);
-  PMPI_Comm_split(comm_node, socket, core, &comm_socket);
+  PMPI_Comm_split(comm_node, my_socket, my_core, &comm_socket);
   PMPI_Comm_rank(comm_socket, &socket_rank);
   PMPI_Comm_size(comm_socket, &socket_size);
 
@@ -127,6 +126,7 @@ int shm_setup(char **argv, int rank){
     status = sem_wait(sem);
     status = ftruncate(shm_fd, getpagesize());
     status = sem_post(sem);
+    shift_socket(my_socket, 0); // set all cores on socket to highest frequency
   }
   PMPI_Barrier(comm_socket);
 
