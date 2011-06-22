@@ -30,8 +30,8 @@ NAS_EXTRA_FLAGS= -mca gmpi_mods bigcomm
 
 # Runtime environment
 NP ?=32
-MPIRUN=mpirun -np $(NP) -hostfile $(HOSTFILE) $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) $(BADNODE_FLAGS)
-NAS_MPIRUN=mpirun $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) $(NAS_BADNODE_FLAGS) $(NAS_EXTRA_FLAGS) 
+MPIRUN=mpirun -bind-to-core -np $(NP) -hostfile $(HOSTFILE) $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) $(BADNODE_FLAGS)
+NAS_MPIRUN=mpirun -bind-to-core $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) $(NAS_BADNODE_FLAGS) $(NAS_EXTRA_FLAGS) 
 
 # Compile environment
 
