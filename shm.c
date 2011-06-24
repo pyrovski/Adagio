@@ -97,7 +97,17 @@ int shm_setup(char **argv, int rank){
   
   cpu_set_t cpuset;
   status = sched_getaffinity(0, sizeof(cpu_set_t), &cpuset);
-  int bound = (CPU_COUNT(&cpuset) == 1);
+  int bound = 0;
+#ifdef CPU_COUNT
+  bound = (CPU_COUNT(&cpuset) == 1);
+#else
+  {
+    int index;
+    for(index = 0; index < sizeof(cpu_set_t) / sizeof(int); index++)
+      bound +=  __builtin_popcount(*((int*)&cpuset + index));
+    bound = bound == 1;
+  }
+#endif
 #ifdef _DEBUG
   printf("rank %d is ", rank);
   if(bound)
@@ -128,7 +138,7 @@ int shm_setup(char **argv, int rank){
   unsigned char digest[16];
 
   status = gethostname(hostname, NAME_MAX);
-  hostname[NAME_MAX - 1] - 0;
+  hostname[NAME_MAX - 1] = 0;
   md5_state_t pms;
   md5_init(&pms);
   md5_append(&pms, (unsigned char*)hostname, strlen(hostname));
