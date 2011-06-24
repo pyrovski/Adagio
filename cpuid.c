@@ -73,7 +73,7 @@ int readline(FILE *fd, char *line, int len)
 
 int parse_proc_cpuinfo()
 {
-  char line[MAX_LINE];
+  char line[1024];
   FILE *cpuinfo;
   int core,i,j,err = -1;
   
@@ -84,7 +84,7 @@ int parse_proc_cpuinfo()
   config.cores=0;
   while (!(feof(cpuinfo)))
     {
-      err=readline(cpuinfo,line,MAX_LINE);
+      err=readline(cpuinfo,line, 1024);
       if (err<MCSUP_OK) 
 	return err;
 
@@ -118,7 +118,7 @@ int parse_proc_cpuinfo()
   
   while (!(feof(cpuinfo)))
     {
-      readline(cpuinfo,line,MAX_LINE);
+      readline(cpuinfo,line, 1024);
       if (err<MCSUP_OK) 
 	return err;
 
@@ -198,6 +198,7 @@ int parse_proc_cpuinfo()
 
 
 int get_cpuid(int *core, int *socket, int *local){
+
   //Return value should be in the range 0-3.
   int a,b,c,d;
 
@@ -220,8 +221,18 @@ int get_cpuid(int *core, int *socket, int *local){
   if(socket)
     *socket=config.map_core_to_socket[*core];
   if(local)
-  *local=config.map_core_to_local[*core];
-  
+    *local=config.map_core_to_local[*core];
+
+#ifdef _DEBUG
+  printf("%s: %s ", __FILE__, __FUNCTION__);
+  if(core)
+    printf("core: %d ", *core);
+  if(socket)
+    printf("socket: %d ", *socket);
+  if(local)
+    printf("local: %d\n", *local);
+#endif
+
 #undef cpuid
 #undef INITAL_APIC_ID_BITS
   return 0;
