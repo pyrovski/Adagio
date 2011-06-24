@@ -44,8 +44,9 @@ int shift_set_socket_governor(int socket, const char *governor_str){
 			fprintf(stderr, 
 				"!!! unable to open governor selector %s\n", 
 				filename);
+			return 1;
 		}
-		assert(sfp);
+		//assert(sfp);
 		fprintf(sfp, "%s", governor_str);
 		fclose(sfp);
 	}
