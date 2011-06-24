@@ -18,6 +18,9 @@ static const char *cpufreq_path[] = {"/sys/devices/system/cpu/cpu",
 				     "/cpufreq/"};
 static const char cpufreq_governor[] = "scaling_governor";
 static const char cpufreq_speed[] = "scaling_setspeed";
+static const char cpufreq_min[] = "scaling_min_freq";
+static const char cpufreq_max[] = "scaling_max_freq";
+       
 static const char cpufreq_frequencies[] = "scaling_available_frequencies";
 static int freqs[MAX_NUM_FREQUENCIES];// in kHz, fastest to slowest
 static int prev_freq_idx[MAX_NUM_FREQUENCIES];
@@ -122,12 +125,60 @@ int shift_socket(int sock, int freq_idx){
 	 return 0;
 }
 
+int shift_set_socket_min_freq(int socket){
+	 assert(socket >= 0);
+	 assert(socket < config.sockets);
+	 
+	 int core_index;
+	 FILE *sfp;
+	 char filename[100];
+	 for(core_index = 0; core_index < config.cores_per_socket; core_index++){
+		 snprintf(filename, 100, "%s%u%s%s", cpufreq_path[0], 
+			  config.map_socket_to_core[socket][core_index], 
+			  cpufreq_path[1], cpufreq_min);
+		 sfp = fopen(filename, "w");
+		 if(!sfp){
+			 fprintf(stderr, "!!! %s does not exist.  Bye!\n", 
+				 filename);
+		 }
+		 assert(sfp);
+		 fprintf(sfp, "%u", freqs[ SLOWEST_FREQ ]);
+		 fclose(sfp);
+	 }
+	 return 0;
+}
+
+int shift_set_socket_max_freq(int socket){
+	 assert(socket >= 0);
+	 assert(socket < config.sockets);
+	 
+	 int core_index;
+	 FILE *sfp;
+	 char filename[100];
+	 for(core_index = 0; core_index < config.cores_per_socket; core_index++){
+		 snprintf(filename, 100, "%s%u%s%s", cpufreq_path[0], 
+			  config.map_socket_to_core[socket][core_index], 
+			  cpufreq_path[1], cpufreq_max);
+		 sfp = fopen(filename, "w");
+		 if(!sfp){
+			 fprintf(stderr, "!!! %s does not exist.  Bye!\n", 
+				 filename);
+		 }
+		 assert(sfp);
+		 fprintf(sfp, "%u", freqs[ FASTEST_FREQ ]);
+		 fclose(sfp);
+	 }
+	 return 0;
+}
+
 int shift_init_socket(int socket, const char *governor_str){
 	assert(socket >= 0);
 	assert(socket < config.sockets);
 	assert(governor_str);
 
 	shift_set_socket_governor(socket, governor_str);
+	shift_set_socket_min_freq(socket);
+	shift_set_socket_max_freq(socket);
 	shift_initialized = 1;
 	shift_socket(socket, 0); // set all cores on socket to highest frequency
 	return 0;

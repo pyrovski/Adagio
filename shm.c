@@ -11,10 +11,15 @@
 #include <string.h>
 #include <mpi.h>
 #include <stdint.h>
+
 #include "cpuid.h"
 #include "md5.h"
 #include "shm.h"
 #include "shift.h"
+
+//#define _GNU_SOURCE
+#define __USE_GNU
+#include <sched.h>
 
 /*! This represents selected frequencies for each core on a socket 
   for a given time period.
@@ -82,6 +87,24 @@ int shm_setup(char **argv, int rank){
   runName = strrchr(argv[0], '/');
   runName = runName ? runName + 1 : argv[0];
   runName = *runName ? runName : argv[0];
+
+  /*
+    Ensure establishment of cpu affinity.
+    If not already bound to a core,
+    let MPI_Comm_split assign ranks to processes on a socket,
+    then use those ranks to chose cpu cores.
+   */
+  
+  cpu_set_t cpuset;
+  status = sched_getaffinity(0, sizeof(cpu_set_t), &cpuset);
+  int bound = (CPU_COUNT(&cpuset) == 1);
+#ifdef _DEBUG
+  printf("rank %d is ", rank);
+  if(bound)
+    printf("bound\n");
+  else
+    printf("not bound\n");
+#endif
   
   status = get_cpuid(&my_core, &my_socket, &my_local);
 
@@ -113,9 +136,29 @@ int shm_setup(char **argv, int rank){
   int digestInt = abs(*(int*)digest); // first few bytes should be unique...
 
   PMPI_Comm_split(MPI_COMM_WORLD, digestInt, rank, &comm_node);
-  PMPI_Comm_split(comm_node, my_socket, my_core, &comm_socket);
+  if(bound)
+    PMPI_Comm_split(comm_node, my_socket, my_core, &comm_socket);
+  else
+    PMPI_Comm_split(comm_node, my_socket, 0, &comm_socket);
   PMPI_Comm_rank(comm_socket, &socket_rank);
   PMPI_Comm_size(comm_socket, &socket_size);
+  
+#ifdef _DEBUG
+  printf("rank %d is in socket %d rank %d (%d)\n", rank, my_socket, 
+	 socket_rank, socket_size);
+#endif
+
+
+  if(!bound){
+    my_core = socket_rank;
+#ifdef _DEBUG
+    printf("rank %d binding to core %d\n", rank, my_core);
+#endif
+    CPU_ZERO(&cpuset);
+    CPU_SET(my_core, &cpuset);
+    status = sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
+    get_cpuid(&my_core, &my_socket, &my_local);
+  }
 
   /* 
      lock semaphore, resize shared object
