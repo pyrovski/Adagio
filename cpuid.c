@@ -230,7 +230,8 @@ int get_cpuid(int *core, int *socket, int *local){
   if(socket)
     printf("socket: %d ", *socket);
   if(local)
-    printf("local: %d\n", *local);
+    printf("local: %d", *local);
+  printf("\n");
 #endif
 
 #undef cpuid
