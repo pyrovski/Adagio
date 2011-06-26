@@ -82,6 +82,7 @@ int parse_proc_cpuinfo()
     return MCSUP_ERR_FILEIO;
 
   config.cores=0;
+  config.max_apicid = 0;
   while (!(feof(cpuinfo)))
     {
       err=readline(cpuinfo,line, 1024);
@@ -92,14 +93,31 @@ int parse_proc_cpuinfo()
 	{
 	  config.cores++;
 	}
+      else if (strncmp(line, "apicid", 6) == 0)
+	{
+	  // extract apicid
+	  int apicid;
+	  char buf[80];
+	  sscanf(line, "%s : %d", buf, &apicid);
+	  config.max_apicid = apicid > config.max_apicid ? apicid :
+	    config.max_apicid;
+#ifdef _DEBUG
+	  //printf("read apicid %d\n", apicid);
+#endif
+	}
     }
 
+  config.map_apicid_to_core = (int*)malloc((config.max_apicid+1)*sizeof(int));
   config.map_core_to_socket=(int*)malloc(config.cores*sizeof(int));
   config.map_core_to_local=(int*)malloc(config.cores*sizeof(int));
   config.map_core_to_per_socket_core=(int*)malloc(config.cores*sizeof(int));
+  config.map_core_to_apicid = (int*)malloc(config.cores*sizeof(int));
 
     if ((config.map_core_to_socket==NULL)||
-      (config.map_core_to_local==NULL))
+	(config.map_core_to_local==NULL) || 
+	!config.map_core_to_per_socket_core || 
+	!config.map_apicid_to_core || 
+	!config.map_core_to_apicid)
     return MCSUP_ERR_NOMEM;
 
   for (i=0; i<config.cores; i++)
@@ -107,8 +125,11 @@ int parse_proc_cpuinfo()
       config.map_core_to_socket[i]=-1;
       config.map_core_to_local[i]=-1;
       config.map_core_to_per_socket_core[i] = -1;
+      config.map_core_to_apicid[i] = -1;
     }
 
+  for(i = 0; i <= config.max_apicid; i++)
+    config.map_apicid_to_core[i] = -1;
 
   cpuinfo=freopen("/proc/cpuinfo","r",cpuinfo);
   if (cpuinfo==NULL)
@@ -129,7 +150,7 @@ int parse_proc_cpuinfo()
 	    return MCSUP_ERR_IDOUTOFRANGE;
 	}
 
-      if (strncmp(line,"physical id",11)==0)
+      else if (strncmp(line,"physical id",11)==0)
 	{
 	  if (core>=0)
 	    config.map_core_to_socket[core]=atoi(strchr(line,':')+2);
@@ -137,12 +158,22 @@ int parse_proc_cpuinfo()
 	    return MCSUP_ERR_PARSEERROR;
 	}
 
-      if (strncmp(line,"core id",7)==0)
+      else if (strncmp(line,"core id",7)==0)
 	{
 	  if (core>=0)
 	    config.map_core_to_local[core]=atoi(strchr(line,':')+2);
 	  else
 	    return MCSUP_ERR_PARSEERROR;
+	}
+
+      else if (strncmp(line, "apicid", 6) == 0)
+	{
+	  // extract apicid
+	  int apicid;
+	  char buf[80];
+	  sscanf(line, "%s : %d", buf, &apicid);
+	  config.map_apicid_to_core[apicid] = core;
+	  config.map_core_to_apicid[core] = apicid;
 	}
     }
 

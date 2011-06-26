@@ -6,18 +6,20 @@ extern int my_core, my_socket, my_local; // intialized in post_MPI_Init
 
 /*! @todo on Xeon E5640, core ids are 0, 1, 9, 10, 
   and apic ids range from 0 to 53.
-  Thus, these array maps must be longer than the number of cores.x
+  Thus, these array maps must be longer than the number of cores.
  */
 typedef struct mcsup_nodeconfig_d 
 {
   int sockets;
   int cores;
+  int max_apicid;
   int cores_per_socket;
   int *map_core_to_socket;   /* length: cores */
   int *map_core_to_local;    /* length: cores */
   int **map_socket_to_core;  /* length: sockets, cores_per_socket */
   int *map_core_to_per_socket_core; /* length: cores */
-  //int *map_apicid_to_;       /* length: apic ids */
+  int *map_apicid_to_core;   /* length: max apic id + 1 */
+  int *map_core_to_apicid;   /* length: cores */
 } mcsup_nodeconfig_t;
 
 extern mcsup_nodeconfig_t config;
