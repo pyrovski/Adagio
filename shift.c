@@ -8,6 +8,8 @@
 #include "shift.h"
 #include "cpuid.h"
 #include "shm.h"
+#include "shim.h"
+
 #define BLR_USE_SHIFT
 //#undef BLR_USE_SHIFT
 
@@ -67,11 +69,11 @@ int shift_parse_freqs(){
 	int status;
 
 	while(!feof(sfp) && !ferror(sfp) && NUM_FREQS < MAX_NUM_FREQUENCIES){
-		status = fscanf(sfp, "%u", &freqs[NUM_FREQS++]);
-		if(status != 1){
-			NUM_FREQS--;
+		status = fscanf(sfp, "%u", &freqs[NUM_FREQS]);
+		if(status != 1)
 			break;
-		}
+		frequencies[NUM_FREQS] = (double)freqs[NUM_FREQS] * 1000.0;
+		NUM_FREQS++;
 	}
 	fclose(sfp);
 

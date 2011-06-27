@@ -50,7 +50,7 @@ static int current_hash=0, previous_hash=-1, current_freq=0, next_freq=0;
 static int in_computation=1;
 static int MPI_Initialized_Already=0;
 
-static double frequencies[MAX_NUM_FREQUENCIES];
+double frequencies[MAX_NUM_FREQUENCIES];
 
 #define GMPI_MIN_COMP_SECONDS (0.1)     // In seconds.
 #define GMPI_MIN_COMM_SECONDS (0.1)     // In seconds.

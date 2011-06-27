@@ -5,6 +5,9 @@
  */
 #include "shift.h"
 #include "shim_parameters.h"
+
+extern double frequencies[MAX_NUM_FREQUENCIES];
+
 void shim_pre( int shim_id, union shim_parameters *p );
 void shim_post( int shim_id, union shim_parameters *p );
 char* f2str( int shim_id );
