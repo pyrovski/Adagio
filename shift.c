@@ -109,7 +109,9 @@ int shift_core(int core, int freq_idx){
 			filename);
 	}
 	assert(sfp);
-	fprintf(sfp, "%u", freqs[ freq_idx ]);
+	printf("socket %d rank %d core %d shifting to %d\n", 
+	       my_socket, socket_rank, my_core, freq_idx);
+	fprintf(sfp, "%u\n", freqs[ freq_idx ]);
 	fclose(sfp);
 #endif
 	current_freq = freq_idx;

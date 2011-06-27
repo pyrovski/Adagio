@@ -1,3 +1,4 @@
+/* -*- Mode: C; tab-width: 2; c-basic-offset: 2 -*- */
 /* shim.c
  *
  * The two global functions here, shim_pre() and shim_post, are called from the
@@ -230,8 +231,9 @@ pre_MPI_Finalize( union shim_parameters *p ){
 	p=p;
 	mark_joules(rank, size);
 	PMPI_Barrier( MPI_COMM_WORLD );
-	// Leave us in a known frequency.  This should always be 0.
-	shift_core(my_core, 0);
+	// Leave us in a known frequency.  
+	// This should always be the fastest available.
+	shift_core(my_core, FASTEST_FREQ);
 	shm_teardown();
 }
 	
@@ -566,15 +568,21 @@ schedule_computation( int idx ){
 	// run at the highest frequency (0).  
 	current_freq = FASTEST_FREQ;
 
-	//fprintf( logfile, "==> schedule_computation called with idx=%d\n", idx);
+#ifdef _DEBUG
+	fprintf( logfile, "==> schedule_computation called with idx=%d\n", idx);
+#endif
 	// If we have no data to work with, go home.
 	if( idx==0 ){ return; }
 
 	// On the first time through, establish worst-case slowdown rates.
 	if( schedule[ idx ].seconds_per_insn[ FASTEST_FREQ ] == 0.0 ){
-		//fprintf( logfile, "==> schedule_computation First time through.\n");
+#ifdef _DEBUG
+		fprintf( logfile, "==> schedule_computation First time through.\n");
+#endif
 		if( schedule[ idx ].observed_comp_seconds[ FASTEST_FREQ ] <= GMPI_MIN_COMP_SECONDS ){
-			//fprintf( logfile, "==> schedule_computation min_seconds violation.\n");
+#ifdef _DEBUG
+			fprintf( logfile, "==> schedule_computation min_seconds violation.\n");
+#endif
 			return;
 		}
 		schedule[ idx ].seconds_per_insn[ FASTEST_FREQ ] = 
@@ -585,12 +593,13 @@ schedule_computation( int idx ){
 				schedule[ idx ].seconds_per_insn[ FASTEST_FREQ ] *
 				( frequencies[ FASTEST_FREQ ]  / frequencies[ i ] );
 		}
-		/*
+#ifdef _DEBUG
 		for( i=0; i<NUM_FREQS; i++ ){
-			fprintf(logfile, "&&& SPI %d = %16.15lf\n", 
-					i, schedule[idx].seconds_per_insn[ i ]);
+			if(!isnan(schedule[idx].seconds_per_insn[i]))
+				fprintf(logfile, "&&& SPI %d = %16.15lf\n", 
+								i, schedule[idx].seconds_per_insn[ i ]);
 		}
-		*/
+#endif
 	}
 
 	// On subsequent execution, only update where we have data.
@@ -600,12 +609,13 @@ schedule_computation( int idx ){
 				schedule[ idx ].observed_comp_seconds[ i ]/
 				schedule[ idx ].observed_comp_insn[ i ];
 		}
-		/*
+#ifdef _DEBUG
 		for( i=0; i<NUM_FREQS; i++ ){
-			fprintf(logfile, "&&& SPI %d = %16.15lf\n", 
-					i, schedule[idx].seconds_per_insn[ i ]);
+			if(!isnan(schedule[idx].seconds_per_insn[i]))
+				fprintf(logfile, "&&& SPI %d = %16.15lf\n", 
+								i, schedule[idx].seconds_per_insn[ i ]);
 		}
-		*/
+#endif
 	}
 
 	// Given I instructions to be executed over d time using available
@@ -634,24 +644,28 @@ schedule_computation( int idx ){
 	
 	// If the fastest frequency isn't fast enough, use f0 all the time.
 	if( I * schedule[ idx ].seconds_per_insn[ FASTEST_FREQ ] >= d ){
-		//fprintf( logfile, "==> schedule_computation GO FASTEST.\n");
-		//fprintf( logfile, "==>     I=%lf\n", I);
-		//fprintf( logfile, "==>   SPI=%lf\n",   
-		//		schedule[ idx ].seconds_per_insn[0]);
-		//fprintf( logfile, "==> I*SPI=%lf\n", 
-		//		I*schedule[ idx ].seconds_per_insn[0]);
-		//fprintf( logfile, "==>     d=%lf\n", d);
+#ifdef _DEBUG
+		fprintf( logfile, "==> schedule_computation GO FASTEST.\n");
+		fprintf( logfile, "==>     I=%lf\n", I);
+		fprintf( logfile, "==>   SPI=%lf\n",   
+				schedule[ idx ].seconds_per_insn[0]);
+		fprintf( logfile, "==> I*SPI=%lf\n", 
+				I*schedule[ idx ].seconds_per_insn[0]);
+		fprintf( logfile, "==>     d=%lf\n", d);
+#endif
 		current_freq = FASTEST_FREQ;
 	}
 	// If the slowest frequency isn't slow enough, use that.
 	else if( I * schedule[ idx ].seconds_per_insn[ SLOWEST_FREQ ] <= d ){
-		//fprintf( logfile, "==> schedule_computation GO SLOWEST.\n");
-		//fprintf( logfile, "==>     I=%lf\n", I);
-		//fprintf( logfile, "==>   SPI=%lf\n",   
-		//		schedule[ idx ].seconds_per_insn[ SLOWEST_FREQ ]);
-		//fprintf( logfile, "==> I*SPI=%lf\n", 
-		//		I*schedule[ idx ].seconds_per_insn[ SLOWEST_FREQ ]);
-		//fprintf( logfile, "==>     d=%lf\n", d);
+#ifdef _DEBUG
+		fprintf( logfile, "==> schedule_computation GO SLOWEST.\n");
+		fprintf( logfile, "==>     I=%lf\n", I);
+		fprintf( logfile, "==>   SPI=%lf\n",   
+				schedule[ idx ].seconds_per_insn[ SLOWEST_FREQ ]);
+		fprintf( logfile, "==> I*SPI=%lf\n", 
+				I*schedule[ idx ].seconds_per_insn[ SLOWEST_FREQ ]);
+		fprintf( logfile, "==>     d=%lf\n", d);
+#endif
 		current_freq = SLOWEST_FREQ;
 	}
 	// Find the slowest frequency that allows the work to be completed in time.
@@ -665,7 +679,7 @@ schedule_computation( int idx ){
 					( I * schedule[ idx ].seconds_per_insn[ i ] - 
 					  I * schedule[ idx ].seconds_per_insn[ i+1 ] );
 
-				/*
+#ifdef _DEBUG
 				fprintf( logfile, "==> schedule_computation GO %d.\n", i);
 				fprintf( logfile, "----> SPI[%d] = %15.14lf\n", 0, schedule[idx].seconds_per_insn[0]);
 				fprintf( logfile, "----> SPI[%i] = %15.14lf\n", i, schedule[idx].seconds_per_insn[i]);
@@ -673,7 +687,7 @@ schedule_computation( int idx ){
 				fprintf( logfile, "---->       I = %lf\n", I);
 				fprintf( logfile, "---->       p = %lf\n", p);
 				fprintf( logfile, "---->     idx = %d\n", idx);
-				*/
+#endif
 				current_freq = i;
 
 				// Do we need to shift down partway through?
@@ -683,10 +697,10 @@ schedule_computation( int idx ){
 					seconds_until_interrupt = 
 						p * I * schedule[ idx ].seconds_per_insn[ i ];
 					next_freq = i+1;
-					/*
+#ifdef _DEBUG
 					fprintf( logfile, "==> schedule_computation alarm=%15.14lf.\n", 
-							seconds_until_interrupt);
-					*/
+						 seconds_until_interrupt);
+#endif
 					set_alarm(seconds_until_interrupt);
 				}
 				break;

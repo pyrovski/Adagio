@@ -257,6 +257,7 @@ int get_cpuid(int *core, int *socket, int *local){
   if(local)
     *local=config.map_core_to_local[mapped_core];
 
+  /*
 #ifdef _DEBUG
   printf("%s: %s ", __FILE__, __FUNCTION__);
   if(core)
@@ -267,6 +268,7 @@ int get_cpuid(int *core, int *socket, int *local){
     printf("local: %d", *local);
   printf("\n");
 #endif
+  */
 
 #undef cpuid
 #undef INITAL_APIC_ID_BITS
