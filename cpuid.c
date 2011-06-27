@@ -192,7 +192,8 @@ int parse_proc_cpuinfo()
   config.map_socket_to_core=(int**)malloc(sizeof(int*)*config.sockets);
   for (i=0; i<config.sockets; i++)
     {
-      config.map_socket_to_core[i]=(int*)malloc(sizeof(int)*config.cores_per_socket);
+      config.map_socket_to_core[i]=
+	(int*)malloc(sizeof(int)*config.cores_per_socket);
       core=0;
       int coreCount = 0;
       for (j=0; j<config.cores; j++)
@@ -246,18 +247,20 @@ int get_cpuid(int *core, int *socket, int *local){
   //Figure out which core we're on.
   cpuid( 1, a, b, c, d );
   a=a; b=b; c=c; d=d;
-  
+
+  int mapped_core = config.map_apicid_to_core[( b & INITIAL_APIC_ID_BITS ) >> 24];
+
   if(core)
-    *core = ( b & INITIAL_APIC_ID_BITS ) >> 24;
+    *core = mapped_core;
   if(socket)
-    *socket=config.map_core_to_socket[*core];
+    *socket=config.map_core_to_socket[mapped_core];
   if(local)
-    *local=config.map_core_to_local[*core];
+    *local=config.map_core_to_local[mapped_core];
 
 #ifdef _DEBUG
   printf("%s: %s ", __FILE__, __FUNCTION__);
   if(core)
-    printf("core: %d ", *core);
+    printf("core: %d ", mapped_core);
   if(socket)
     printf("socket: %d ", *socket);
   if(local)
