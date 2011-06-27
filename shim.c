@@ -263,35 +263,41 @@ Log( int shim_id, union shim_parameters *p ){
 	MPI_Aint lb; 
 	MPI_Aint extent;
 	int MsgSz=-1;
-	char *var_format =
-		"%5d %14s %06d "\
-		" %9.6lf %9.6lf %9.6lf %9.6lf %9.6lf"\
-		" %9.6lf %7d\n";
-	char *hdr_format =
-		"%5s %14s %6s"\
-		" %9s %9s %9s %9s %9s"\
-		" %9s %7s\n";
 
+	/*! @todo create these at runtime for the detected number of frequencies */
+	char *var_format[] = {
+		"%5d %14s %06d ",
+		" %9.6lf ",
+		" %9.6lf %7d\n"
+	};
+	char *hdr_format[] = {
+		"%5s %14s %6s",
+		" %9s ,"
+		" %9s %7s\n"
+	};
+	char buf[80];
+	int i;
 
 	// One-time initialization.
 	if(!initialized){
 		//Write the header line.
 		if(rank==0){
-			fprintf(logfile, 
-				hdr_format,
-				" Rank", "Function", "Hash", 
-				"Comp0", "Comp1", "Comp2", "Comp3", "Comp4",
-				"Comm", "MsgSz");
+			fprintf(logfile, " ");
 		}else{
-			fprintf(logfile, 
-				hdr_format,
-				"#Rank", "Function", "Hash", 
-				"Comp0", "Comp1", "Comp2", "Comp3", "Comp4",
-				"Comm", "MsgSz");
+			fprintf(logfile, "#");
 		}
+		fprintf(logfile, 
+						hdr_format[0],
+						"Rank", "Function", "Hash");
+		for(i = 0; i < NUM_FREQS; i++){
+			snprintf(buf, 80, "Comp%d", i);
+			fprintf(logfile, hdr_format[1], buf);
+		}
+		fprintf(logfile, hdr_format[2], "Comm", "MsgSz");
+		
 		initialized=1;
 	}
-
+	
 	// Determine message size for selected function calls.
 	switch(shim_id){
 		case GMPI_ISEND: 
@@ -328,19 +334,15 @@ Log( int shim_id, union shim_parameters *p ){
 	}
 			
 	// Write to the logfile.
-	fprintf( logfile,
-		var_format,
-		rank,
-		f2str(p->MPI_Dummy_p.shim_id),	
-		current_hash,
-		schedule[current_hash].observed_comp_seconds[0],
-		schedule[current_hash].observed_comp_seconds[1],
-		schedule[current_hash].observed_comp_seconds[2],
-		schedule[current_hash].observed_comp_seconds[3],
-		schedule[current_hash].observed_comp_seconds[4],
-		schedule[current_hash].observed_comm_seconds,
-		MsgSz
-	);
+	fprintf(logfile, var_format[0], rank,
+					f2str(p->MPI_Dummy_p.shim_id),	
+					current_hash);
+	for(i = 0; i < NUM_FREQS; i++)
+		fprintf(logfile, var_format[1], 
+						schedule[current_hash].observed_comp_seconds[i]);
+	fprintf(logfile, var_format[2], 
+					schedule[current_hash].observed_comm_seconds,
+					MsgSz);
 
 #ifdef BLR_USE_EAGER_LOGGING
 	fflush( logfile );
