@@ -156,8 +156,8 @@ pre_MPI_Init( union shim_parameters *p ){
 		g_trace |= strstr(env_trace, "rank"    ) ? trace_RANK  	: 0;
 		g_trace |= strstr(env_trace, "pcontrol") ? trace_PCONTROL: 0;
 #ifdef _DEBUG
-	printf("g_trace=%s %d\n", env_trace, g_trace);
-	printf("g_trace=%s %d\n", env_trace, g_trace);
+		g_trace = trace_ALL;
+		printf("g_trace=%s %d\n", env_trace, g_trace);
 #endif
 	}
 
@@ -266,14 +266,14 @@ Log( int shim_id, union shim_parameters *p ){
 
 	/*! @todo create these at runtime for the detected number of frequencies */
 	char *var_format[] = {
-		"%5d %14s %06d ",
-		" %9.6lf ",
-		" %9.6lf %7d\n"
+		"%5d %13s %06d ",
+		"%9.6lf ",
+		"%9.6lf %7d\n"
 	};
 	char *hdr_format[] = {
-		"%5s %14s %6s",
-		" %9s ,"
-		" %9s %7s\n"
+		"%4s %13s %6s ",
+		"%9s ",
+		"%9s %7s\n"
 	};
 	char buf[80];
 	int i;
