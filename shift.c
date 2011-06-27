@@ -80,41 +80,41 @@ int shift_parse_freqs(){
 	return 0;
 }
 
- int shift_core(int core, int freq_idx){
- #ifdef BLR_USE_SHIFT
-	 char filename[100];
-	 FILE *sfp;
- #endif
-	 int temp_cpuid;
-	 assert(shift_initialized);
-	 assert( (freq_idx >= 0) && (freq_idx < NUM_FREQS) );
+int shift_core(int core, int freq_idx){
+#ifdef BLR_USE_SHIFT
+	char filename[100];
+	FILE *sfp;
+#endif
+	int temp_cpuid;
+	assert(shift_initialized);
+	assert( (freq_idx >= 0) && (freq_idx < NUM_FREQS) );
 
-	 get_cpuid(&temp_cpuid, 0, 0);
-	 assert( temp_cpuid == my_core );
+	get_cpuid(&temp_cpuid, 0, 0);
+	assert( temp_cpuid == my_core );
 
-	 shm_mark_freq(freq_idx);
+	shm_mark_freq(freq_idx);
 
-	 if( freq_idx == prev_freq_idx[ my_core ] ){
-		 return freq_idx;
-	 }
-	 prev_freq_idx[ my_core ] = freq_idx;
+	if( freq_idx == prev_freq_idx[ my_core ] ){
+		return freq_idx;
+	}
+	prev_freq_idx[ my_core ] = freq_idx;
 
-	 //Make the change
- #ifdef BLR_USE_SHIFT
-	 snprintf(filename, 100, "%s%u%s%s", cpufreq_path[0], my_core, 
-		  cpufreq_path[1], cpufreq_speed);
-	 sfp = fopen(filename, "w");
-	 if(!sfp){
-		 fprintf(stderr, "!!! %s does not exist.  Bye!\n", 
-			 filename);
-	 }
-	 assert(sfp);
-	 fprintf(sfp, "%u", freqs[ freq_idx ]);
-	 fclose(sfp);
- #endif
-	 current_freq = freq_idx;
-	 return freq_idx;
- }
+	//Make the change
+#ifdef BLR_USE_SHIFT
+	snprintf(filename, 100, "%s%u%s%s", cpufreq_path[0], my_core, 
+		 cpufreq_path[1], cpufreq_speed);
+	sfp = fopen(filename, "w");
+	if(!sfp){
+		fprintf(stderr, "!!! %s does not exist.  Bye!\n", 
+			filename);
+	}
+	assert(sfp);
+	fprintf(sfp, "%u", freqs[ freq_idx ]);
+	fclose(sfp);
+#endif
+	current_freq = freq_idx;
+	return freq_idx;
+}
 
 int shift_socket(int sock, int freq_idx){
 	 assert(sock >= 0);
@@ -181,6 +181,10 @@ int shift_init_socket(int socket, const char *governor_str){
 	shift_set_socket_min_freq(socket);
 	shift_set_socket_max_freq(socket);
 	shift_initialized = 1;
+	
+	/*!
+	  @todo check to see if unrelated cores are affecting selected frequency
+	*/
 	shift_socket(socket, 0); // set all cores on socket to highest frequency
 	return 0;
 }
