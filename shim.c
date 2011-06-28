@@ -675,6 +675,7 @@ schedule_computation( int idx ){
 		for( i=SLOWEST_FREQ-1; i>FASTEST_FREQ; i-- ){
 			if( I * schedule[ idx ].seconds_per_insn[ i ] < d ){
 				// We have a winner.
+				//! @todo adjust for average frequency measurement
 				p = 
 					( d - I * schedule[ idx ].seconds_per_insn[ i+1 ] )
 					/
