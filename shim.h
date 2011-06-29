@@ -17,7 +17,7 @@ void Log( int shim_id, union shim_parameters *p );
 
 // Schedule entry
 /*! @todo this structure may need to change to accommodate average frequencies
-  per task measurement
+  per task measurement.
  */
 struct entry{
   double observed_comm_seconds;

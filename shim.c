@@ -332,11 +332,10 @@ Log( int shim_id, union shim_parameters *p ){
 		"%9s ",
 		"%9s %7s\n"
 	};
-	char buf[80];
-	int i;
 
 	// One-time initialization.
 	if(!initialized){
+		char buf[80];
 		//Write the header line.
 		if(rank==0){
 			fprintf(logfile, " ");
@@ -346,10 +345,8 @@ Log( int shim_id, union shim_parameters *p ){
 		fprintf(logfile, 
 						hdr_format[0],
 						"Rank", "Function", "Hash");
-		for(i = 0; i < NUM_FREQS; i++){
-			snprintf(buf, 80, "Comp%d", i);
-			fprintf(logfile, hdr_format[1], buf);
-		}
+		snprintf(buf, 80, "Comp");
+		fprintf(logfile, hdr_format[1], buf);
 		fprintf(logfile, hdr_format[2], "Comm", "MsgSz");
 		
 		initialized=1;
@@ -394,7 +391,6 @@ Log( int shim_id, union shim_parameters *p ){
 	fprintf(logfile, var_format[0], rank,
 					f2str(p->MPI_Dummy_p.shim_id),	
 					current_hash);
-	//for(i = 0; i < NUM_FREQS; i++)
 	fprintf(logfile, var_format[1], 
 					schedule[current_hash].observed_comp_seconds);
 	fprintf(logfile, var_format[2], 
@@ -664,19 +660,12 @@ schedule_computation( int idx ){
 		schedule[ idx ].seconds_per_insn = 
 			schedule[ idx ].observed_comp_seconds /
 			schedule[ idx ].observed_comp_insn;
-		/*
-		for( i=FASTEST_FREQ+1; i<NUM_FREQS; i++ ){
-			schedule[ idx ].seconds_per_insn[ i ] = 
-				schedule[ idx ].seconds_per_insn[ FASTEST_FREQ ] *
-				( frequencies[ FASTEST_FREQ ]  / frequencies[ i ] );
-		}
-		*/
+		/*! @todo we should save the numbers from the first high freq run
+		 */
 #ifdef _DEBUG
-		for( i=0; i<NUM_FREQS; i++ ){
-			if(!isnan(schedule[idx].seconds_per_insn))
-				fprintf(logfile, "&&& SPI = %16.15lf\n", 
-								schedule[idx].seconds_per_insn);
-		}
+		if(!isnan(schedule[idx].seconds_per_insn))
+			fprintf(logfile, "&&& SPI = %16.15lf\n", 
+							schedule[idx].seconds_per_insn);
 #endif
 	}
 
@@ -688,11 +677,9 @@ schedule_computation( int idx ){
 				schedule[ idx ].observed_comp_insn;
 		}
 #ifdef _DEBUG
-		for( i=0; i<NUM_FREQS; i++ ){
-			if(!isnan(schedule[idx].seconds_per_insn))
-				fprintf(logfile, "&&& SPI = %16.15lf\n", 
-								schedule[idx].seconds_per_insn);
-		}
+	if(!isnan(schedule[idx].seconds_per_insn))
+		fprintf(logfile, "&&& SPI = %16.15lf\n", 
+						schedule[idx].seconds_per_insn);
 #endif
 		//}
 
@@ -727,10 +714,10 @@ I += schedule[ idx ].observed_comp_insn;
 #ifdef _DEBUG
 		fprintf( logfile, "==> schedule_computation GO FASTEST.\n");
 		fprintf( logfile, "==>     I=%lf\n", I);
-		fprintf( logfile, "==>   SPI=%lf\n",   
+		fprintf( logfile, "==>   SPI=%16.15lf\n",   
 				schedule[ idx ].seconds_per_insn * 
 						 schedule[idx].freq / frequencies[FASTEST_FREQ]);
-		fprintf( logfile, "==> I*SPI=%lf\n", 
+		fprintf( logfile, "==> I*SPI=%16.15lf\n", 
 				I*schedule[ idx ].seconds_per_insn *
 						 schedule[idx].freq / frequencies[FASTEST_FREQ]);
 		fprintf( logfile, "==>     d=%lf\n", d);
@@ -744,10 +731,10 @@ I += schedule[ idx ].observed_comp_insn;
 #ifdef _DEBUG
 		fprintf( logfile, "==> schedule_computation GO SLOWEST.\n");
 		fprintf( logfile, "==>     I=%lf\n", I);
-		fprintf( logfile, "==>   SPI=%lf\n",   
+		fprintf( logfile, "==>   SPI=%16.15lf\n",   
 				schedule[ idx ].seconds_per_insn * 
 						 schedule[idx].freq / frequencies[ SLOWEST_FREQ ]);
-		fprintf( logfile, "==> I*SPI=%lf\n", 
+		fprintf( logfile, "==> I*SPI=%16.15lf\n", 
 				I*schedule[ idx ].seconds_per_insn * 
 						 schedule[idx].freq / frequencies[ SLOWEST_FREQ ]);
 		fprintf( logfile, "==>     d=%lf\n", d);
