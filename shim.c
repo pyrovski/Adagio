@@ -11,6 +11,7 @@
 #include <numa.h>
 #include <sys/utsname.h>
 #include <stdint.h>
+#include <assert.h>
 #include "shim_enumeration.h"
 #include "shim.h"
 #include "gettimeofday_helpers.h"
@@ -106,13 +107,50 @@ enum{
 	
 };
 
+static inline uint64_t rdtsc(void)
+{
+	// compiler should eliminate one code path
+  if (sizeof(long) == sizeof(uint64_t)) {
+    uint32_t lo, hi;
+    asm volatile("rdtsc" : "=a" (lo), "=d" (hi));
+    return ((uint64_t)(hi) << 32) | lo;
+  }
+  else {
+    uint64_t tsc;
+    asm volatile("rdtsc" : "=A" (tsc));
+    return tsc;
+  }
+}
+
+static FILE *perf_file = 0;
+
+static void read_aperf_mperf(uint64_t *aperf, uint64_t *mperf){
+	uint64_t mperf_aperf[2];
+	if(!perf_file){
+		perf_file = fopen("/proc/mperf_aperf", "r");
+		assert(perf_file);
+	}
+	
+	int status = fread(mperf_aperf, sizeof(uint64_t) * 2, 1, perf_file);
+	if(mperf)
+		*mperf = mperf_aperf[0];
+	if(aperf)
+		*aperf = mperf_aperf[1];
+	status = fseek(perf_file, 0, SEEK_SET);
+}
+
 /* start = 1, stop = 0 
  */
-static inline int mark_time(timing_t *t, int start_stop){
-	/*! @todo get aperf/mperf */
-	/*! @todo get tsc */
-	/*! @todo get time of day */
-	return 0;
+static inline void mark_time(timing_t *t, int start_stop){
+	if(start_stop){
+		t->tsc_start = rdtsc();
+		read_aperf_mperf(&t->aperf_start, &t->mperf_start);
+		gettimeofday(&t->start, 0);
+	} else {
+		t->tsc_stop = rdtsc();
+		read_aperf_mperf(&t->aperf_stop, &t->mperf_stop);
+		gettimeofday(&t->stop, 0);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -577,21 +615,6 @@ set_alarm(double s){
 // Schedules
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline uint64_t rdtsc(void)
-{
-	// compiler should eliminate one code path
-  if (sizeof(long) == sizeof(uint64_t)) {
-    uint32_t lo, hi;
-    asm volatile("rdtsc" : "=a" (lo), "=d" (hi));
-    return ((uint64_t)(hi) << 32) | lo;
-  }
-  else {
-    uint64_t tsc;
-    asm volatile("rdtsc" : "=A" (tsc));
-    return tsc;
-  }
-}
-
 static void
 schedule_communication( int idx ){
 	// If we have no data to work with, go home.
@@ -705,9 +728,11 @@ I += schedule[ idx ].observed_comp_insn;
 		fprintf( logfile, "==> schedule_computation GO FASTEST.\n");
 		fprintf( logfile, "==>     I=%lf\n", I);
 		fprintf( logfile, "==>   SPI=%lf\n",   
-				schedule[ idx ].seconds_per_insn[0]);
+				schedule[ idx ].seconds_per_insn * 
+						 schedule[idx].freq / frequencies[FASTEST_FREQ]);
 		fprintf( logfile, "==> I*SPI=%lf\n", 
-				I*schedule[ idx ].seconds_per_insn[0]);
+				I*schedule[ idx ].seconds_per_insn *
+						 schedule[idx].freq / frequencies[FASTEST_FREQ]);
 		fprintf( logfile, "==>     d=%lf\n", d);
 #endif
 		current_freq = FASTEST_FREQ;
@@ -720,9 +745,11 @@ I += schedule[ idx ].observed_comp_insn;
 		fprintf( logfile, "==> schedule_computation GO SLOWEST.\n");
 		fprintf( logfile, "==>     I=%lf\n", I);
 		fprintf( logfile, "==>   SPI=%lf\n",   
-				schedule[ idx ].seconds_per_insn[ SLOWEST_FREQ ]);
+				schedule[ idx ].seconds_per_insn * 
+						 schedule[idx].freq / frequencies[ SLOWEST_FREQ ]);
 		fprintf( logfile, "==> I*SPI=%lf\n", 
-				I*schedule[ idx ].seconds_per_insn[ SLOWEST_FREQ ]);
+				I*schedule[ idx ].seconds_per_insn * 
+						 schedule[idx].freq / frequencies[ SLOWEST_FREQ ]);
 		fprintf( logfile, "==>     d=%lf\n", d);
 #endif
 		current_freq = SLOWEST_FREQ;
@@ -745,8 +772,12 @@ I += schedule[ idx ].observed_comp_insn;
 
 #ifdef _DEBUG
 				fprintf( logfile, "==> schedule_computation GO %d.\n", i);
-				fprintf( logfile, "----> SPI[%d] = %15.14lf\n", 0, schedule[idx].seconds_per_insn[0]);
-				fprintf( logfile, "----> SPI[%i] = %15.14lf\n", i, schedule[idx].seconds_per_insn[i]);
+				fprintf( logfile, "----> SPI[%d] = %15.14lf\n", FASTEST_FREQ, 
+								 schedule[idx].seconds_per_insn * 
+								 schedule[idx].freq / frequencies[FASTEST_FREQ]);
+				fprintf( logfile, "----> SPI[%i] = %15.14lf\n", i, 
+								 schedule[idx].seconds_per_insn *
+								 schedule[idx].freq / frequencies[i]);
 				fprintf( logfile, "---->       d = %lf\n", d);
 				fprintf( logfile, "---->       I = %lf\n", I);
 				fprintf( logfile, "---->       p = %lf\n", p);
