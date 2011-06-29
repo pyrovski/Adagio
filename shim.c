@@ -10,6 +10,7 @@
 #include <math.h>
 #include <numa.h>
 #include <sys/utsname.h>
+#include <stdint.h>
 #include "shim_enumeration.h"
 #include "shim.h"
 #include "gettimeofday_helpers.h"
@@ -39,8 +40,18 @@ static void set_alarm			( double s );
 
 static int rank, size;
 
-static struct timeval ts_start_communication, ts_start_computation,
+typedef struct {
+	struct timeval start, stop;
+	uint64_t aperf_start, aperf_stop,
+		mperf_start, mperf_stop, 
+		tsc_start, tsc_stop;
+} timing_t;
+
+/*
+	static struct timeval ts_start_communication, ts_start_computation,
 			ts_stop_communication, ts_stop_computation;
+*/
+static timing_t time_comp, time_comm;
 
 static int g_algo;	// which algorithm(s) to use.
 static int g_freq;	// frequency to use with fixedfreq.  
@@ -94,6 +105,15 @@ enum{
 	
 	
 };
+
+/* start = 1, stop = 0 
+ */
+static inline int mark_time(timing_t *t, int start_stop){
+	/*! @todo get aperf/mperf */
+	/*! @todo get tsc */
+	/*! @todo get time of day */
+	return 0;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Init
@@ -179,9 +199,8 @@ pre_MPI_Init( union shim_parameters *p ){
 	}
 	
 	// Put a reasonable value in.
-	/*! @todo get aperf/mperf */
-	gettimeofday(&ts_start_computation, NULL);  
-	gettimeofday(&ts_stop_computation, NULL);  
+	mark_time(&time_comp, 1);
+	mark_time(&time_comp, 0);
 	
 	// initialize mcsup
 	parse_proc_cpuinfo();
@@ -395,8 +414,7 @@ shim_pre( int shim_id, union shim_parameters *p ){
 
 	// Bookkeeping.
 	in_computation = 0;
-	/*! @todo get aperf/mperf */
-	gettimeofday(&ts_stop_computation, NULL);  
+	mark_time(&time_comp, 0);
 
 	// Which call is this?
 	current_hash=hash_backtrace(shim_id);
@@ -445,11 +463,10 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	
 	/*! @todo calculate aperf/mperf ratio and rate */
 	schedule[current_hash].observed_comp_seconds = 
-		delta_seconds(&ts_start_computation, &ts_stop_computation);
+		delta_seconds(&time_comp.start, &time_comp.stop);
 
 	// Schedule communication.
-	/*! @todo get aperf/mperf */
-	gettimeofday(&ts_start_communication, NULL);  
+	mark_time(&time_comm, 1);
 	if( g_algo & algo_FERMATA ) { schedule_communication( current_hash ); }
 }
 
@@ -462,14 +479,14 @@ shim_post( int shim_id, union shim_parameters *p ){
 	set_alarm(0.0);
 
 	// Bookkeeping.
-	gettimeofday(&ts_stop_communication, NULL);  
+	mark_time(&time_comm, 0);
 	//dump_timeval(logfile, "Communication halted. ", &ts_stop_communication);
 
 	// (Most) Function-specific intercept code.
 	if(shim_id == GMPI_INIT){ post_MPI_Init( p ); }
 	
 	schedule[current_hash].observed_comm_seconds = 
-		delta_seconds(&ts_start_communication, &ts_stop_communication);
+		delta_seconds(&time_comm.start, &time_comm.stop);
 	if( previous_hash >= 0 ){
 		schedule[previous_hash].following_entry = current_hash;
 	}
@@ -479,8 +496,7 @@ shim_post( int shim_id, union shim_parameters *p ){
 	
 	// Bookkeeping.  MUST COME AFTER LOGGING.
 	previous_hash = current_hash;
-	/*! @todo get aperf/mperf */
-	gettimeofday(&ts_start_computation, NULL);  
+	mark_time(&time_comp, 1);
 	//dump_timeval(logfile, "COMPUTATION started.  ", &ts_start_computation);
 	start_papi();	//Computation.
 
@@ -515,10 +531,9 @@ signal_handler(int signal){
         signal = signal;
 	//fprintf( logfile, "++> SIGNAL HANDLER\n");
 	if(in_computation){
-		gettimeofday(&ts_stop_computation, NULL);
-		/*! @todo get aperf/mperf */
+		mark_time(&time_comp, 0);
 		current_comp_seconds = 
-			delta_seconds(&ts_start_computation, &ts_stop_computation);
+			delta_seconds(&time_comp.start, &time_comp.stop);
 		current_comp_insn=stop_papi();	//  <---|
 	}							//  	|
 								//	|
@@ -535,7 +550,7 @@ signal_handler(int signal){
 								//	|
 	if(in_computation){					//	|
 		/*! @todo get aperf/mperf */
-		gettimeofday(&ts_start_computation, NULL);	//	|
+		mark_time(&time_comp, 1);		
 		start_papi();					//  <---|
 	}
 }
@@ -561,6 +576,21 @@ set_alarm(double s){
 ////////////////////////////////////////////////////////////////////////////////
 // Schedules
 ////////////////////////////////////////////////////////////////////////////////
+
+static inline uint64_t rdtsc(void)
+{
+	// compiler should eliminate one code path
+  if (sizeof(long) == sizeof(uint64_t)) {
+    uint32_t lo, hi;
+    asm volatile("rdtsc" : "=a" (lo), "=d" (hi));
+    return ((uint64_t)(hi) << 32) | lo;
+  }
+  else {
+    uint64_t tsc;
+    asm volatile("rdtsc" : "=A" (tsc));
+    return tsc;
+  }
+}
 
 static void
 schedule_communication( int idx ){
@@ -669,7 +699,8 @@ I += schedule[ idx ].observed_comp_insn;
 	
 	// If the fastest frequency isn't fast enough, use f0 all the time.
 	//! @todo fix for average frequency measurement; need prediction
-	if( I * schedule[ idx ].seconds_per_insn >= d ){
+	if( I * schedule[ idx ].seconds_per_insn * 
+			schedule[ idx ].freq/frequencies[FASTEST_FREQ] >= d ){
 #ifdef _DEBUG
 		fprintf( logfile, "==> schedule_computation GO FASTEST.\n");
 		fprintf( logfile, "==>     I=%lf\n", I);
