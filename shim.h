@@ -20,12 +20,14 @@ void Log( int shim_id, union shim_parameters *p );
   per task measurement
  */
 struct entry{
-	double observed_comm_seconds;
+  double observed_comm_seconds;
+  
+  double observed_comp_seconds;
+  double observed_comp_insn;
+  double seconds_per_insn;
 
-	double observed_comp_seconds[MAX_NUM_FREQUENCIES];
-	double observed_comp_insn[MAX_NUM_FREQUENCIES];
-	double seconds_per_insn[MAX_NUM_FREQUENCIES];
-	int following_entry;
+  double freq;
+  int following_entry;
 };
 
 
