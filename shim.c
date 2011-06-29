@@ -46,6 +46,8 @@ typedef struct {
 	uint64_t aperf_start, aperf_stop,
 		mperf_start, mperf_stop, 
 		tsc_start, tsc_stop;
+
+	double freq, ratio, elapsed_time;
 } timing_t;
 
 /*
@@ -124,19 +126,43 @@ static inline uint64_t rdtsc(void)
 
 static FILE *perf_file = 0;
 
-static void read_aperf_mperf(uint64_t *aperf, uint64_t *mperf){
+static inline void read_aperf_mperf(uint64_t *aperf, uint64_t *mperf){
 	uint64_t mperf_aperf[2];
 	if(!perf_file){
 		perf_file = fopen("/proc/mperf_aperf", "r");
 		assert(perf_file);
 	}
 	
-	int status = fread(mperf_aperf, sizeof(uint64_t) * 2, 1, perf_file);
+	fread(mperf_aperf, sizeof(uint64_t) * 2, 1, perf_file);
 	if(mperf)
 		*mperf = mperf_aperf[0];
 	if(aperf)
 		*aperf = mperf_aperf[1];
+	/*
 	status = fseek(perf_file, 0, SEEK_SET);
+	assert(!status);
+	*/
+	fclose(perf_file);
+	perf_file = 0;
+	/*
+#ifdef _DEBUG
+	printf("core %d aperf: 0x%llx mperf: 0x%llx\n", my_core, 
+				 mperf_aperf[1], mperf_aperf[0]);
+#endif
+	*/
+}
+
+/*!
+	@todo calculate aperf/mperf ratio and corresponding frequency, elapsed time
+	@todo deal with counter overflow; see turbostat code
+ */
+static void calc_rates(timing_t *t){
+	assert(t);
+	t->ratio = (double)(t->aperf_stop - t->aperf_start) / 
+		(t->mperf_stop - t->mperf_start);
+	uint64_t tsc_delta = t->tsc_stop - t->tsc_start;
+	t->elapsed_time = delta_seconds(&t->start, &t->stop);
+	t->freq = t->ratio * tsc_delta / t->elapsed_time;
 }
 
 /* start = 1, stop = 0 
@@ -150,6 +176,7 @@ static inline void mark_time(timing_t *t, int start_stop){
 		t->tsc_stop = rdtsc();
 		read_aperf_mperf(&t->aperf_stop, &t->mperf_stop);
 		gettimeofday(&t->stop, 0);
+		calc_rates(t);
 	}
 }
 
@@ -322,33 +349,19 @@ Log( int shim_id, union shim_parameters *p ){
 	MPI_Aint extent;
 	int MsgSz=-1;
 
-	char *var_format[] = {
-		"%5d %13s %06d ",
-		"%9.6lf ",
-		"%9.6lf %7d\n"
-	};
-	char *hdr_format[] = {
-		"%4s %13s %6s ",
-		"%9s ",
-		"%9s %7s\n"
-	};
+	char var_format[] = "%5d %13s %06d %9.6lf %4.3lf %9.6lf %7d\n";
+	char hdr_format[] = "%4s %13s %6s %9s %6s %9s %7s\n";
 
 	// One-time initialization.
 	if(!initialized){
-		char buf[80];
 		//Write the header line.
 		if(rank==0){
 			fprintf(logfile, " ");
 		}else{
 			fprintf(logfile, "#");
 		}
-		fprintf(logfile, 
-						hdr_format[0],
-						"Rank", "Function", "Hash");
-		snprintf(buf, 80, "Comp");
-		fprintf(logfile, hdr_format[1], buf);
-		fprintf(logfile, hdr_format[2], "Comm", "MsgSz");
-		
+		fprintf(logfile, hdr_format,
+						"Rank", "Function", "Hash", "Comp", "CompF(GHz)", "Comm", "MsgSz");		
 		initialized=1;
 	}
 	
@@ -388,12 +401,11 @@ Log( int shim_id, union shim_parameters *p ){
 	}
 			
 	// Write to the logfile.
-	fprintf(logfile, var_format[0], rank,
+	fprintf(logfile, var_format, rank, 
 					f2str(p->MPI_Dummy_p.shim_id),	
-					current_hash);
-	fprintf(logfile, var_format[1], 
-					schedule[current_hash].observed_comp_seconds);
-	fprintf(logfile, var_format[2], 
+					current_hash,
+					schedule[current_hash].observed_comp_seconds,
+					schedule[current_hash].freq / 1000000000.0,
 					schedule[current_hash].observed_comm_seconds,
 					MsgSz);
 
@@ -465,12 +477,14 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	current_comp_insn=stop_papi();
 	
 	// Write the schedule entry.  MUST COME BEFORE LOGGING.
+	schedule[current_hash].freq = time_comp.freq;
 	/*
 	memcpy(	// Copy time accrued before we shifted into current freq.
 		schedule[current_hash].observed_comp_seconds, 
 		current_comp_seconds, 
 		sizeof( double ) * NUM_FREQS);
 	*/
+	// current_comp_seconds is set in the signal handler
 	schedule[current_hash].observed_comp_seconds = current_comp_seconds;
 	/*
 	memset(
@@ -495,9 +509,9 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	*/
 	current_comp_insn = 0;
 	
-	/*! @todo calculate aperf/mperf ratio and rate */
-	schedule[current_hash].observed_comp_seconds = 
-		delta_seconds(&time_comp.start, &time_comp.stop);
+	/*! @todo multiple assignment to observed_comp_seconds;
+	 which is correct? */
+	schedule[current_hash].observed_comp_seconds = time_comp.elapsed_time;
 
 	// Schedule communication.
 	mark_time(&time_comm, 1);
@@ -519,8 +533,7 @@ shim_post( int shim_id, union shim_parameters *p ){
 	// (Most) Function-specific intercept code.
 	if(shim_id == GMPI_INIT){ post_MPI_Init( p ); }
 	
-	schedule[current_hash].observed_comm_seconds = 
-		delta_seconds(&time_comm.start, &time_comm.stop);
+	schedule[current_hash].observed_comm_seconds = time_comm.elapsed_time;
 	if( previous_hash >= 0 ){
 		schedule[previous_hash].following_entry = current_hash;
 	}
@@ -566,9 +579,8 @@ signal_handler(int signal){
 	//fprintf( logfile, "++> SIGNAL HANDLER\n");
 	if(in_computation){
 		mark_time(&time_comp, 0);
-		current_comp_seconds = 
-			delta_seconds(&time_comp.start, &time_comp.stop);
 		current_comp_insn=stop_papi();	//  <---|
+		current_comp_seconds = time_comp.elapsed_time;
 	}							//  	|
 								//	|
 	if( ! (g_algo & mods_FAKEFREQ) ) {                      //      |
@@ -583,7 +595,6 @@ signal_handler(int signal){
 	next_freq = 0;						//	|
 								//	|
 	if(in_computation){					//	|
-		/*! @todo get aperf/mperf */
 		mark_time(&time_comp, 1);		
 		start_papi();					//  <---|
 	}
