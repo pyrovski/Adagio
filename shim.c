@@ -160,7 +160,13 @@ static void calc_rates(timing_t *t){
 	assert(t);
 	t->ratio = (double)(t->aperf_stop - t->aperf_start) / 
 		(t->mperf_stop - t->mperf_start);
+	if(t->aperf_stop <= t->aperf_start)
+		printf("aperf went backwards?\n");
+	if(t->mperf_stop <= t->mperf_start)
+		printf("mperf went backwards?\n");
 	uint64_t tsc_delta = t->tsc_stop - t->tsc_start;
+	if(t->tsc_stop <= t->tsc_start)
+		printf("tsc went backwards?\n");
 	t->elapsed_time = delta_seconds(&t->start, &t->stop);
 	t->freq = t->ratio * tsc_delta / t->elapsed_time;
 }
@@ -169,6 +175,9 @@ static void calc_rates(timing_t *t){
  */
 static inline void mark_time(timing_t *t, int start_stop){
 	if(start_stop){
+#ifdef _DEBUG
+		printf("rank %d timing start 0x%lx\n", rank, t);
+#endif
 		t->tsc_start = rdtsc();
 		read_aperf_mperf(&t->aperf_start, &t->mperf_start);
 		gettimeofday(&t->start, 0);
@@ -177,6 +186,9 @@ static inline void mark_time(timing_t *t, int start_stop){
 		read_aperf_mperf(&t->aperf_stop, &t->mperf_stop);
 		gettimeofday(&t->stop, 0);
 		calc_rates(t);
+#ifdef _DEBUG
+		printf("rank %d timing stop 0x%lx\n", rank, t);
+#endif
 	}
 }
 
