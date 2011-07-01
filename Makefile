@@ -19,14 +19,14 @@ MCA_REQUIRED_FLAGS=-mca btl self,tcp
 NUMA_FLAGS=
 
 
-ADAGIO_FLAGS= -mca gmpi_algo adagio 
-ANDANTE_FLAGS= -mca gmpi_algo andante 
-FERMATA_FLAGS= -mca gmpi_algo fermata 
-NOSCHED_FLAGS= 
-MISER_FLAGS= -mca gmpi_algo miser
-BADNODE_FLAGS= -mca gmpi_badnode opt09,opt13
-NAS_BADNODE_FLAGS= -mca gmpi_badnode opt01,opt09,opt13
-NAS_EXTRA_FLAGS= -mca gmpi_mods bigcomm
+export ADAGIO_FLAGS= -mca gmpi_algo adagio 
+export ANDANTE_FLAGS= -mca gmpi_algo andante 
+export FERMATA_FLAGS= -mca gmpi_algo fermata 
+export NOSCHED_FLAGS= 
+export MISER_FLAGS= -mca gmpi_algo miser
+export BADNODE_FLAGS= -mca gmpi_badnode opt09,opt13
+export NAS_BADNODE_FLAGS= -mca gmpi_badnode opt01,opt09,opt13
+export NAS_EXTRA_FLAGS= -mca gmpi_mods bigcomm
 
 # Runtime environment
 NP ?=32
@@ -53,23 +53,19 @@ shim_selection.h  shim_str.h  shim_structs.h  shim_union.h
 all: Makefile harness_pristine harness harness_static
 	@echo Done
 ft:
-	$(MAKE) -C ../NPB3.3/NPB3.3-MPI/bin ft  "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)" 
+	$(MAKE) -C ../NPB3.3/NPB3.3-MPI/bin ft  "MPIRUN=$(NAS_MPIRUN)"
 nas:
-	$(MAKE) -C ../NPB3.3/NPB3.3-MPI/bin nas "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
+	$(MAKE) -C ../NPB3.3/NPB3.3-MPI/bin nas "MPIRUN=$(NAS_MPIRUN)"
 miser:
-	$(MAKE) -C ../NPB3.3/NPB3.3-MPI/bin miser_test "MPIRUN=$(NAS_MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)" "MISER_FLAGS=$(MISER_FLAGS)"
-
+	$(MAKE) -C ../NPB3.3/NPB3.3-MPI/bin miser_test "MPIRUN=$(NAS_MPIRUN)" 
 umt:
-	cd ../umt2k-1.2.2/bin; $(MAKE) umt "MPIRUN=$(MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
-
+	cd ../umt2k-1.2.2/bin; $(MAKE) umt "MPIRUN=$(MPIRUN)" 
 umt_jitter:
-	cd ../umt2k-1.2.2/bin; $(MAKE) jitter "MPIRUN=$(MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
-
+	cd ../umt2k-1.2.2/bin; $(MAKE) jitter "MPIRUN=$(MPIRUN)" 
 paradis:
-	cd ../ParaDiS/blr; $(MAKE) paradis "MPIRUN=$(MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)" "MISER_FLAGS=$(MISER_FLAGS)"
-
+	cd ../ParaDiS/blr; $(MAKE) paradis "MPIRUN=$(MPIRUN)"
 paradis_jitter:
-	cd ../ParaDiS/blr; $(MAKE) jitter "MPIRUN=$(MPIRUN)" "ADAGIO_FLAGS=$(ADAGIO_FLAGS)" "ANDANTE_FLAGS=$(ANDANTE_FLAGS)" "FERMATA_FLAGS=$(FERMATA_FLAGS)" "NOSCHED_FLAGS=$(NOSCHED_FLAGS)"
+	cd ../ParaDiS/blr; $(MAKE) jitter "MPIRUN=$(MPIRUN)" 
 
 # Test runs
 spin: Makefile harness 
