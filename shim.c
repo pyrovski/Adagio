@@ -171,7 +171,8 @@ static void calc_rates(timing_t *t){
 	t->freq = t->ratio * tsc_delta / t->elapsed_time;
 }
 
-/* start = 1, stop = 0 
+/*! start = 1, stop = 0 
+	 @todo don't need gettimeofday if tsc rate is constant.
  */
 static inline void mark_time(timing_t *t, int start_stop){
 	if(start_stop){
