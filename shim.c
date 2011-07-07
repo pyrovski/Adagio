@@ -111,6 +111,9 @@ enum{
 
 static inline uint64_t rdtsc(void)
 {
+	// use cpuid instruction to serialize
+	asm volatile ("xorl %%eax,%%eax \n cpuid"
+								::: "%rax", "%rbx", "%rcx", "%rdx");
 	// compiler should eliminate one code path
   if (sizeof(long) == sizeof(uint64_t)) {
     uint32_t lo, hi;
@@ -168,7 +171,9 @@ static void calc_rates(timing_t *t){
 	if(t->tsc_stop <= t->tsc_start)
 		printf("tsc went backwards?\n");
 	t->elapsed_time = delta_seconds(&t->start, &t->stop);
+	//t->elapsed_time = tsc_delta / 2667000000;
 	t->freq = t->ratio * tsc_delta / t->elapsed_time;
+	//t->freq = t->ratio * 2667000000;
 }
 
 /*! start = 1, stop = 0 
