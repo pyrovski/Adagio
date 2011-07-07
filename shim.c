@@ -184,9 +184,9 @@ static inline void mark_time(timing_t *t, int start_stop){
 #ifdef _DEBUG
 		printf("rank %d timing start 0x%lx\n", rank, t);
 #endif
+		gettimeofday(&t->start, 0);
 		t->tsc_start = rdtsc();
 		read_aperf_mperf(&t->aperf_start, &t->mperf_start);
-		gettimeofday(&t->start, 0);
 	} else {
 		t->tsc_stop = rdtsc();
 		read_aperf_mperf(&t->aperf_stop, &t->mperf_stop);
