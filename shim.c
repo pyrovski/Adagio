@@ -193,7 +193,10 @@ static inline void mark_time(timing_t *t, int start_stop){
 		gettimeofday(&t->stop, 0);
 		calc_rates(t);
 #ifdef _DEBUG
-		printf("rank %d timing stop 0x%lx\n", rank, t);
+		printf("rank %d timing stop 0x%lx delta: %11.7f ratio: %f min ratio: %f\n", 
+					 rank, t, 
+					 t->elapsed_time, t->ratio, 
+					 frequencies[current_freq] / frequencies[FASTEST_FREQ]);
 #endif
 	}
 }
