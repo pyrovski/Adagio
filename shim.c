@@ -43,9 +43,9 @@ static int rank, size;
 
 typedef struct {
 	struct timeval start, stop;
-	uint64_t aperf_start, aperf_stop,
-		mperf_start, mperf_stop, 
-		tsc_start, tsc_stop;
+	uint64_t aperf_start, aperf_stop, aperf_accum,
+		mperf_start, mperf_stop, mperf_accum,
+		tsc_start, tsc_stop, tsc_accum;
 
 	double freq, ratio, elapsed_time;
 } timing_t;
@@ -168,18 +168,22 @@ static inline void read_aperf_mperf(uint64_t *aperf, uint64_t *mperf){
  */
 static void calc_rates(timing_t *t){
 	assert(t);
-	t->ratio = (double)(t->aperf_stop - t->aperf_start) / 
-		(t->mperf_stop - t->mperf_start);
+
 	if(t->aperf_stop <= t->aperf_start)
 		printf("aperf went backwards?\n");
 	if(t->mperf_stop <= t->mperf_start)
 		printf("mperf went backwards?\n");
-	uint64_t tsc_delta = t->tsc_stop - t->tsc_start;
 	if(t->tsc_stop <= t->tsc_start)
 		printf("tsc went backwards?\n");
-	t->elapsed_time = delta_seconds(&t->start, &t->stop);
+
+	t->aperf_accum += t->aperf_stop - t->aperf_start;
+	t->mperf_accum += t->mperf_stop - t->mperf_start;
+	t->tsc_accum += t->tsc_stop - t->tsc_start;
+	t->elapsed_time += delta_seconds(&t->start, &t->stop);
+
+	t->ratio = (double)t->aperf_accum / t->mperf_accum;
 	//t->elapsed_time = tsc_delta / 2667000000;
-	t->freq = t->ratio * tsc_delta / t->elapsed_time;
+	t->freq = t->ratio * t->tsc_accum / t->elapsed_time;
 	//t->freq = t->ratio * 2667000000;
 }
 
@@ -210,6 +214,10 @@ static inline void mark_time(timing_t *t, int start_stop){
 					 frequencies[current_freq] / frequencies[FASTEST_FREQ]);
 #endif
 	}
+}
+
+static inline void clear_time(timing_t *t){
+	memset(t, 0, sizeof(timing_t));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -289,6 +297,7 @@ pre_MPI_Init( union shim_parameters *p ){
 	}
 	
 	// Put a reasonable value in.
+	clear_time(&time_comp);
 	mark_time(&time_comp, 1);
 	mark_time(&time_comp, 0);
 	
@@ -560,6 +569,7 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	schedule[current_hash].observed_comp_seconds = time_comp.elapsed_time;
 
 	// Schedule communication.
+	clear_time(&time_comm);
 	mark_time(&time_comm, 1);
 	if( g_algo & algo_FERMATA ) { schedule_communication( current_hash ); }
 }
@@ -589,6 +599,7 @@ shim_post( int shim_id, union shim_parameters *p ){
 	
 	// Bookkeeping.  MUST COME AFTER LOGGING.
 	previous_hash = current_hash;
+	clear_time(&time_comp);
 	mark_time(&time_comp, 1);
 	//dump_timeval(logfile, "COMPUTATION started.  ", &ts_start_computation);
 	start_papi();	//Computation.
