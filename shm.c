@@ -81,13 +81,14 @@ int shm_setup(char **argv, int rank){
   char *runName;
   int status;
 
-  assert(argv && argv[0]);
-  
-  // use part of name after last '/'
-  runName = strrchr(argv[0], '/');
-  runName = runName ? runName + 1 : argv[0];
-  runName = *runName ? runName : argv[0];
-
+  if(!argv || !argv[0]){
+    runName = "MPI_program";
+  } else {
+    // use part of name after last '/'
+    runName = strrchr(argv[0], '/');
+    runName = runName ? runName + 1 : argv[0];
+    runName = *runName ? runName : argv[0];
+  }
   /*
     Ensure establishment of cpu affinity.
     If not already bound to a core,
