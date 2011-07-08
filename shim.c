@@ -203,9 +203,9 @@ static inline void mark_time(timing_t *t, int start_stop){
 			alternatively, keep two entries for each interrupted task.
 			elapsed_time should be initialized to zero and added to on each stop.
 		 */
+		gettimeofday(&t->stop, 0);
 		t->tsc_stop = rdtsc();
 		read_aperf_mperf(&t->aperf_stop, &t->mperf_stop);
-		gettimeofday(&t->stop, 0);
 		calc_rates(t);
 #ifdef _DEBUG
 		printf("rank %d timing stop 0x%lx delta: %11.7f ratio: %f min ratio: %f\n", 
@@ -533,6 +533,16 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	
 	// Write the schedule entry.  MUST COME BEFORE LOGGING.
 	schedule[current_hash].freq = time_comp.freq;
+#ifdef _DEBUG
+	printf("rank %d set comp r: %f f: %f GHz tsc: %llu aperf: %lu mperf: %lu s: %f\n", 
+				 rank,
+				 time_comp.ratio,
+				 time_comp.freq / 1000000000,
+				 time_comp.tsc_accum,
+				 time_comp.aperf_accum,
+				 time_comp.mperf_accum,
+				 time_comp.elapsed_time);
+#endif
 	/*
 	memcpy(	// Copy time accrued before we shifted into current freq.
 		schedule[current_hash].observed_comp_seconds, 
