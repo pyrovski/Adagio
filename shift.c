@@ -13,10 +13,12 @@
 #define BLR_USE_SHIFT
 //#undef BLR_USE_SHIFT
 
+/*! @todo FASTEST_FREQ, turboboost_present, current_freq are initialized
+  assuming turboboost is present.
+ */
 int NUM_FREQS, SLOWEST_FREQ, FASTEST_FREQ = 1;
 int turboboost_present = 1;
 
-static int current_freq=0;
 static const char *cpufreq_path[] = {"/sys/devices/system/cpu/cpu",
 				     "/cpufreq/"};
 static const char cpufreq_governor[] = "scaling_governor";

@@ -60,7 +60,13 @@ static int g_algo;	// which algorithm(s) to use.
 static int g_freq;	// frequency to use with fixedfreq.  
 static int g_trace;	// tracing level.  
 
-static int current_hash=0, previous_hash=-1, current_freq=0, next_freq=0;
+static int current_hash=0, previous_hash=-1, next_freq=1;
+
+/*! @todo FASTEST_FREQ, turboboost_present, current_freq, and next_freq
+	are initialized assuming turboboost is present.
+ */
+int current_freq=1;
+
 static int in_computation=1;
 static int MPI_Initialized_Already=0;
 

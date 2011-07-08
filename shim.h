@@ -7,6 +7,7 @@
 #include "shim_parameters.h"
 
 extern double frequencies[MAX_NUM_FREQUENCIES];
+extern int current_freq;
 
 void shim_pre( int shim_id, union shim_parameters *p );
 void shim_post( int shim_id, union shim_parameters *p );
@@ -29,5 +30,3 @@ struct entry{
   double freq;
   int following_entry;
 };
-
-
