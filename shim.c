@@ -93,6 +93,7 @@ enum{
 	mods_FAKEJOULES = 0x100,	// Pretend power meter present.
 	mods_FAKEFREQ   = 0x200,	// Pretend to change the cpu frequency.
 	mods_BIGCOMM	= 0x400,	// Barrier before MPI_Alltoall.
+	mods_TURBOBOOST = 0x800, // allow turboboost
 
 	trace_NONE	= 0x000,
 	trace_TS	= 0x001,	// Timestamp.
@@ -239,6 +240,7 @@ pre_MPI_Init( union shim_parameters *p ){
 	if(env_mods && strlen(env_mods) > 0){
 		g_algo |= strstr(env_mods, "fakejoules") ? mods_FAKEJOULES: 0;
 		g_algo |= strstr(env_mods, "bigcomm"   ) ? mods_BIGCOMM   : 0;
+		g_algo |= strstr(env_mods, "turboboost") ? mods_TURBOBOOST: 0;
 	}
 
 	env_freq=getenv("OMPI_MCA_gmpi_freq");
@@ -276,14 +278,6 @@ pre_MPI_Init( union shim_parameters *p ){
 		}
 	}
 	
-	// To bound miser, we assume top gear is 1 instead of 0.
-	// We also allow fermata to be used.
-	//! @todo this needs to change to 2 on platforms supporting Turboboost
-	if(g_algo & algo_MISER){
-		g_algo |= algo_FERMATA;
-		FASTEST_FREQ = 1;
-	}
-	
 	// Put a reasonable value in.
 	mark_time(&time_comp, 1);
 	mark_time(&time_comp, 0);
@@ -294,6 +288,27 @@ pre_MPI_Init( union shim_parameters *p ){
 	// get list of available frequencies
 	// assume all processors support the same options
 	shift_parse_freqs();
+	
+	if(g_algo & mods_TURBOBOOST)
+		if(!turboboost_present){
+			printf("error: turboboost requested without turboboost support");
+			exit(1);
+		}
+
+	// To bound miser, we assume top gear is 1 instead of 0.
+	// We also allow fermata to be used.
+	if(g_algo & algo_MISER){
+		g_algo |= algo_FERMATA;
+		FASTEST_FREQ = 1 + turboboost_present;
+	} else {
+		if(turboboost_present){
+			if(g_algo & mods_TURBOBOOST)
+				FASTEST_FREQ = 0;
+			else
+				FASTEST_FREQ = 1;
+		} else
+			FASTEST_FREQ = 0;
+	}
 
 	// Pretend computation started here.
 	start_papi();	

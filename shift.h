@@ -11,6 +11,7 @@ int shift_init_socket(int socket, const char *governor_str);
 void shift_set_initialized(int);
 
 extern int NUM_FREQS, SLOWEST_FREQ, FASTEST_FREQ;
+extern int turboboost_present;
 
 #endif  //BLR_SHIFT_H
 
