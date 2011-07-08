@@ -189,6 +189,10 @@ static inline void mark_time(timing_t *t, int start_stop){
 		t->tsc_start = rdtsc();
 		read_aperf_mperf(&t->aperf_start, &t->mperf_start);
 	} else {
+		/*! @todo this should be cumulative; also need a reset.
+			alternatively, keep two entries for each interrupted task.
+			elapsed_time should be initialized to zero and added to on each stop.
+		 */
 		t->tsc_stop = rdtsc();
 		read_aperf_mperf(&t->aperf_stop, &t->mperf_stop);
 		gettimeofday(&t->stop, 0);
@@ -615,24 +619,24 @@ signal_handler(int signal){
 	//fprintf( logfile, "++> SIGNAL HANDLER\n");
 	if(in_computation){
 		mark_time(&time_comp, 0);
-		current_comp_insn=stop_papi();	//  <---|
-		current_comp_seconds = time_comp.elapsed_time;
-	}							//  	|
-								//	|
-	if( ! (g_algo & mods_FAKEFREQ) ) {                      //      |
-	  shift_core( my_core, next_freq );
-	}                                                       //      |
-#ifdef _DEBUG
-	fprintf(logfile, 
-		"==> Signal handler shifting to %d, in_computation=%d\n", 
-		next_freq, in_computation);
-#endif
-	current_freq = next_freq;				//	|
-	next_freq = 0;						//	|
-								//	|
-	if(in_computation){					//	|
-		mark_time(&time_comp, 1);		
-		start_papi();					//  <---|
+		current_comp_insn=stop_papi();	                                   //  <---|
+		current_comp_seconds = time_comp.elapsed_time;                          // |
+	}                                                                         // |
+                                                                            // |
+	if( ! (g_algo & mods_FAKEFREQ) ) {                                        // |
+	  shift_core( my_core, next_freq );                                       // |
+	}                                                                         // |
+#ifdef _DEBUG                                                               // |
+	fprintf(logfile,                                                          // |
+		"==> Signal handler shifting to %d, in_computation=%d\n",               // |
+		next_freq, in_computation);                                             // |
+#endif                                                                      // |
+	current_freq = next_freq;                                                 // |
+	next_freq = FASTEST_FREQ;                                                 // |
+                                                                            // |
+	if(in_computation){                                                       // |
+		mark_time(&time_comp, 1);                                               // |
+		start_papi();	                                                     //  <---|
 	}
 }
 
