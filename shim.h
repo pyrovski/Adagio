@@ -28,5 +28,6 @@ struct entry{
   double seconds_per_insn;
 
   double freq;
+  double ratio;
   int following_entry;
 };

@@ -404,8 +404,8 @@ Log( int shim_id, union shim_parameters *p ){
 	MPI_Aint extent;
 	int MsgSz=-1;
 
-	char var_format[] = "%5d %13s %06d %9.6lf %10.3lf %8.6lf %7d\n";
-	char hdr_format[] = "%4s %13s %6s %9s %6s %8s %7s\n";
+	char var_format[] = "%5d %13s %06d %9.6lf %4.2f %10.3lf %8.6lf %7d\n";
+	char hdr_format[] = "%4s %13s %6s %9s %6s %6s %8s %7s\n";
 
 	// One-time initialization.
 	if(!initialized){
@@ -416,7 +416,8 @@ Log( int shim_id, union shim_parameters *p ){
 			fprintf(logfile, "#");
 		}
 		fprintf(logfile, hdr_format,
-						"Rank", "Function", "Hash", "Comp", "CompF(GHz)", "Comm", "MsgSz");		
+						"Rank", "Function", "Hash", "Comp", "Ratio", "GHz", 
+						"Comm", "MsgSz");		
 		initialized=1;
 	}
 	
@@ -460,6 +461,7 @@ Log( int shim_id, union shim_parameters *p ){
 					f2str(p->MPI_Dummy_p.shim_id),	
 					current_hash,
 					schedule[current_hash].observed_comp_seconds,
+					schedule[current_hash].ratio,
 					schedule[current_hash].freq / 1000000000.0,
 					schedule[current_hash].observed_comm_seconds,
 					MsgSz);
@@ -533,6 +535,7 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	
 	// Write the schedule entry.  MUST COME BEFORE LOGGING.
 	schedule[current_hash].freq = time_comp.freq;
+	schedule[current_hash].ratio = time_comp.ratio;
 #ifdef _DEBUG
 	printf("rank %d set comp r: %f f: %f GHz tsc: %llu aperf: %lu mperf: %lu s: %f\n", 
 				 rank,
