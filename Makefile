@@ -36,8 +36,8 @@ NAS_MPIRUN=mpirun -bind-to-core $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) $(NAS_BADNOD
 # Compile environment
 
 MPICC=mpicc
-ifeq ($(dbg),1)
-DBG=-D_DEBUG -g
+ifneq ($(dbg),)
+DBG=-D_DEBUG=$(dbg) -g
 OPT_FLAGS = -O0
 else
 OPT_FLAGS = -O3
