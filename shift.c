@@ -28,7 +28,7 @@ static const char cpufreq_max[] = "scaling_max_freq";
        
 static const char cpufreq_frequencies[] = "scaling_available_frequencies";
 static int freqs[MAX_NUM_FREQUENCIES];// in kHz, fastest to slowest
-static int prev_freq_idx[MAX_NUM_FREQUENCIES];
+static int prev_freq_idx = -1;
 static int shift_initialized = 0;
 
 int shift_set_socket_governor(int socket, const char *governor_str){
@@ -96,21 +96,25 @@ int shift_core(int core, int freq_idx){
 #endif
 	int temp_cpuid;
 	assert(shift_initialized);
-	assert( (freq_idx >= 0) && (freq_idx < NUM_FREQS) );
+	assert( (freq_idx >= FASTEST_FREQ) && (freq_idx < NUM_FREQS) );
 
+	/*! @todo ...
 	get_cpuid(&temp_cpuid, 0, 0);
 	assert( temp_cpuid == my_core );
+	*/
 
-	shm_mark_freq(freq_idx);
+	//shm_mark_freq(freq_idx);
 
-	if( freq_idx == prev_freq_idx[ my_core ] ){
-		return freq_idx;
+	if(my_core == core){
+		if( freq_idx == prev_freq_idx)
+			return freq_idx;
+		
+		prev_freq_idx = freq_idx;
 	}
-	prev_freq_idx[ my_core ] = freq_idx;
 
 	//Make the change
 #ifdef BLR_USE_SHIFT
-	snprintf(filename, 100, "%s%u%s%s", cpufreq_path[0], my_core, 
+	snprintf(filename, 100, "%s%u%s%s", cpufreq_path[0], core, 
 		 cpufreq_path[1], cpufreq_speed);
 	sfp = fopen(filename, "w");
 	if(!sfp){
@@ -119,13 +123,14 @@ int shift_core(int core, int freq_idx){
 	}
 	assert(sfp);
 #ifdef _DEBUG
-	printf("socket %d rank %d core %d shifting to %d\n", 
-	       my_socket, socket_rank, my_core, freq_idx);
+	printf("socket %d rank %d core %d shifting core %d to %d\n", 
+	       my_socket, socket_rank, my_core, core, freq_idx);
 #endif
 	fprintf(sfp, "%u\n", freqs[ freq_idx ]);
 	fclose(sfp);
 #endif
-	current_freq = freq_idx;
+	if(my_core == core)
+		current_freq = freq_idx;
 	return freq_idx;
 }
 
@@ -134,6 +139,11 @@ int shift_socket(int sock, int freq_idx){
 	 assert(sock < config.sockets);
 	 
 	 int core_index;
+#ifdef _DEBUG
+	 printf("shifting %d cores on socket %d to %d\n", 
+		config.cores_per_socket, 
+		sock, freq_idx);
+#endif
 	 for(core_index = 0; core_index < config.cores_per_socket; core_index++)
 		 shift_core(config.map_socket_to_core[sock][core_index], freq_idx);
 	 return 0;
@@ -198,7 +208,10 @@ int shift_init_socket(int socket, const char *governor_str){
 	/*!
 	  @todo check to see if unrelated cores are affecting selected frequency
 	*/
-	shift_socket(socket, 0); // set all cores on socket to highest frequency
+	/* set all cores to slowest frequency, 
+	   then let individual cores select a higher frequency
+	*/
+	shift_socket(socket, SLOWEST_FREQ);
 	return 0;
 }
 

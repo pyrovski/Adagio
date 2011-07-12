@@ -188,6 +188,8 @@ int shm_setup(char **argv, int rank){
   }
   PMPI_Barrier(comm_socket);
   shift_set_initialized(1);
+  shift_core(my_core, FASTEST_FREQ);
+  PMPI_Barrier(comm_socket);
 
   return 0;
 }
@@ -214,7 +216,9 @@ int shm_teardown(){
   Mark an entry in shared memory with an attempted frequency transition.
   This may have no effect on the actual frequency.
  */
+/*
 int shm_mark_freq(int freq_idx){
   
   return 0;
 }
+*/
