@@ -208,10 +208,14 @@ static inline void mark_time(timing_t *t, int start_stop){
 		read_aperf_mperf(&t->aperf_stop, &t->mperf_stop);
 		calc_rates(t);
 #ifdef _DEBUG
-		printf("rank %d timing stop 0x%lx delta: %11.7f ratio: %f min ratio: %f\n", 
+		printf("rank %d timing stop 0x%lx delta: %11.7f ratio: %f min ratio: %f f: %f GHz tsc f: %f GHz aperf: 0x%lx mperf: 0x%lx\n", 
 					 rank, t, 
 					 t->elapsed_time, t->ratio, 
-					 frequencies[current_freq] / frequencies[FASTEST_FREQ]);
+					 frequencies[current_freq] / frequencies[FASTEST_FREQ],
+					 t->freq / 1000000000,
+					 time_comp.tsc_accum / time_comp.elapsed_time / 1000000000,
+					 time_comp.aperf_stop,
+					 time_comp.mperf_stop);
 #endif
 	}
 }
@@ -537,10 +541,11 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	schedule[current_hash].freq = time_comp.freq;
 	schedule[current_hash].ratio = time_comp.ratio;
 #ifdef _DEBUG
-	printf("rank %d set comp r: %f f: %f GHz tsc: %llu aperf: %lu mperf: %lu s: %f\n", 
+	printf("rank %d set comp r: %f f: %f GHz tsc f: %f GHz tsc: %llu aperf: %lu mperf: %lu s: %f\n", 
 				 rank,
 				 time_comp.ratio,
 				 time_comp.freq / 1000000000,
+				 time_comp.tsc_accum / time_comp.elapsed_time / 1000000000,
 				 time_comp.tsc_accum,
 				 time_comp.aperf_accum,
 				 time_comp.mperf_accum,
