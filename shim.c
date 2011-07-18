@@ -50,11 +50,7 @@ typedef struct {
 	double freq, ratio, elapsed_time;
 } timing_t;
 
-/*
-	static struct timeval ts_start_communication, ts_start_computation,
-			ts_stop_communication, ts_stop_computation;
-*/
-static timing_t time_comp, time_comm;
+static timing_t time_comp, time_comm, time_total;
 
 static int g_algo;	// which algorithm(s) to use.
 static int g_freq;	// frequency to use with fixedfreq.  
@@ -302,8 +298,10 @@ pre_MPI_Init( union shim_parameters *p ){
 	
 	// Put a reasonable value in.
 	clear_time(&time_comp);
+	clear_time(&time_total);
 	mark_time(&time_comp, 1);
 	mark_time(&time_comp, 0);
+	mark_time(&time_total, 1);
 	
 	// initialize mcsup
 	parse_proc_cpuinfo();
@@ -375,8 +373,10 @@ pre_MPI_Finalize( union shim_parameters *p ){
 	p=p;
 	mark_joules(rank, size);
 	PMPI_Barrier( MPI_COMM_WORLD );
+	mark_time(&time_total, 0);
 	// Leave us in a known frequency.  
 	// This should always be the fastest available.
+	//! @todo shift socket
 	shift_core(my_core, FASTEST_FREQ);
 	shm_teardown();
 }
@@ -473,6 +473,9 @@ Log( int shim_id, union shim_parameters *p ){
 #ifdef BLR_USE_EAGER_LOGGING
 	fflush( logfile );
 #endif
+	/*! @todo add up interval times, compare to total program time,
+		defined as time between MPI_Init and MPI_Finalize
+	 */
 }
 
 
