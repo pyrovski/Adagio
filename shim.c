@@ -408,8 +408,8 @@ Log( int shim_id, union shim_parameters *p ){
 	MPI_Aint extent;
 	int MsgSz=-1;
 
-	char var_format[] = "%5d %13s %06d %9.6lf %4.2f %10.3lf %8.6lf %7d\n";
-	char hdr_format[] = "%4s %13s %6s %9s %6s %6s %8s %7s\n";
+	char var_format[] = "%5d %13s %06d %9.6lf %9.6f %9.6lf %8.6lf %7d\n";
+	char hdr_format[] = "%4s %13s %6s %9s %9s %9s %8s %7s\n";
 
 	// One-time initialization.
 	if(!initialized){
