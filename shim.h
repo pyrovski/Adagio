@@ -6,7 +6,7 @@
 #include "shift.h"
 #include "shim_parameters.h"
 
-extern double frequencies[MAX_NUM_FREQUENCIES];
+extern double frequencies[MAX_NUM_FREQUENCIES], ratios[MAX_NUM_FREQUENCIES];
 extern int current_freq;
 
 void shim_pre( int shim_id, union shim_parameters *p );
@@ -27,7 +27,9 @@ struct entry{
   double observed_comp_insn;
   double seconds_per_insn;
 
-  double freq;
-  double ratio;
+  double observed_freq;
+  double observed_ratio;
+  double desired_freq;
+  double desired_ratio;
   int following_entry;
 };
