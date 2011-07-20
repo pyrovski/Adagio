@@ -24,6 +24,9 @@
 #include "meters.h"     // power meters
 #include "cpuid.h"
 
+#define max(a,b) (a > b ? a : b)
+#define min(a,b) (a < b ? a : b)
+
 // MPI_Init
 static void pre_MPI_Init 	( union shim_parameters *p );
 static void post_MPI_Init	( union shim_parameters *p );
@@ -474,6 +477,7 @@ Log( int shim_id, union shim_parameters *p ){
 					schedule[current_hash].observed_comp_seconds,
 					schedule[current_hash].observed_ratio,
 					schedule[current_hash].observed_freq / 1000000000.0,
+					schedule[current_hash].desired_ratio == 0.0 ? 1.0 : 
 					schedule[current_hash].desired_ratio,
 					schedule[current_hash].observed_comm_seconds,
 					MsgSz);
@@ -742,6 +746,8 @@ schedule_computation( int idx ){
 	// If we have no data to work with, go home.
 	if( idx==0 ){ return; }
 
+	schedule[idx].desired_ratio = 1.0;
+
 	// On the first time through, establish worst-case slowdown rates.
 	//! @todo fix for average frequency
 	if( schedule[ idx ].seconds_per_insn == 0.0 ){
@@ -792,8 +798,6 @@ schedule_computation( int idx ){
 	
 	d += schedule[ idx ].observed_comp_seconds;
 	I += schedule[ idx ].observed_comp_insn;
-
-	schedule[idx].desired_ratio = 1.0;
 	
 	// If there's not enough computation to bother scaling, skip it.
 	if( d <= GMPI_MIN_COMP_SECONDS ){
@@ -805,7 +809,12 @@ schedule_computation( int idx ){
 	d += schedule[ idx ].observed_comm_seconds - GMPI_BLOCKING_BUFFER;
 
 	// Create the schedule.
-	
+	schedule[idx].desired_ratio = 
+		min(1.0, 
+				schedule[idx].observed_comp_seconds / 
+				(schedule[idx].observed_comm_seconds + 
+				 schedule[idx].observed_comp_seconds - GMPI_BLOCKING_BUFFER));
+				
 	// If the fastest frequency isn't fast enough, use f0 all the time.
 	//! @todo fix for average frequency measurement; need prediction
 	if( I * schedule[ idx ].seconds_per_insn * 
@@ -822,7 +831,6 @@ schedule_computation( int idx ){
 		fprintf( logfile, "==>     d=%lf\n", d);
 #endif
 		current_freq = FASTEST_FREQ;
-		schedule[idx].desired_ratio = ratios[FASTEST_FREQ];
 	}
 	// If the slowest frequency isn't slow enough, use that.
 	//! @todo fix for average frequency measurement; need prediction
@@ -840,7 +848,6 @@ schedule_computation( int idx ){
 		fprintf( logfile, "==>     d=%lf\n", d);
 #endif
 		current_freq = SLOWEST_FREQ;
-		schedule[idx].desired_ratio = ratios[SLOWEST_FREQ];
 	}
 	// Find the slowest frequency that allows the work to be completed in time.
 	else{
