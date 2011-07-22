@@ -429,7 +429,7 @@ Log( int shim_id, union shim_parameters *p ){
 		}
 		fprintf(logfile, hdr_format,
 						"Rank", "Function", "Hash", "Comp", "Ratio", "GHz", 
-						"T Ratio",
+						"T_Ratio",
 						"Comm", "MsgSz");		
 		initialized=1;
 	}

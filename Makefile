@@ -37,7 +37,7 @@ NAS_MPIRUN=mpirun -bind-to-core $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) $(NAS_BADNOD
 
 MPICC=mpicc
 ifneq ($(dbg),)
-DBG=-D_DEBUG=$(dbg) -g
+DBG=-D_DEBUG=$(dbg) -g -pg
 OPT_FLAGS = -O0
 else
 OPT_FLAGS = -O3
@@ -150,7 +150,7 @@ libGreenMPI.so: Makefile shim.o wpapi.o shift.o meters.o cpuid.o shm.o\
 	$(MPICC) $(CFLAGS) $(LIBDIR) -shared -Wl,-soname,libGreenMPI.so \
 		-o libGreenMPI.so 					\
 		$(objects) $(LIBS)
-install: libGreenMPI.so
+install: libGreenMPI.so harness
 	install -m 0744 libGreenMPI.so $(installDest)/lib/
 
 shim.o: Makefile shim.c shim.h log.o stacktrace.o 			\
