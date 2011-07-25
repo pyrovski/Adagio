@@ -29,7 +29,8 @@ struct entry{
 
   double observed_freq;
   double observed_ratio;
-  double desired_freq;
   double desired_ratio;
+  double start_time;
+  double end_time;
   int following_entry;
 };

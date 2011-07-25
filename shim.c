@@ -83,6 +83,7 @@ static struct entry schedule[8192];
 
 static double current_comp_seconds;
 static double current_comp_insn;
+static double current_start_time;
 
 enum{ 
 	// To run without library overhead, use the .pristine binary.
@@ -305,6 +306,8 @@ pre_MPI_Init( union shim_parameters *p ){
 	mark_time(&time_comp, 1);
 	mark_time(&time_comp, 0);
 	mark_time(&time_total, 1);
+	current_start_time = time_total.start.tv_sec + 
+		time_total.start.tv_usec / 1000000.0;
 	
 	// initialize mcsup
 	parse_proc_cpuinfo();
@@ -408,6 +411,7 @@ f2str( int shim_id ){
 	return str;
 }
 
+//! @todo represent time since program start in each log entry
 void
 Log( int shim_id, union shim_parameters *p ){
 
@@ -416,8 +420,8 @@ Log( int shim_id, union shim_parameters *p ){
 	MPI_Aint extent;
 	int MsgSz=-1;
 
-	char var_format[] = "%5d %13s %06d %9.6lf %9.6f %9.6lf %9.6lf %8.6lf %7d\n";
-	char hdr_format[] = "%4s %13s %6s %9s %9s %9s %9s %8s %7s\n";
+	char var_format[] = "%5d %13s %06d %9.6lf %9.6f %9.6lf %9.6f %9.6lf %9.6lf %8.6lf %7d\n";
+	char hdr_format[] = "%4s %13s %6s %9s %9s %9s %9s %9s %9s %8s %7s\n";
 
 	// One-time initialization.
 	if(!initialized){
@@ -428,7 +432,9 @@ Log( int shim_id, union shim_parameters *p ){
 			fprintf(logfile, "#");
 		}
 		fprintf(logfile, hdr_format,
-						"Rank", "Function", "Hash", "Comp", "Ratio", "GHz", 
+						"Rank", "Function", "Hash", 
+						"Time_in", "Time_out",
+						"Comp", "Ratio", "GHz", 
 						"T_Ratio",
 						"Comm", "MsgSz");		
 		initialized=1;
@@ -474,6 +480,10 @@ Log( int shim_id, union shim_parameters *p ){
 	fprintf(logfile, var_format, rank, 
 					f2str(p->MPI_Dummy_p.shim_id),	
 					current_hash,
+					schedule[current_hash].start_time - 
+					(time_total.start.tv_sec + time_total.start.tv_usec / 1000000.0),
+					schedule[current_hash].end_time - 
+					(time_total.start.tv_sec + time_total.start.tv_usec / 1000000.0),
 					schedule[current_hash].observed_comp_seconds,
 					schedule[current_hash].observed_ratio,
 					schedule[current_hash].observed_freq / 1000000000.0,
@@ -567,35 +577,13 @@ shim_pre( int shim_id, union shim_parameters *p ){
 				 time_comp.mperf_accum,
 				 time_comp.elapsed_time);
 #endif
-	/*
-	memcpy(	// Copy time accrued before we shifted into current freq.
-		schedule[current_hash].observed_comp_seconds, 
-		current_comp_seconds, 
-		sizeof( double ) * NUM_FREQS);
-	*/
+	// Copy time accrued before we shifted into current freq.
 	// current_comp_seconds is set in the signal handler
 	schedule[current_hash].observed_comp_seconds = current_comp_seconds;
-	/*
-	memset(
-		current_comp_seconds,
-		0,
-		sizeof( double ) * NUM_FREQS);
-	*/
 	current_comp_seconds = 0;
 
-	/*
-	memcpy( // Copy insn accrued before we shifted into current freq.
-		schedule[current_hash].observed_comp_insn,
-		current_comp_insn,
-		sizeof( double ) * NUM_FREQS);
-	*/
+	// Copy insn accrued before we shifted into current freq.
 	schedule[current_hash].observed_comp_insn = current_comp_insn;
-	/*
-	memset(
-		current_comp_insn,
-		0,
-		sizeof( double ) * NUM_FREQS);
-	*/
 	current_comp_insn = 0;
 	
 	/*! @todo multiple assignment to observed_comp_seconds;
@@ -624,6 +612,9 @@ shim_post( int shim_id, union shim_parameters *p ){
 	if(shim_id == GMPI_INIT){ post_MPI_Init( p ); }
 	
 	schedule[current_hash].observed_comm_seconds = time_comm.elapsed_time;
+	schedule[current_hash].start_time = current_start_time;
+	schedule[current_hash].end_time = time_comm.stop.tv_sec + 
+		time_comm.stop.tv_usec / 1000000.0;
 	if( previous_hash >= 0 ){
 		schedule[previous_hash].following_entry = current_hash;
 	}
@@ -635,6 +626,8 @@ shim_post( int shim_id, union shim_parameters *p ){
 	previous_hash = current_hash;
 	clear_time(&time_comp);
 	mark_time(&time_comp, 1);
+	current_start_time = time_comp.start.tv_sec + 
+		time_comp.start.tv_usec / 1000000.0;
 	//dump_timeval(logfile, "COMPUTATION started.  ", &ts_start_computation);
 	start_papi();	//Computation.
 
