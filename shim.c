@@ -87,19 +87,19 @@ static double current_start_time;
 
 enum{ 
 	// To run without library overhead, use the .pristine binary.
-	algo_NONE	= 0x000,	// Identical to CLEAN.
-	algo_FERMATA 	= 0x001,	// slow communication
-	algo_ANDANTE 	= 0x002,	// slow comp before global sync pts.
-	algo_ADAGIO  	= 0x004,	// fermata + andante
-	algo_ALLEGRO 	= 0x008,	// slow computation everywhere.
+	algo_NONE	      = 0x000,	// Identical to CLEAN.
+	algo_FERMATA 	  = 0x001,	// slow communication
+	algo_ANDANTE 	  = 0x002,	// slow comp before global sync pts.
+	algo_ADAGIO  	  = 0x004,	// fermata + andante
+	algo_ALLEGRO 	  = 0x008,	// slow computation everywhere.
 	algo_FIXEDFREQ	= 0x010,	// run whole program at single freq.
-	algo_JITTER  	= 0x020,	// per ncsu.
-	algo_MISER   	= 0x040,	// per vt.
-	algo_CLEAN   	= 0x080,	// Identical to fixedfreq=0.
+	algo_JITTER  	  = 0x020,	// per ncsu.
+	algo_MISER   	  = 0x040,	// per vt.
+	algo_CLEAN   	  = 0x080,	// Identical to fixedfreq=0.
 	mods_FAKEJOULES = 0x100,	// Pretend power meter present.
 	mods_FAKEFREQ   = 0x200,	// Pretend to change the cpu frequency.
-	mods_BIGCOMM	= 0x400,	// Barrier before MPI_Alltoall.
-	mods_TURBOBOOST = 0x800, // allow turboboost
+	mods_BIGCOMM    = 0x400,	// Barrier before MPI_Alltoall.
+	mods_TURBOBOOST = 0x800,  // allow turboboost
 
 	trace_NONE	= 0x000,
 	trace_TS	= 0x001,	// Timestamp.
