@@ -101,17 +101,17 @@ enum{
 	mods_BIGCOMM    = 0x400,	// Barrier before MPI_Alltoall.
 	mods_TURBOBOOST = 0x800,  // allow turboboost
 
-	trace_NONE	= 0x000,
-	trace_TS	= 0x001,	// Timestamp.
-	trace_FILE	= 0x002,	// Filename where MPI call occurred.
-	trace_LINE	= 0x004,	// Line # where MPI call occurred.
-	trace_FN	= 0x008,	// MPI Function Name.
-	trace_COMP	= 0x010,	// Elapsed comp time since the end of
-					//   the previous MPI comm call.
-	trace_COMM	= 0x020,	// Elapsed comm time spend in mpi lib.
-	trace_RANK	= 0x040,	// MPI rank.
-	trace_PCONTROL	= 0x080,	// Most recent pcontrol.
-	trace_ALL	= 0xFFF
+	trace_NONE    = 0x000,
+	trace_TS      = 0x001,	// Timestamp.
+	trace_FILE    = 0x002,	// Filename where MPI call occurred.
+	trace_LINE    = 0x004,	// Line # where MPI call occurred.
+	trace_FN      = 0x008,	// MPI Function Name.
+	trace_COMP	  = 0x010,	// Elapsed comp time since the end of
+	                        // the previous MPI comm call.
+	trace_COMM	  = 0x020,	// Elapsed comm time spend in mpi lib.
+	trace_RANK	  = 0x040,	// MPI rank.
+	trace_PCONTROL= 0x080,	// Most recent pcontrol.
+	trace_ALL	    = 0xFFF
 	
 	
 };
@@ -241,7 +241,6 @@ pre_MPI_Init( union shim_parameters *p ){
 	// runtime environment without confusing the application 
 	env_algo=getenv("OMPI_MCA_gmpi_algo");
 	if(env_algo && strlen(env_algo) > 0){
-		g_algo &= strstr(env_algo, "none"      ) ? algo_NONE      : 0xFFF;
 		g_algo |= strstr(env_algo, "fermata"   ) ? algo_FERMATA   : 0;
 		g_algo |= strstr(env_algo, "andante"   ) ? algo_ANDANTE   : 0;
 		g_algo |= strstr(env_algo, "adagio"    ) ? algo_FERMATA | algo_ANDANTE    : 0;
@@ -249,7 +248,22 @@ pre_MPI_Init( union shim_parameters *p ){
 		g_algo |= strstr(env_algo, "fixedfreq" ) ? algo_FIXEDFREQ : 0;
 		g_algo |= strstr(env_algo, "jitter"    ) ? algo_JITTER    : 0;
 		g_algo |= strstr(env_algo, "miser"     ) ? algo_MISER     : 0;
-		g_algo |= strstr(env_algo, "clean"     ) ? algo_CLEAN     : 0;
+		if(strstr(env_algo, "fixedfreq")){
+			g_algo = algo_FIXEDFREQ;
+			env_freq=getenv("OMPI_MCA_gmpi_freq");
+			if(env_freq && strlen(env_freq) > 0){
+				g_freq = atoi(env_freq);	//FIXME make this a little more idiotproof.
+#ifdef _DEBUG
+				printf("g_freq=%s %d\n", env_freq, g_freq);
+#endif
+			} else
+				g_freq = 0;
+		}
+		else if(strstr(env_algo, "none") || strstr(env_algo, "clean")){
+			g_algo = algo_FIXEDFREQ;
+			g_freq = 0;
+		}
+		
 #ifdef _DEBUG
 		printf("g_algo=%s %d\n", env_algo, g_algo);
 #endif
@@ -263,14 +277,6 @@ pre_MPI_Init( union shim_parameters *p ){
 		g_algo |= strstr(env_mods, "fakejoules") ? mods_FAKEJOULES: 0;
 		g_algo |= strstr(env_mods, "bigcomm"   ) ? mods_BIGCOMM   : 0;
 		g_algo |= strstr(env_mods, "turboboost") ? mods_TURBOBOOST: 0;
-	}
-
-	env_freq=getenv("OMPI_MCA_gmpi_freq");
-	if(env_freq && strlen(env_freq) > 0){
-		g_freq = atoi(env_freq);	//FIXME make this a little more idiotproof.
-#ifdef _DEBUG
-		printf("g_freq=%s %d\n", env_freq, g_freq);
-#endif
 	}
 
 	env_trace=getenv("OMPI_MCA_gmpi_trace");
@@ -428,8 +434,10 @@ Log( int shim_id, union shim_parameters *p ){
 		//Write the header line.
 		if(rank==0){
 			fprintf(logfile, " ");
+			/*
 		}else{
 			fprintf(logfile, "#");
+			*/
 		}
 		fprintf(logfile, hdr_format,
 						"Rank", "Function", "Hash", 
@@ -486,7 +494,7 @@ Log( int shim_id, union shim_parameters *p ){
 					(time_total.start.tv_sec + time_total.start.tv_usec / 1000000.0),
 					schedule[current_hash].observed_comp_seconds,
 					schedule[current_hash].observed_ratio,
-					schedule[current_hash].observed_freq / 1000000000.0,
+					schedule[current_hash].observed_freq / 1000000000.0, //! @todo this could go away if we keep FASTEST_FREQ somewhere
 					schedule[current_hash].desired_ratio == 0.0 ? 1.0 : 
 					schedule[current_hash].desired_ratio,
 					schedule[current_hash].observed_comm_seconds,
