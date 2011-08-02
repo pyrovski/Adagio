@@ -402,6 +402,9 @@ pre_MPI_Finalize( union shim_parameters *p ){
 	// Leave us in a known frequency.  
 	// This should always be the fastest available.
 	//! @todo shift socket
+  if(!socket_rank){
+    shift_init_socket(my_socket, "userspace", FASTEST_FREQ);
+  }
 	shift_core(my_core, FASTEST_FREQ);
 	shm_teardown();
 }

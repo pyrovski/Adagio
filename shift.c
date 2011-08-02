@@ -94,7 +94,6 @@ int shift_core(int core, int freq_idx){
 	char filename[100];
 	FILE *sfp;
 #endif
-	int temp_cpuid;
 	assert(shift_initialized);
 	assert( (freq_idx >= FASTEST_FREQ) && (freq_idx < NUM_FREQS) );
 
@@ -195,7 +194,7 @@ int shift_set_socket_max_freq(int socket){
 	 return 0;
 }
 
-int shift_init_socket(int socket, const char *governor_str){
+int shift_init_socket(int socket, const char *governor_str, int freq_idx){
 	assert(socket >= 0);
 	assert(socket < config.sockets);
 	assert(governor_str);
@@ -211,7 +210,7 @@ int shift_init_socket(int socket, const char *governor_str){
 	/* set all cores to slowest frequency, 
 	   then let individual cores select a higher frequency
 	*/
-	shift_socket(socket, SLOWEST_FREQ);
+	shift_socket(socket, freq_idx);
 	return 0;
 }
 

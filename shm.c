@@ -184,7 +184,7 @@ int shm_setup(char **argv, int rank){
     status = sem_wait(sem);
     status = ftruncate(shm_fd, getpagesize());
     status = sem_post(sem);
-    shift_init_socket(my_socket, "userspace");
+    shift_init_socket(my_socket, "userspace", SLOWEST_FREQ);
   }
   PMPI_Barrier(comm_socket);
   shift_set_initialized(1);
