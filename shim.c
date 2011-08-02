@@ -76,6 +76,7 @@ double frequencies[MAX_NUM_FREQUENCIES], ratios[MAX_NUM_FREQUENCIES];
 #define GMPI_BLOCKING_BUFFER (0.1)      // In seconds.
 
 FILE *logfile = NULL;
+FILE *runTimeLog = 0;
 
 // Don't change this without altering the hash function.
 //! @todo change hash function?
@@ -379,6 +380,11 @@ post_MPI_Init( union shim_parameters *p ){
 	
 	// Fire up the logfile.
 	if(g_trace){logfile = initialize_logfile( rank );}
+	if(!rank){
+		runTimeLog = fopen("globalRunTime.dat", "w");
+		assert(runTimeLog);
+	}
+		
 	mark_joules(rank, size);
 }
 	
@@ -391,6 +397,8 @@ pre_MPI_Finalize( union shim_parameters *p ){
 	mark_joules(rank, size);
 	PMPI_Barrier( MPI_COMM_WORLD );
 	mark_time(&time_total, 0);
+	if(!rank)
+		fprintf(runTimeLog, "%lf\n", time_total.elapsed_time);
 	// Leave us in a known frequency.  
 	// This should always be the fastest available.
 	//! @todo shift socket
