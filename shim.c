@@ -442,17 +442,13 @@ Log( int shim_id, union shim_parameters *p ){
 		//Write the header line.
 		if(rank==0){
 			fprintf(logfile, " ");
-			/*
-		}else{
-			fprintf(logfile, "#");
-			*/
+			fprintf(logfile, hdr_format,
+							"Rank", "Function", "Hash", 
+							"Time_in", "Time_out",
+							"Comp", "Ratio", "GHz", 
+							"T_Ratio",
+							"Comm", "MsgSz");		
 		}
-		fprintf(logfile, hdr_format,
-						"Rank", "Function", "Hash", 
-						"Time_in", "Time_out",
-						"Comp", "Ratio", "GHz", 
-						"T_Ratio",
-						"Comm", "MsgSz");		
 		initialized=1;
 	}
 	
