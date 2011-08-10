@@ -122,7 +122,7 @@ stacktrace.o gettimeofday_helpers.o cpuid.o shm.o
 
 harness: Makefile harness.o libGreenMPI.so
 	$(MPICC) $(CFLAGS) $(LIBDIR) $(INCDIR)  -o harness 	\
-	harness.o -lGreenMPI
+	harness.o -Xlinker -rpath $(HOME)/local/lib -lGreenMPI
 
 harness_pristine: Makefile harness.o
 	$(MPICC) $(CFLAGS) -o harness_pristine harness.o 
