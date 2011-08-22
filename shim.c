@@ -489,27 +489,29 @@ Log( int shim_id, union shim_parameters *p ){
 		default:
 			MsgSz = -1;	// We don't have complete coverage, obviously.
 	}
-	
-	//! @todo also log desired ratio/freq
-	// Write to the logfile.
-	fprintf(logfile, var_format, rank, 
-					f2str(p->MPI_Dummy_p.shim_id),	
-					current_hash,
-					schedule[current_hash].start_time - 
-					(time_total.start.tv_sec + time_total.start.tv_usec / 1000000.0),
-					schedule[current_hash].end_time - 
-					(time_total.start.tv_sec + time_total.start.tv_usec / 1000000.0),
-					schedule[current_hash].observed_comp_seconds,
-					schedule[current_hash].observed_ratio,
-					schedule[current_hash].observed_freq / 1000000000.0, //! @todo this could go away if we keep FASTEST_FREQ somewhere
-					schedule[current_hash].desired_ratio == 0.0 ? 1.0 : 
-					schedule[current_hash].desired_ratio,
-					schedule[current_hash].observed_comm_seconds,
-					MsgSz);
+
+	if(schedule[current_hash].observed_comp_seconds >= GMPI_MIN_COMP_SECONDS ||
+		 schedule[current_hash].observed_comm_seconds >= GMPI_MIN_COMM_SECONDS){
+		// Write to the logfile.
+		fprintf(logfile, var_format, rank, 
+						f2str(p->MPI_Dummy_p.shim_id),	
+						current_hash,
+						schedule[current_hash].start_time - 
+						(time_total.start.tv_sec + time_total.start.tv_usec / 1000000.0),
+						schedule[current_hash].end_time - 
+						(time_total.start.tv_sec + time_total.start.tv_usec / 1000000.0),
+						schedule[current_hash].observed_comp_seconds,
+						schedule[current_hash].observed_ratio,
+						schedule[current_hash].observed_freq / 1000000000.0, //! @todo this could go away if we keep FASTEST_FREQ somewhere
+						schedule[current_hash].desired_ratio == 0.0 ? 1.0 : 
+						schedule[current_hash].desired_ratio,
+						schedule[current_hash].observed_comm_seconds,
+						MsgSz);
 
 #ifdef BLR_USE_EAGER_LOGGING
 	fflush( logfile );
 #endif
+	}
 	/*! @todo add up interval times, compare to total program time,
 		defined as time between MPI_Init and MPI_Finalize
 	 */
@@ -648,6 +650,9 @@ shim_post( int shim_id, union shim_parameters *p ){
 
 	// Setup computation schedule.
 	if(g_algo & algo_ANDANTE){
+		/*! @todo call schedule_computation to do prediction even when adagio is off
+			This will allow us to track target freqs without DVFS
+		 */
 		schedule_computation( schedule[current_hash].following_entry );
 	}else{
 		current_freq = FASTEST_FREQ;	// Default case.
