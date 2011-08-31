@@ -823,10 +823,7 @@ schedule_computation( int idx ){
 
 	// Create the schedule.
 	schedule[idx].desired_ratio = 
-		min(1.0, 
-				schedule[idx].observed_comp_seconds / 
-				(schedule[idx].observed_comm_seconds + 
-				 schedule[idx].observed_comp_seconds - GMPI_BLOCKING_BUFFER));
+		min(1.0, schedule[idx].observed_comp_seconds / d);
 				
 	// If the fastest frequency isn't fast enough, use f0 all the time.
 	//! @todo fix for average frequency measurement; need prediction
