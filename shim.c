@@ -414,8 +414,8 @@ Log( int shim_id, union shim_parameters *p ){
 	MPI_Aint extent;
 	int MsgSz=-1;
 
-	char var_format[] = "%5d %13s %06d %9.6lf %9.6f %9.6lf %9.6f %9.6lf %9.6lf %8.6lf %7d\n";
-	char hdr_format[] = "%4s %13s %6s %9s %9s %9s %9s %9s %9s %8s %7s\n";
+	char var_format[] = "%5d %13s %06d %9.6lf %9.6f %9.6lf %e %9.6f %9.6lf %9.6lf %8.6lf %7d\n";
+	char hdr_format[] = "%4s %13s %6s %9s %9s %9s %9s %9s %9s %9s %8s %7s\n";
 
 	// One-time initialization.
 	if(!initialized){
@@ -425,7 +425,7 @@ Log( int shim_id, union shim_parameters *p ){
 			fprintf(logfile, hdr_format,
 							"Rank", "Function", "Hash", 
 							"Time_in", "Time_out",
-							"Comp", "Ratio", "GHz", 
+							"Comp", "Insn", "Ratio", "GHz", 
 							"T_Ratio",
 							"Comm", "MsgSz");		
 		}
@@ -478,6 +478,7 @@ Log( int shim_id, union shim_parameters *p ){
 						schedule[current_hash].end_time - 
 						(time_total.start.tv_sec + time_total.start.tv_usec / 1000000.0),
 						schedule[current_hash].observed_comp_seconds,
+						schedule[current_hash].observed_comp_insn,
 						schedule[current_hash].observed_ratio,
 						schedule[current_hash].observed_freq / 1000000000.0, //! @todo this could go away if we keep FASTEST_FREQ somewhere
 						schedule[current_hash].desired_ratio == 0.0 ? 1.0 : 

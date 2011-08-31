@@ -157,13 +157,12 @@ int shm_setup(char **argv, int rank){
   PMPI_Comm_rank(comm_socket, &socket_rank);
   PMPI_Comm_size(comm_socket, &socket_size);
   
-#ifdef _DEBUG
-  printf("rank %d is in socket %d rank %d (%d)\n", rank, my_socket, 
-	 socket_rank, socket_size);
-#endif
-
 
   if(!bound){
+#ifdef _DEBUG
+    printf("prior to binding, rank %d is in socket %d rank %d (%d)\n", 
+	   rank, my_socket, socket_rank, socket_size);
+#endif
     if(g_bind & bind_COLLAPSE){
       int i;
       cpu_set_t cpusetCollapsed;
@@ -187,6 +186,11 @@ int shm_setup(char **argv, int rank){
       status = sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
       get_cpuid(&my_core, &my_socket, &my_local);
     }
+  } else {
+#ifdef _DEBUG
+    printf("rank %d is in socket %d rank %d (%d)\n", rank, my_socket, 
+	   socket_rank, socket_size);
+#endif
   }
 
   /* 
