@@ -16,6 +16,7 @@
 #include "md5.h"
 #include "shm.h"
 #include "shift.h"
+#include "shim.h"
 
 //#define _GNU_SOURCE
 #define __USE_GNU
@@ -163,14 +164,29 @@ int shm_setup(char **argv, int rank){
 
 
   if(!bound){
-    my_core = socket_rank;
+    if(g_bind & bind_COLLAPSE){
+      int i;
+      cpu_set_t cpusetCollapsed;
+      for(i = 0; i < sizeof(cpu_set_t) / sizeof(int); i++)
+	if(CPU_ISSET(i, &cpuset))
+	  break;
+      if(i < sizeof(cpu_set_t) / sizeof(int)){
+	CPU_ZERO(&cpusetCollapsed);
+	CPU_SET(i, &cpusetCollapsed);
+	sched_setaffinity(0, sizeof(cpu_set_t), &cpusetCollapsed);
+      }else{
+	MPI_Abort(MPI_COMM_WORLD, 1);
+      }
+    } else {    
+      my_core = socket_rank;
 #ifdef _DEBUG
-    printf("rank %d binding to core %d\n", rank, my_core);
+      printf("rank %d binding to core %d\n", rank, my_core);
 #endif
-    CPU_ZERO(&cpuset);
-    CPU_SET(my_core, &cpuset);
-    status = sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
-    get_cpuid(&my_core, &my_socket, &my_local);
+      CPU_ZERO(&cpuset);
+      CPU_SET(my_core, &cpuset);
+      status = sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
+      get_cpuid(&my_core, &my_socket, &my_local);
+    }
   }
 
   /* 

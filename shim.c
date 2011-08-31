@@ -58,6 +58,7 @@ static timing_t time_comp, time_comm, time_total;
 static int g_algo;	// which algorithm(s) to use.
 static int g_freq;	// frequency to use with fixedfreq.  
 static int g_trace;	// tracing level.  
+int g_bind;  // cpu binding
 
 static int current_hash=0, previous_hash=-1, next_freq=1;
 
@@ -85,37 +86,6 @@ static struct entry schedule[8192];
 static double current_comp_seconds;
 static double current_comp_insn;
 static double current_start_time;
-
-enum{ 
-	// To run without library overhead, use the .pristine binary.
-	algo_NONE	      = 0x000,	// Identical to CLEAN.
-	algo_FERMATA 	  = 0x001,	// slow communication
-	algo_ANDANTE 	  = 0x002,	// slow comp before global sync pts.
-	algo_ADAGIO  	  = 0x004,	// fermata + andante
-	algo_ALLEGRO 	  = 0x008,	// slow computation everywhere.
-	algo_FIXEDFREQ	= 0x010,	// run whole program at single freq.
-	algo_JITTER  	  = 0x020,	// per ncsu.
-	algo_MISER   	  = 0x040,	// per vt.
-	algo_CLEAN   	  = 0x080,	// Identical to fixedfreq=0.
-	mods_FAKEJOULES = 0x100,	// Pretend power meter present.
-	mods_FAKEFREQ   = 0x200,	// Pretend to change the cpu frequency.
-	mods_BIGCOMM    = 0x400,	// Barrier before MPI_Alltoall.
-	mods_TURBOBOOST = 0x800,  // allow turboboost
-
-	trace_NONE    = 0x000,
-	trace_TS      = 0x001,	// Timestamp.
-	trace_FILE    = 0x002,	// Filename where MPI call occurred.
-	trace_LINE    = 0x004,	// Line # where MPI call occurred.
-	trace_FN      = 0x008,	// MPI Function Name.
-	trace_COMP	  = 0x010,	// Elapsed comp time since the end of
-	                        // the previous MPI comm call.
-	trace_COMM	  = 0x020,	// Elapsed comm time spend in mpi lib.
-	trace_RANK	  = 0x040,	// MPI rank.
-	trace_PCONTROL= 0x080,	// Most recent pcontrol.
-	trace_ALL	    = 0xFFF
-	
-	
-};
 
 static inline uint64_t rdtsc(void)
 {
@@ -193,7 +163,7 @@ static void calc_rates(timing_t *t){
  */
 static inline void mark_time(timing_t *t, int start_stop){
 	if(start_stop){
-#ifdef _DEBUG
+#if _DEBUG > 1
 		printf("rank %d timing start 0x%lx\n", rank, t);
 #endif
 		gettimeofday(&t->start, 0);
@@ -208,7 +178,7 @@ static inline void mark_time(timing_t *t, int start_stop){
 		t->tsc_stop = rdtsc();
 		read_aperf_mperf(&t->aperf_stop, &t->mperf_stop);
 		calc_rates(t);
-#ifdef _DEBUG
+#if _DEBUG > 1
 		printf("rank %d timing stop 0x%lx delta: %11.7f ratio: %f min ratio: %f f: %f GHz tsc f: %f GHz aperf: 0x%lx mperf: 0x%lx\n", 
 					 rank, t, 
 					 t->elapsed_time, t->ratio, 
@@ -233,13 +203,19 @@ pre_MPI_Init( union shim_parameters *p ){
 
 	struct utsname utsname;	// Holds hostname.
 	char  *hostname;
-	char *env_algo, *env_trace, *env_freq, *env_badnode, *env_mods;
+	char *env_algo, *env_trace, *env_freq, *env_badnode, *env_mods, *env_bind;
 	p=p;
 
 	// Using "-mca key value" on the command line, the environment variable
 	// "OMPI_MCA_key" is set to "value".  mpirun doesn't check the validity
 	// of these (yay!), so we end up with an easy way of controlling the 
 	// runtime environment without confusing the application 
+	env_bind = getenv("OMPI_MCA_gmpi_bind");
+	if(env_bind && strlen(env_bind) > 0){
+		g_bind |= strstr(env_bind, "collapse") ? bind_COLLAPSE : 0;
+	} else
+		g_bind = 0;
+
 	env_algo=getenv("OMPI_MCA_gmpi_algo");
 	if(env_algo && strlen(env_algo) > 0){
 		g_algo |= strstr(env_algo, "fermata"   ) ? algo_FERMATA   : 0;
@@ -267,6 +243,7 @@ pre_MPI_Init( union shim_parameters *p ){
 		
 #ifdef _DEBUG
 		printf("g_algo=%s %d\n", env_algo, g_algo);
+		printf("g_bind=%s %d\n", env_bind, g_bind);
 #endif
 	} else {
 #ifdef _DEBUG
@@ -582,7 +559,7 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	// Write the schedule entry.  MUST COME BEFORE LOGGING.
 	schedule[current_hash].observed_freq = time_comp.freq;
 	schedule[current_hash].observed_ratio = time_comp.ratio;
-#ifdef _DEBUG
+#if _DEBUG > 1
 	printf("rank %d set comp r: %f f: %f GHz tsc f: %f GHz tsc: %llu aperf: %lu "
 				 "mperf: %lu s: %f\n", 
 				 rank,
