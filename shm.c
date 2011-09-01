@@ -100,8 +100,8 @@ int shm_setup(char **argv, int rank){
   cpu_set_t cpuset;
   status = sched_getaffinity(0, sizeof(cpu_set_t), &cpuset);
   int bound = 0;
-  /*! @todo if bound to a socket, refine to a core?
-   */
+  //! @todo if bound to a socket, refine mask to a core
+  //! @todo make this test into a function
 #ifdef CPU_COUNT
   bound = (CPU_COUNT(&cpuset) == 1);
 #else
@@ -137,6 +137,7 @@ int shm_setup(char **argv, int rank){
 
   // alternatively, shm_update() could be used here
 
+  //! @todo this needs to be a function
   MPI_Comm comm_node;
   char hostname[NAME_MAX];
   unsigned char digest[16];
@@ -172,7 +173,11 @@ int shm_setup(char **argv, int rank){
       if(i < sizeof(cpu_set_t) / sizeof(int)){
 	CPU_ZERO(&cpusetCollapsed);
 	CPU_SET(i, &cpusetCollapsed);
+#ifdef _DEBUG
+	printf("rank %d collapsing binding to core %d\n", rank, i);
+#endif
 	sched_setaffinity(0, sizeof(cpu_set_t), &cpusetCollapsed);
+	status = get_cpuid(&my_core, &my_socket, &my_local);
       }else{
 	MPI_Abort(MPI_COMM_WORLD, 1);
       }
@@ -186,6 +191,10 @@ int shm_setup(char **argv, int rank){
       status = sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
       get_cpuid(&my_core, &my_socket, &my_local);
     }
+#ifdef _DEBUG
+    printf("after binding, rank %d is in socket %d core %d\n", rank, my_socket, 
+	   my_core);
+#endif
   } else {
 #ifdef _DEBUG
     printf("rank %d is in socket %d rank %d (%d)\n", rank, my_socket, 
