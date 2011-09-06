@@ -18,8 +18,7 @@
 #include "stacktrace.h"
 #include "log.h"
 #include "wpapi.h"	// PAPI wrappers.
-#include "shift.h"	// shift, enums.  
-#include "affinity.h"	// Setting cpu affinity.
+#include "shift.h"	// shift, enums.
 #include "shm.h"        // shared memory
 #include "meters.h"     // power meters
 #include "cpuid.h"

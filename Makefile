@@ -115,7 +115,7 @@ rank: Makefile harness
 
 test: Makefile rank hash sane ping spin
 
-objects = shim.o shim_functions.o wpapi.o shift.o meters.o affinity.o log.o \
+objects = shim.o shim_functions.o wpapi.o shift.o meters.o log.o \
 stacktrace.o gettimeofday_helpers.o cpuid.o shm.o
 
 # Harness code.
@@ -145,7 +145,7 @@ clean:
 # Adagio libraries.
 
 libGreenMPI.so: Makefile shim.o wpapi.o shift.o meters.o cpuid.o shm.o\
-	affinity.o log.o stacktrace.o gettimeofday_helpers.o \
+	log.o stacktrace.o gettimeofday_helpers.o \
 	$(GENERATED_SHIMFILES)  
 	$(MPICC) $(CFLAGS) $(LIBDIR) -shared -Wl,-soname,libGreenMPI.so \
 		-o libGreenMPI.so 					\
@@ -176,9 +176,6 @@ shift.o: Makefile shift.c shift.h
 
 meters.o: Makefile meters.c meters.h gettimeofday_helpers.o 
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c meters.c
-
-affinity.o: Makefile affinity.c affinity.h 
-	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c affinity.c
 
 $(GENERATED_SHIMFILES): Makefile shim.py shim.sh
 	echo $(SHELL)
