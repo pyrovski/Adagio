@@ -59,6 +59,7 @@ static int g_algo;	// which algorithm(s) to use.
 static int g_freq;	// frequency to use with fixedfreq.  
 static int g_trace;	// tracing level.  
 int g_bind;  // cpu binding
+int g_cores_per_socket; // 
 
 static int current_hash=0, previous_hash=-1, next_freq=1;
 
@@ -210,11 +211,6 @@ pre_MPI_Init( union shim_parameters *p ){
 	// "OMPI_MCA_key" is set to "value".  mpirun doesn't check the validity
 	// of these (yay!), so we end up with an easy way of controlling the 
 	// runtime environment without confusing the application 
-	env_bind = getenv("OMPI_MCA_gmpi_bind");
-	if(env_bind && strlen(env_bind) > 0){
-		g_bind |= strstr(env_bind, "collapse") ? bind_COLLAPSE : 0;
-	} else
-		g_bind = 0;
 
 	env_algo=getenv("OMPI_MCA_gmpi_algo");
 	if(env_algo && strlen(env_algo) > 0){
@@ -284,6 +280,31 @@ pre_MPI_Init( union shim_parameters *p ){
 		}
 	}
 	
+	// initialize mcsup
+	parse_proc_cpuinfo();
+
+	env_bind = getenv("OMPI_MCA_gmpi_bind");
+	if(env_bind && strlen(env_bind) > 0){
+		g_bind |= strstr(env_bind, "collapse") ? bind_COLLAPSE : 0;
+		if(strlen(env_bind) > strlen("collapse")){
+			g_cores_per_socket = strtoul(env_bind + strlen("collapse"), 0, 0);
+			//! @todo get number of cores per socket from 
+			if(g_cores_per_socket > config.cores_per_socket || 
+				 g_cores_per_socket <= 0){
+				printf("error: invalid gmpi_bind collapse: %s\n", env_bind);
+				MPI_Abort(MPI_COMM_WORLD, 1);
+			}
+		} else
+			g_cores_per_socket = 1;
+	} else
+		g_bind = 0;
+	
+#ifdef _DEBUG
+		printf("g_bind=%s %d\n", env_bind, g_bind);
+		if(g_bind)
+			printf("g_cores_per_socket: %d\n", g_cores_per_socket);
+#endif
+		
 	// Put a reasonable value in.
 	clear_time(&time_comp);
 	clear_time(&time_total);
@@ -293,9 +314,6 @@ pre_MPI_Init( union shim_parameters *p ){
 	current_start_time = time_total.start.tv_sec + 
 		time_total.start.tv_usec / 1000000.0;
 	
-	// initialize mcsup
-	parse_proc_cpuinfo();
-
 	// get list of available frequencies
 	// assume all processors support the same options
 	shift_parse_freqs();

@@ -158,7 +158,7 @@ int shm_setup(char **argv, int rank){
   PMPI_Comm_rank(comm_socket, &socket_rank);
   PMPI_Comm_size(comm_socket, &socket_size);
   
-
+  //! @todo fix for g_cores_per_socket
   if(!bound){
 #ifdef _DEBUG
     printf("prior to binding, rank %d is in socket %d rank %d (%d)\n", 
