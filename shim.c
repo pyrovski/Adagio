@@ -134,7 +134,7 @@ static inline void read_aperf_mperf(uint64_t *aperf, uint64_t *mperf){
 }
 
 /*!
-	@todo calculate aperf/mperf ratio and corresponding frequency, elapsed time
+	calculate aperf/mperf ratio and corresponding frequency, elapsed time
 	@todo deal with counter overflow; see turbostat code
  */
 static void calc_rates(timing_t *t){
@@ -170,8 +170,7 @@ static inline void mark_time(timing_t *t, int start_stop){
 		t->tsc_start = rdtsc();
 		read_aperf_mperf(&t->aperf_start, &t->mperf_start);
 	} else {
-		/*! @todo this should be cumulative; also need a reset.
-			alternatively, keep two entries for each interrupted task.
+		/*
 			elapsed_time should be initialized to zero and added to on each stop.
 		 */
 		gettimeofday(&t->stop, 0);
@@ -287,7 +286,6 @@ pre_MPI_Init( union shim_parameters *p ){
 		g_bind |= strstr(env_bind, "collapse") ? bind_COLLAPSE : 0;
 		if(strlen(env_bind) > strlen("collapse")){
 			g_cores_per_socket = strtoul(env_bind + strlen("collapse"), 0, 0);
-			//! @todo get number of cores per socket from 
 			if(g_cores_per_socket > config.cores_per_socket || 
 				 g_cores_per_socket <= 0){
 				printf("error: invalid gmpi_bind collapse: %s\n", env_bind);
@@ -422,7 +420,6 @@ f2str( int shim_id ){
 	return str;
 }
 
-//! @todo represent time since program start in each log entry
 void
 Log( int shim_id, union shim_parameters *p ){
 
@@ -772,8 +769,6 @@ schedule_computation( int idx ){
 		schedule[ idx ].seconds_per_insn = 
 			schedule[ idx ].observed_comp_seconds /
 			schedule[ idx ].observed_comp_insn;
-		/*! @todo we should save the numbers from the first high freq run
-		 */
 #ifdef _DEBUG
 		if(!isnan(schedule[idx].seconds_per_insn))
 			fprintf(logfile, "&&& SPI = %16.15lf\n", 

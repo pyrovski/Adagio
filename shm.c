@@ -100,7 +100,6 @@ int shm_setup(char **argv, int rank){
   cpu_set_t cpuset;
   status = sched_getaffinity(0, sizeof(cpu_set_t), &cpuset);
   int bound = 0;
-  //! @todo if bound to a socket, refine mask to a core
   //! @todo make this test into a function
 #ifdef CPU_COUNT
   bound = (CPU_COUNT(&cpuset) == 1);

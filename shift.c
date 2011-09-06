@@ -1,7 +1,4 @@
 /* -*- Mode: C; tab-width: 8; c-basic-offset: 8 -*- */
-/*!
-  @todo allow configuration of Turboboost
-*/
 
 #include <assert.h>
 #include <stdio.h>
@@ -208,7 +205,7 @@ int shift_init_socket(int socket, const char *governor_str, int freq_idx){
 	  @todo check to see if unrelated cores are affecting selected frequency
 	*/
 	/* set all cores to slowest frequency, 
-	   then let individual cores select a higher frequency
+	   thenx let individual cores select a higher frequency
 	*/
 	shift_socket(socket, freq_idx);
 	return 0;
