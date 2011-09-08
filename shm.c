@@ -157,7 +157,13 @@ int shm_setup(char **argv, int rank){
   PMPI_Comm_rank(comm_socket, &socket_rank);
   PMPI_Comm_size(comm_socket, &socket_size);
   
-  //! @todo fix for g_cores_per_socket
+  /*! @todo fix for g_cores_per_socket
+    - use slurm to allocate N nodes, n cores, and distribute MPI processes
+    - once MPI processes are distributed, we can muck with them all we like
+    { fix MCSUP to count sockets and cores correctly }
+    - if the g_cores_per_socket value makes sense, there needs to be some 
+    MPI coordination between ranks on a node
+   */
   if(!bound){
 #ifdef _DEBUG
     printf("prior to binding, rank %d is in socket %d rank %d (%d)\n", 
