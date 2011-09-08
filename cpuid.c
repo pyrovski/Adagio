@@ -4,8 +4,6 @@
 #include <assert.h>
 #include "cpuid.h"
 
-int my_core, my_socket, my_local;
-
 /*-----------------------------------------------------------------------*/
 /* adapted from                                                          */
 /* Multicore/NUMA support library                                        */

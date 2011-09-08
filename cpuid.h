@@ -1,9 +1,6 @@
 #ifndef BLR_CPUID_H
 #define BLR_CPUID_H
 
-extern int my_core, my_socket, my_local; // intialized in post_MPI_Init
-
-
 /*! on Xeon E5640, core ids are 0, 1, 9, 10, 
   and apic ids range from 0 to 53.
   Thus, some array maps must be longer than the number of cores.

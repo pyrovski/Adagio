@@ -59,6 +59,7 @@ static int g_freq;	// frequency to use with fixedfreq.
 static int g_trace;	// tracing level.  
 int g_bind;  // cpu binding
 int g_cores_per_socket; // 
+int my_core, my_socket, my_local;
 
 static int current_hash=0, previous_hash=-1, next_freq=1;
 

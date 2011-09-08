@@ -160,7 +160,6 @@ int shm_setup(char **argv, int rank){
   /*! @todo fix for g_cores_per_socket
     - use slurm to allocate N nodes, n cores, and distribute MPI processes
     - once MPI processes are distributed, we can muck with them all we like
-    { fix MCSUP to count sockets and cores correctly }
     - if the g_cores_per_socket value makes sense, there needs to be some 
     MPI coordination between ranks on a node
    */
