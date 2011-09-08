@@ -50,7 +50,7 @@ GENERATED_SHIMFILES = shim_enumeration.h shim_functions.c shim_parameters.h 	\
 shim_selection.h  shim_str.h  shim_structs.h  shim_union.h			
 
 
-all: Makefile harness_pristine harness harness_static
+all: Makefile harness_pristine harness harness_static cpuidTest
 	@echo Done
 ft:
 	$(MAKE) -C ../NPB3.3/NPB3.3-MPI/bin ft  "MPIRUN=$(NAS_MPIRUN)"
@@ -64,7 +64,7 @@ umt_jitter:
 	cd ../umt2k-1.2.2/bin; $(MAKE) jitter "MPIRUN=$(MPIRUN)" 
 paradis:
 	cd ../ParaDiS/blr; $(MAKE) paradis "MPIRUN=$(MPIRUN)"
-paradis_jitter:
+4paradis_jitter:
 	cd ../ParaDiS/blr; $(MAKE) jitter "MPIRUN=$(MPIRUN)" 
 
 # Test runs
@@ -119,6 +119,9 @@ objects = shim.o shim_functions.o wpapi.o shift.o meters.o log.o \
 stacktrace.o gettimeofday_helpers.o cpuid.o shm.o
 
 # Harness code.
+
+cpuidTest: Makefile cpuidTest.c cpuid.o
+	gcc -o $@ cpuidTest.c cpuid.o $(CFLAGS)
 
 harness: Makefile harness.o libGreenMPI.so
 	$(MPICC) $(CFLAGS) $(LIBDIR) $(INCDIR)  -o harness 	\
