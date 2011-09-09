@@ -4,6 +4,6 @@ pwd=`pwd`
 list=`./parse_pbatch3.sh`
 for i in $list
 do
-rsh $i $pwd/modules.sh&
+rsh $i $pwd/modulesTest.sh&
 done
 wait
