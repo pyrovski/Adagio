@@ -1,9 +1,5 @@
 #!/bin/bash
 pwd=`pwd`
-list=`./parse_alloc.sh`
-for i in $list
-do
-echo $i
-/usr/bin/rsh e$i $pwd/permissions.sh $1 &
-done
-wait
+./parse_alloc.sh>list
+sudo bash -c "for i in \`cat $pwd/list\`; do echo \$i; /usr/bin/rsh \$i $pwd/permissions.sh $1; done"
+#wait
