@@ -61,6 +61,7 @@ static int g_trace;	// tracing level.
 int g_bind;  // cpu binding
 int g_cores_per_socket; // 
 int my_core, my_socket, my_local;
+int binding_stable = 0;
 
 static int current_hash=0, previous_hash=-1, next_freq=1;
 
@@ -109,6 +110,8 @@ static inline uint64_t rdtsc(void)
 
 static FILE *perf_file = 0;
 
+/*! @todo perhaps there should be one perf file per core
+ */
 static inline void read_aperf_mperf(uint64_t *aperf, uint64_t *mperf){
 	uint64_t mperf_aperf[2];
 	if(!perf_file){
@@ -143,11 +146,11 @@ static void calc_rates(timing_t *t){
 	assert(t);
 
 	if(t->aperf_stop <= t->aperf_start)
-		printf("aperf went backwards?\n");
+		printf("rank %d aperf went backwards?\n", rank);
 	if(t->mperf_stop <= t->mperf_start)
-		printf("mperf went backwards?\n");
+		printf("rank %d mperf went backwards?\n", rank);
 	if(t->tsc_stop <= t->tsc_start)
-		printf("tsc went backwards?\n");
+		printf("rank %d tsc went backwards?\n", rank);
 
 	t->aperf_accum += t->aperf_stop - t->aperf_start;
 	t->mperf_accum += t->mperf_stop - t->mperf_start;

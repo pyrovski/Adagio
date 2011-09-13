@@ -181,6 +181,8 @@ int shm_setup(char **argv, int rank){
 	printf("rank %d collapsing binding to core %d\n", rank, i);
 #endif
 	sched_setaffinity(0, sizeof(cpu_set_t), &cpusetCollapsed);
+	sched_yield();
+	binding_stable = 1;
 	status = get_cpuid(&my_core, &my_socket, &my_local);
       }else{
 	MPI_Abort(MPI_COMM_WORLD, 1);
@@ -194,18 +196,27 @@ int shm_setup(char **argv, int rank){
       CPU_ZERO(&cpuset);
       CPU_SET(my_core, &cpuset);
       status = sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
+      sched_yield();
+      binding_stable = 1;
       get_cpuid(&my_core, &my_socket, &my_local);
     }
 #ifdef _DEBUG
-    printf("after binding, rank %d is in socket %d core %d\n", rank, my_socket, 
-	   my_core);
+    status = sched_getaffinity(0, sizeof(cpu_set_t), &cpuset);
+    int i,mask;
+    for(i = 0,mask=0; i < sizeof(cpu_set_t) / sizeof(int); i++)
+      if(CPU_ISSET(i, &cpuset))
+	mask |= (1 << i);
+    printf("after binding, rank %d is in socket %d core %d, mask 0x%x\n", rank, my_socket, 
+	   my_core, mask);
 #endif
   } else {
 #ifdef _DEBUG
     printf("rank %d is in socket %d rank %d (%d)\n", rank, my_socket, 
 	   socket_rank, socket_size);
+    binding_stable = 1;
 #endif
   }
+    
 
   /* 
      lock semaphore, resize shared object

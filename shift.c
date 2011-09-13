@@ -94,10 +94,10 @@ int shift_core(int core, int freq_idx){
 	assert(shift_initialized);
 	assert( (freq_idx >= FASTEST_FREQ) && (freq_idx < NUM_FREQS) );
 
-	/*! @todo ...
+	int temp_cpuid;
 	get_cpuid(&temp_cpuid, 0, 0);
-	assert( temp_cpuid == my_core );
-	*/
+	if(binding_stable)
+		assert( temp_cpuid == my_core );
 
 	//shm_mark_freq(freq_idx);
 
