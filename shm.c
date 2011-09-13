@@ -187,6 +187,7 @@ int shm_setup(char **argv, int rank){
       }
     } else {    
       my_core = socket_rank;
+      //! @todo this is not sufficient for nonconflicting bindings; also need to specify socket
 #ifdef _DEBUG
       printf("rank %d binding to core %d\n", rank, my_core);
 #endif

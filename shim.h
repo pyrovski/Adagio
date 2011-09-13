@@ -10,6 +10,7 @@ extern double frequencies[MAX_NUM_FREQUENCIES], ratios[MAX_NUM_FREQUENCIES];
 extern int current_freq;
 extern int g_bind;
 extern int my_core, my_socket, my_local; // intialized in post_MPI_Init
+extern int rank;
 
 void shim_pre( int shim_id, union shim_parameters *p );
 void shim_post( int shim_id, union shim_parameters *p );

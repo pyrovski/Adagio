@@ -41,7 +41,8 @@ static void signal_handler        	( int signal);
 static void set_alarm			( double s );
 
 
-static int rank, size;
+int rank;
+static int size;
 
 typedef struct {
 	struct timeval start, stop;

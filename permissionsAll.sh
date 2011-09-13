@@ -4,6 +4,6 @@ pwd=`pwd`
 list=`./parse_pbatch3.sh`
 for i in $list
 do
-rsh $i $pwd/permissions.sh $1 &
+/usr/bin/rsh e$i $pwd/permissions.sh $1 &
 done
 wait

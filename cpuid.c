@@ -210,9 +210,7 @@ int parse_proc_cpuinfo()
 	 config.cores,config.sockets,config.cores_per_socket);
   printf("Mapping of cores to sockets:\n");
   for (i=0; i<config.cores; i++)
-    {
       printf("\tCore %2i -> Socket %2i\n",i,config.map_core_to_socket[i]);
-    }
   printf("Mapping of sockets to cores:\n");
   for (i=0; i<config.sockets; i++)
     {
@@ -221,6 +219,22 @@ int parse_proc_cpuinfo()
 	printf(" %i",config.map_socket_to_core[i][j]);
       printf("\n");
     }
+  printf("Mapping of cores to locals:\n");
+  for(i = 0; i < config.cores; i++)
+    printf("\tcore %d -> local %d\n", i, config.map_core_to_local[i]);
+  printf("Mapping of cores to per-socket cores:\n");
+  for(i = 0; i < config.cores; i++)
+    printf("\tcore %d -> socket %d core %d\n", i, 
+	   config.map_core_to_socket[i], 
+	   config.map_core_to_per_socket_core[i]);
+  printf("Mapping of apicids to cores:\n");
+  for(i = 0; i < config.max_apicid; i++)
+    if(config.map_apicid_to_core[i] != -1)
+      printf("\tapicid %d -> core %d\n", 
+	     i, config.map_apicid_to_core[i]);
+  printf("Mapping of cores to apicids:\n");
+  for(i = 0; i < config.cores; i++)
+    printf("\tcore %d -> apicid %d\n", i, config.map_core_to_apicid[i]);
 #endif
 
   return MCSUP_OK;

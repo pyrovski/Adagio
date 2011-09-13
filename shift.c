@@ -119,8 +119,8 @@ int shift_core(int core, int freq_idx){
 	}
 	assert(sfp);
 #ifdef _DEBUG
-	printf("socket %d rank %d core %d shifting core %d to %d\n", 
-	       my_socket, socket_rank, my_core, core, freq_idx);
+	printf("rank %d socket %d rank %d core %d shifting core %d to %d\n", 
+	       rank, my_socket, socket_rank, my_core, core, freq_idx);
 #endif
 	fprintf(sfp, "%u\n", freqs[ freq_idx ]);
 	fclose(sfp);
@@ -136,7 +136,8 @@ int shift_socket(int sock, int freq_idx){
 	 
 	 int core_index;
 #ifdef _DEBUG
-	 printf("shifting %d cores on socket %d to %d\n", 
+	 printf("rank %d shifting %d cores on socket %d to %d\n", 
+		rank,
 		config.cores_per_socket, 
 		sock, freq_idx);
 #endif
