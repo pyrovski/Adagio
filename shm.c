@@ -216,6 +216,9 @@ int shm_setup(char **argv, int rank){
     binding_stable = 1;
 #endif
   }
+  //if(binding_stable)
+  assert(binding_stable);
+  printf("rank %d binding stable\n", rank);
     
 
   /* 

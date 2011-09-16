@@ -145,17 +145,30 @@ static inline void read_aperf_mperf(uint64_t *aperf, uint64_t *mperf){
 static void calc_rates(timing_t *t){
 	assert(t);
 
-	if(t->aperf_stop <= t->aperf_start)
-		printf("rank %d aperf went backwards?\n", rank);
-	if(t->mperf_stop <= t->mperf_start)
-		printf("rank %d mperf went backwards?\n", rank);
+	t->elapsed_time += delta_seconds(&t->start, &t->stop);
+
+	if(t->aperf_stop <= t->aperf_start){
+		// double-check core binding
+		int tmp_core, tmp_socket, tmp_local;
+		get_cpuid(&tmp_core, &tmp_socket, &tmp_local);
+		printf("rank %d aperf went backwards 0x%lx to 0x%lx; core %d delta: %e\n", 
+					 rank,
+					 t->aperf_start, t->aperf_stop, tmp_core, t->elapsed_time);
+		
+	}
+	if(t->mperf_stop <= t->mperf_start){
+		int tmp_core, tmp_socket, tmp_local;
+		get_cpuid(&tmp_core, &tmp_socket, &tmp_local);
+		printf("rank %d mperf went backwards 0x%lx to 0x%lx; core %d delta: %e\n", 
+					 rank,
+					 t->mperf_start, t->mperf_stop, tmp_core, t->elapsed_time);
+	}
 	if(t->tsc_stop <= t->tsc_start)
 		printf("rank %d tsc went backwards?\n", rank);
 
 	t->aperf_accum += t->aperf_stop - t->aperf_start;
 	t->mperf_accum += t->mperf_stop - t->mperf_start;
 	t->tsc_accum += t->tsc_stop - t->tsc_start;
-	t->elapsed_time += delta_seconds(&t->start, &t->stop);
 
 	t->ratio = (double)t->aperf_accum / t->mperf_accum;
 	//t->elapsed_time = tsc_delta / 2667000000;
@@ -751,7 +764,8 @@ schedule_computation( int idx ){
 	current_freq = FASTEST_FREQ;
 
 #ifdef _DEBUG
-	fprintf( logfile, "==> schedule_computation called with idx=%d\n", idx);
+	if(g_trace)
+		fprintf( logfile, "==> schedule_computation called with idx=%d\n", idx);
 #endif
 	// If we have no data to work with, go home.
 	if( idx==0 ){ return; }
@@ -762,12 +776,14 @@ schedule_computation( int idx ){
 	//! @todo fix for average frequency
 	if( schedule[ idx ].seconds_per_insn == 0.0 ){
 #ifdef _DEBUG
-		fprintf( logfile, "==> schedule_computation First time through.\n");
+		if(g_trace)
+			fprintf( logfile, "==> schedule_computation First time through.\n");
 #endif
 	//! @todo fix for average frequency
 		if( schedule[ idx ].observed_comp_seconds <= GMPI_MIN_COMP_SECONDS ){
 #ifdef _DEBUG
-			fprintf( logfile, "==> schedule_computation min_seconds violation.\n");
+				if(g_trace)
+					fprintf( logfile, "==> schedule_computation min_seconds violation.\n");
 #endif
 			return;
 		}
@@ -776,8 +792,9 @@ schedule_computation( int idx ){
 			schedule[ idx ].observed_comp_insn;
 #ifdef _DEBUG
 		if(!isnan(schedule[idx].seconds_per_insn))
-			fprintf(logfile, "&&& SPI = %16.15lf\n", 
-							schedule[idx].seconds_per_insn);
+			if(g_trace)
+				fprintf(logfile, "&&& SPI = %16.15lf\n", 
+								schedule[idx].seconds_per_insn);
 #endif
 	}
 
@@ -790,10 +807,11 @@ schedule_computation( int idx ){
 		}
 #ifdef _DEBUG
 	if(!isnan(schedule[idx].seconds_per_insn))
-		fprintf(logfile, "&&& SPI = %16.15lf\n", 
-						schedule[idx].seconds_per_insn);
+			if(g_trace)
+				fprintf(logfile, "&&& SPI = %16.15lf\n", 
+								schedule[idx].seconds_per_insn);
 #endif
-		//}
+	//}
 
 	// Given I instructions to be executed over d time using available
 	// rates r[], 
@@ -825,15 +843,18 @@ schedule_computation( int idx ){
 	if( I * schedule[ idx ].seconds_per_insn * 
 			schedule[ idx ].observed_freq/frequencies[FASTEST_FREQ] >= d ){
 #ifdef _DEBUG
-		fprintf( logfile, "==> schedule_computation GO FASTEST.\n");
-		fprintf( logfile, "==>     I=%lf\n", I);
-		fprintf( logfile, "==>   SPI=%16.15lf\n",   
-				schedule[ idx ].seconds_per_insn * 
-						 schedule[idx].observed_freq / frequencies[FASTEST_FREQ]);
-		fprintf( logfile, "==> I*SPI=%16.15lf\n", 
-				I*schedule[ idx ].seconds_per_insn *
-						 schedule[idx].observed_freq / frequencies[FASTEST_FREQ]);
-		fprintf( logfile, "==>     d=%lf\n", d);
+		if(g_trace){
+			fprintf( logfile, "==> schedule_computation GO FASTEST.\n");
+			fprintf( logfile, "==>     I=%lf\n", I);
+			fprintf( logfile, "==>   SPI=%16.15lf\n",   
+							 schedule[ idx ].seconds_per_insn * 
+							 schedule[idx].observed_freq / frequencies[FASTEST_FREQ]);
+			fprintf( logfile, "==> I*SPI=%16.15lf\n", 
+							 I*schedule[ idx ].seconds_per_insn *
+							 schedule[idx].observed_freq / frequencies[FASTEST_FREQ]);
+			fprintf( logfile, "==>     d=%lf\n", d
+							 );
+		}
 #endif
 		current_freq = FASTEST_FREQ;
 	}
@@ -842,15 +863,17 @@ schedule_computation( int idx ){
 	else if( I * schedule[ idx ].seconds_per_insn * 
 					 schedule[ idx ].observed_freq/frequencies[ SLOWEST_FREQ ] <= d ){
 #ifdef _DEBUG
-		fprintf( logfile, "==> schedule_computation GO SLOWEST.\n");
-		fprintf( logfile, "==>     I=%lf\n", I);
-		fprintf( logfile, "==>   SPI=%16.15lf\n",   
-				schedule[ idx ].seconds_per_insn * 
-						 schedule[idx].observed_freq / frequencies[ SLOWEST_FREQ ]);
-		fprintf( logfile, "==> I*SPI=%16.15lf\n", 
-				I*schedule[ idx ].seconds_per_insn * 
-						 schedule[idx].observed_freq / frequencies[ SLOWEST_FREQ ]);
-		fprintf( logfile, "==>     d=%lf\n", d);
+		if(g_trace){
+			fprintf( logfile, "==> schedule_computation GO SLOWEST.\n");
+			fprintf( logfile, "==>     I=%lf\n", I);
+			fprintf( logfile, "==>   SPI=%16.15lf\n",   
+							 schedule[ idx ].seconds_per_insn * 
+							 schedule[idx].observed_freq / frequencies[ SLOWEST_FREQ ]);
+			fprintf( logfile, "==> I*SPI=%16.15lf\n", 
+							 I*schedule[ idx ].seconds_per_insn * 
+							 schedule[idx].observed_freq / frequencies[ SLOWEST_FREQ ]);
+			fprintf( logfile, "==>     d=%lf\n", d);
+		}
 #endif
 		current_freq = SLOWEST_FREQ;
 	}
@@ -871,17 +894,19 @@ schedule_computation( int idx ){
 						schedule[ idx ].observed_freq/frequencies[ i+1 ] );
 
 #ifdef _DEBUG
-				fprintf( logfile, "==> schedule_computation GO %d.\n", i);
-				fprintf( logfile, "----> SPI[%d] = %15.14lf\n", FASTEST_FREQ, 
-								 schedule[idx].seconds_per_insn * 
-								 schedule[idx].observed_freq / frequencies[FASTEST_FREQ]);
-				fprintf( logfile, "----> SPI[%i] = %15.14lf\n", i, 
-								 schedule[idx].seconds_per_insn *
-								 schedule[idx].observed_freq / frequencies[i]);
-				fprintf( logfile, "---->       d = %lf\n", d);
-				fprintf( logfile, "---->       I = %lf\n", I);
-				fprintf( logfile, "---->       p = %lf\n", p);
-				fprintf( logfile, "---->     idx = %d\n", idx);
+				if(g_trace){
+					fprintf( logfile, "==> schedule_computation GO %d.\n", i);
+					fprintf( logfile, "----> SPI[%d] = %15.14lf\n", FASTEST_FREQ, 
+									 schedule[idx].seconds_per_insn * 
+									 schedule[idx].observed_freq / frequencies[FASTEST_FREQ]);
+					fprintf( logfile, "----> SPI[%i] = %15.14lf\n", i, 
+									 schedule[idx].seconds_per_insn *
+									 schedule[idx].observed_freq / frequencies[i]);
+					fprintf( logfile, "---->       d = %lf\n", d);
+					fprintf( logfile, "---->       I = %lf\n", I);
+					fprintf( logfile, "---->       p = %lf\n", p);
+					fprintf( logfile, "---->     idx = %d\n", idx);
+				}
 #endif
 				current_freq = i;
 
@@ -896,8 +921,9 @@ schedule_computation( int idx ){
 						schedule[ idx ].observed_freq/frequencies[ i ];
 					next_freq = i+1;
 #ifdef _DEBUG
-					fprintf( logfile, "==> schedule_computation alarm=%15.14lf.\n", 
-						 seconds_until_interrupt);
+					if(g_trace)
+						fprintf( logfile, "==> schedule_computation alarm=%15.14lf.\n", 
+										 seconds_until_interrupt);
 #endif
 					set_alarm(seconds_until_interrupt);
 				}
