@@ -213,8 +213,8 @@ int shm_setup(char **argv, int rank){
 #ifdef _DEBUG
     printf("rank %d is in socket %d rank %d (%d)\n", rank, my_socket, 
 	   socket_rank, socket_size);
-    binding_stable = 1;
 #endif
+    binding_stable = 1;
   }
   //if(binding_stable)
   assert(binding_stable);

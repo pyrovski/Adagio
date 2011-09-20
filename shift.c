@@ -37,6 +37,7 @@ int shift_set_socket_governor(int socket, const char *governor_str){
 	assert(governor_str);
 
 	int core_index;
+#ifdef BLR_USE_SHIFT
 	for(core_index = 0; core_index < config.cores_per_socket; core_index++){
 		snprintf(filename, 100, "%s%u%s%s", cpufreq_path[0], 
 			 config.map_socket_to_core[socket][core_index], 
@@ -52,6 +53,7 @@ int shift_set_socket_governor(int socket, const char *governor_str){
 		fprintf(sfp, "%s", governor_str);
 		fclose(sfp);
 	}
+#endif
 	return 0;
 }
 
@@ -153,6 +155,7 @@ int shift_set_socket_min_freq(int socket){
 	 int core_index;
 	 FILE *sfp;
 	 char filename[100];
+#ifdef BLR_USE_SHIFT
 	 for(core_index = 0; core_index < config.cores_per_socket; core_index++){
 		 snprintf(filename, 100, "%s%u%s%s", cpufreq_path[0], 
 			  config.map_socket_to_core[socket][core_index], 
@@ -166,6 +169,7 @@ int shift_set_socket_min_freq(int socket){
 		 fprintf(sfp, "%u", freqs[ SLOWEST_FREQ ]);
 		 fclose(sfp);
 	 }
+#endif
 	 return 0;
 }
 
@@ -176,6 +180,7 @@ int shift_set_socket_max_freq(int socket){
 	 int core_index;
 	 FILE *sfp;
 	 char filename[100];
+#ifdef BLR_USE_SHIFT
 	 for(core_index = 0; core_index < config.cores_per_socket; core_index++){
 		 snprintf(filename, 100, "%s%u%s%s", cpufreq_path[0], 
 			  config.map_socket_to_core[socket][core_index], 
@@ -189,6 +194,7 @@ int shift_set_socket_max_freq(int socket){
 		 fprintf(sfp, "%u", freqs[ FASTEST_FREQ ]);
 		 fclose(sfp);
 	 }
+#endif
 	 return 0;
 }
 
