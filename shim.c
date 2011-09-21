@@ -453,13 +453,15 @@ Log( int shim_id, union shim_parameters *p ){
 	if(!initialized){
 		//Write the header line.
 		if(rank==0){
-			fprintf(logfile, " ");
-			fprintf(logfile, hdr_format,
-							"Rank", "Function", "Hash", 
-							"Time_in", "Time_out",
-							"Comp", "Insn", "Ratio", "GHz", 
-							"T_Ratio",
-							"Comm", "MsgSz");		
+			if(g_trace){
+				fprintf(logfile, " ");
+				fprintf(logfile, hdr_format,
+								"Rank", "Function", "Hash", 
+								"Time_in", "Time_out",
+								"Comp", "Insn", "Ratio", "GHz", 
+								"T_Ratio",
+								"Comm", "MsgSz");		
+			}
 		}
 		initialized=1;
 	}
@@ -502,24 +504,26 @@ Log( int shim_id, union shim_parameters *p ){
 	if(schedule[current_hash].observed_comp_seconds >= GMPI_MIN_COMP_SECONDS ||
 		 schedule[current_hash].observed_comm_seconds >= GMPI_MIN_COMM_SECONDS){
 		// Write to the logfile.
-		fprintf(logfile, var_format, rank, 
-						f2str(p->MPI_Dummy_p.shim_id),	
-						current_hash,
-						schedule[current_hash].start_time - 
-						(time_total.start.tv_sec + time_total.start.tv_usec / 1000000.0),
-						schedule[current_hash].end_time - 
-						(time_total.start.tv_sec + time_total.start.tv_usec / 1000000.0),
-						schedule[current_hash].observed_comp_seconds,
-						schedule[current_hash].observed_comp_insn,
-						schedule[current_hash].observed_ratio,
-						schedule[current_hash].observed_freq / 1000000000.0, //! @todo this could go away if we keep FASTEST_FREQ somewhere
-						schedule[current_hash].desired_ratio == 0.0 ? 1.0 : 
-						schedule[current_hash].desired_ratio,
-						schedule[current_hash].observed_comm_seconds,
-						MsgSz);
+		if(g_trace)
+			fprintf(logfile, var_format, rank, 
+							f2str(p->MPI_Dummy_p.shim_id),	
+							current_hash,
+							schedule[current_hash].start_time - 
+							(time_total.start.tv_sec + time_total.start.tv_usec / 1000000.0),
+							schedule[current_hash].end_time - 
+							(time_total.start.tv_sec + time_total.start.tv_usec / 1000000.0),
+							schedule[current_hash].observed_comp_seconds,
+							schedule[current_hash].observed_comp_insn,
+							schedule[current_hash].observed_ratio,
+							schedule[current_hash].observed_freq / 1000000000.0, //! @todo this could go away if we keep FASTEST_FREQ somewhere
+							schedule[current_hash].desired_ratio == 0.0 ? 1.0 : 
+							schedule[current_hash].desired_ratio,
+							schedule[current_hash].observed_comm_seconds,
+							MsgSz);
 
 #ifdef BLR_USE_EAGER_LOGGING
-	fflush( logfile );
+		if(g_trace)
+			fflush( logfile );
 #endif
 	}
 	/*! @todo add up interval times, compare to total program time,
@@ -701,6 +705,7 @@ signal_handler(int signal){
 	  shift_core( my_core, next_freq );                                       // |
 	}                                                                         // |
 #ifdef _DEBUG                                                               // |
+	if(g_trace)
 	fprintf(logfile,                                                          // |
 		"==> Signal handler shifting to %d, in_computation=%d\n",               // |
 		next_freq, in_computation);                                             // |
