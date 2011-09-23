@@ -37,7 +37,7 @@ NAS_MPIRUN=mpirun -bind-to-core $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) $(NAS_BADNOD
 
 MPICC=mpicc
 ifneq ($(dbg),)
-DBG=-D_DEBUG=$(dbg) -g -pg
+DBG=-D_DEBUG=$(dbg) -DBLR_USE_EAGER_LOGGING -g -pg
 # -DVERBOSE
 OPT_FLAGS = -O0
 else
@@ -160,7 +160,7 @@ install: libGreenMPI.so harness
 shim.o: Makefile shim.c shim.h log.o stacktrace.o 			\
 		gettimeofday_helpers.o wpapi.o shift.o  		\
 		$(GENERATED_SHIMFILES) 
-	$(MPICC) $(CFLAGS) -fPIC -DBLR_USE_EAGER_LOGGING -c shim.c $(INCDIR)
+	$(MPICC) $(CFLAGS) -fPIC -c shim.c $(INCDIR)
 	$(MPICC) $(CFLAGS) -fPIC -c shim_functions.c
 
 log.o: Makefile log.c log.h

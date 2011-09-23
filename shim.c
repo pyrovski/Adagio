@@ -596,9 +596,12 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	// Write the schedule entry.  MUST COME BEFORE LOGGING.
 	schedule[current_hash].observed_freq = time_comp.freq;
 	schedule[current_hash].observed_ratio = time_comp.ratio;
+	/*! @todo FIXME intervals may not line up for start/stop and freq measurement
+	 */
+	printf("I am broken... %s:%d\n", __FILE__, __LINE__);
 #if _DEBUG > 1
 	printf("rank %d set comp r: %f f: %f GHz tsc f: %f GHz tsc: %llu aperf: %lu "
-				 "mperf: %lu s: %f\n", 
+				 "mperf: %lu s: %f current_comp_seconds: %f\n", 
 				 rank,
 				 time_comp.ratio,
 				 time_comp.freq / 1000000000,
@@ -606,7 +609,8 @@ shim_pre( int shim_id, union shim_parameters *p ){
 				 time_comp.tsc_accum,
 				 time_comp.aperf_accum,
 				 time_comp.mperf_accum,
-				 time_comp.elapsed_time);
+				 time_comp.elapsed_time,
+				 current_comp_seconds);
 #endif
 	// Copy time accrued before we shifted into current freq.
 	// current_comp_seconds is set in the signal handler
