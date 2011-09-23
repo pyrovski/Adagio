@@ -86,7 +86,7 @@ FILE *runTimeLog = 0;
 //! @todo change hash function?
 static struct entry schedule[8192];
 
-static double current_comp_seconds;
+//static double current_comp_seconds;
 static double current_comp_insn;
 static double current_start_time;
 
@@ -196,14 +196,23 @@ static inline void mark_time(timing_t *t, int start_stop){
 		read_aperf_mperf(&t->aperf_stop, &t->mperf_stop);
 		calc_rates(t);
 #if _DEBUG > 1
-		printf("rank %d timing stop 0x%lx delta: %11.7f ratio: %f min ratio: %f f: %f GHz tsc f: %f GHz aperf: 0x%lx mperf: 0x%lx\n", 
+		printf("rank %d timing stop 0x%lx delta: %11.7f ratio: %f min ratio: %f hash: %06d f: %f GHz tsc f: %f GHz aperf: 0x%lx mperf: 0x%lx\n", 
 					 rank, t, 
 					 t->elapsed_time, t->ratio, 
 					 ratios[current_freq],
+					 current_hash,
 					 t->freq / 1000000000,
 					 time_comp.tsc_accum / time_comp.elapsed_time / 1000000000,
 					 time_comp.aperf_stop,
 					 time_comp.mperf_stop);
+#endif
+#ifdef _DEBUG
+		if(ratios[current_freq] > 0 && t->ratio < 0.95 * ratios[current_freq] && t->elapsed_time > GMPI_MIN_COMP_SECONDS)
+			printf("rank %d 0x%lx delta: %11.7f ratio %f < min ratio %f\n",
+						 rank, t, t->elapsed_time, t->ratio, ratios[current_freq]);
+		else if(ratios[current_freq] <= 0)
+			printf("rank %d 0x%lx delta: %11.7f ratio: %f no target ratio defined\n",
+						 rank, t, t->elapsed_time, t->ratio);
 #endif
 	}
 }
@@ -596,26 +605,24 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	// Write the schedule entry.  MUST COME BEFORE LOGGING.
 	schedule[current_hash].observed_freq = time_comp.freq;
 	schedule[current_hash].observed_ratio = time_comp.ratio;
-	/*! @todo FIXME intervals may not line up for start/stop and freq measurement
-	 */
-	printf("I am broken... %s:%d\n", __FILE__, __LINE__);
 #if _DEBUG > 1
-	printf("rank %d set comp r: %f f: %f GHz tsc f: %f GHz tsc: %llu aperf: %lu "
-				 "mperf: %lu s: %f current_comp_seconds: %f\n", 
+	printf("rank %d set comp r: %f tr: %f hash: %06d f: %f GHz tsc f: %f GHz tsc: %llu aperf: %lu "
+				 "mperf: %lu s: %f\n", 
 				 rank,
 				 time_comp.ratio,
+				 schedule[current_hash].desired_ratio,
+				 current_hash,
 				 time_comp.freq / 1000000000,
 				 time_comp.tsc_accum / time_comp.elapsed_time / 1000000000,
 				 time_comp.tsc_accum,
 				 time_comp.aperf_accum,
 				 time_comp.mperf_accum,
-				 time_comp.elapsed_time,
-				 current_comp_seconds);
+				 time_comp.elapsed_time);
 #endif
 	// Copy time accrued before we shifted into current freq.
 	// current_comp_seconds is set in the signal handler
-	schedule[current_hash].observed_comp_seconds = current_comp_seconds;
-	current_comp_seconds = 0;
+	//schedule[current_hash].observed_comp_seconds = current_comp_seconds;
+	//current_comp_seconds = 0;
 
 	// Copy insn accrued before we shifted into current freq.
 	schedule[current_hash].observed_comp_insn = current_comp_insn;
@@ -702,7 +709,7 @@ signal_handler(int signal){
 	if(in_computation){
 		mark_time(&time_comp, 0);
 		current_comp_insn=stop_papi();	                                   //  <---|
-		current_comp_seconds = time_comp.elapsed_time;                          // |
+		//		current_comp_seconds = time_comp.elapsed_time;                          // |
 	}                                                                         // |
                                                                             // |
 	if( ! (g_algo & mods_FAKEFREQ) ) {                                        // |
@@ -779,7 +786,8 @@ schedule_computation( int idx ){
 	// If we have no data to work with, go home.
 	if( idx==0 ){ return; }
 
-	schedule[idx].desired_ratio = 1.0;
+	//! @todo this needs to go away
+	//schedule[idx].desired_ratio = 1.0;
 
 	// On the first time through, establish worst-case slowdown rates.
 	//! @todo fix for average frequency
@@ -844,9 +852,23 @@ schedule_computation( int idx ){
 	d += schedule[ idx ].observed_comm_seconds - GMPI_BLOCKING_BUFFER;
 
 	// Create the schedule.
+	double updatedRatio = (schedule[idx].observed_comp_seconds * schedule[idx].observed_freq) / 
+		(d * frequencies[FASTEST_FREQ]);
+#if _DEBUG > 1
+	printf("rank %d updating hash %06d target ratio from %f to %f; insn: %le comp: %f comm: %f\n",
+				 rank, idx, schedule[idx].desired_ratio,
+				 updatedRatio,
+				 I,
+				 schedule[idx].observed_comp_seconds, 
+				 schedule[idx].observed_comm_seconds);
+#endif
+	/*! @todo this is wrong
 	schedule[idx].desired_ratio = 
 		min(1.0, schedule[idx].observed_comp_seconds / d);
-				
+	*/
+	
+	schedule[idx].desired_ratio = updatedRatio;
+	
 	// If the fastest frequency isn't fast enough, use f0 all the time.
 	//! @todo fix for average frequency measurement; need prediction
 	if( I * schedule[ idx ].seconds_per_insn * 
