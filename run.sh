@@ -21,9 +21,13 @@ command='harness -S'
 echo 'command:'$command >> $path/info
 oldDir=`pwd`
 cd $path
+cores=$SLURM_NPROCS
 mpirun -n $SLURM_NPROCS -bind-to-core -report-bindings $trace $oldDir/$command >log 2>errlog
-#mpirun -n 32 -cpus-per-proc 4 -report-bindings $trace -mca gmpi_bind collapse $oldDir/harness -S >log 2>errlog
+
+#cores=32
+#mpirun -n $cores -cpus-per-proc 4 -report-bindings $trace -mca gmpi_bind collapse $oldDir/harness -S >log 2>errlog
 # pernode gives segfaults...
+echo 'cores:'$cores >> $path/info
 mpirun -n $SLURM_NNODES bash -c "cat scaling_available_frequencies | cut -d' ' -f1 | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_max_freq"
 mpirun -n $SLURM_NNODES bash -c "cat scaling_available_frequencies | sed -re 's/[[:space:]]+/\n/g'|sed -e '/^$/d'|tail -n 1|tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_min_freq"
 cd ..
