@@ -26,10 +26,8 @@ mpirun -n $SLURM_NPROCS -bind-to-core -report-bindings $trace $oldDir/$command >
 # pernode gives segfaults...
 mpirun -n $SLURM_NNODES bash -c "cat scaling_available_frequencies | cut -d' ' -f1 | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_max_freq"
 mpirun -n $SLURM_NNODES bash -c "cat scaling_available_frequencies | sed -re 's/[[:space:]]+/\n/g'|sed -e '/^$/d'|tail -n 1|tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_min_freq"
-#mpirun -pernode -n $SLURM_NNODES bash -c "echo ondemand | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor"
 cd ..
 namez=$oldDir/$name.bz2
-#tar -cjvf $namez $name
-#rsync --progress $namez lec.cs.arizona.edu:/home/pbailey/data/GreenMPI/$benchmark/
+tar -cjvf $namez $name
+rsync --progress $namez lec.cs.arizona.edu:/home/pbailey/data/GreenMPI/$benchmark/
 
-#salloc -N 8 -n 32 -pprountree mpirun -n 16 -cpus-per-proc 4 -report-bindings hwloc-bind --get
