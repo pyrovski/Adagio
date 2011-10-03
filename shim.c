@@ -852,8 +852,9 @@ schedule_computation( int idx ){
 	d += schedule[ idx ].observed_comm_seconds - GMPI_BLOCKING_BUFFER;
 
 	// Create the schedule.
-	double updatedRatio = (schedule[idx].observed_comp_seconds * schedule[idx].observed_freq) / 
-		(d * frequencies[FASTEST_FREQ]);
+	double updatedRatio = min(1.0, (schedule[idx].observed_comp_seconds * 
+																	schedule[idx].observed_freq) / 
+														(d * frequencies[FASTEST_FREQ]));
 #if _DEBUG > 1
 	printf("rank %d updating hash %06d target ratio from %f to %f; insn: %le comp: %f comm: %f\n",
 				 rank, idx, schedule[idx].desired_ratio,
