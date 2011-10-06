@@ -18,12 +18,7 @@ void shim_post( int shim_id, union shim_parameters *p );
 char* f2str( int shim_id );
 void Log( int shim_id, union shim_parameters *p );
 
-//extern FILE *logfile;
-
 // Schedule entry
-/*! @todo this structure may need to change to accommodate average frequencies
-  per task measurement.
- */
 struct entry{
   double observed_comm_seconds;
   

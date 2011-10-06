@@ -767,6 +767,10 @@ schedule_communication( int idx ){
 	// Set the timer to go off and return.
 	next_freq = SLOWEST_FREQ;
 	set_alarm( GMPI_MIN_COMM_SECONDS );
+
+	/*! @todo what is the intended outcome if there is not enough time to 
+		slow down the clock?
+	 */
 }
 
 static void
@@ -786,9 +790,6 @@ schedule_computation( int idx ){
 	// If we have no data to work with, go home.
 	if( idx==0 ){ return; }
 
-	//! @todo this needs to go away
-	//schedule[idx].desired_ratio = 1.0;
-
 	// On the first time through, establish worst-case slowdown rates.
 	//! @todo fix for average frequency
 	if( schedule[ idx ].seconds_per_insn == 0.0 ){
@@ -796,7 +797,6 @@ schedule_computation( int idx ){
 		if(g_trace)
 			fprintf( logfile, "==> schedule_computation First time through.\n");
 #endif
-	//! @todo fix for average frequency
 		if( schedule[ idx ].observed_comp_seconds <= GMPI_MIN_COMP_SECONDS ){
 #ifdef _DEBUG
 				if(g_trace)
@@ -816,7 +816,6 @@ schedule_computation( int idx ){
 	}
 
 	// On subsequent execution, only update where we have data.
-	//for( i=FASTEST_FREQ; i<NUM_FREQS; i++ ){
 	if( schedule[ idx ].observed_comp_seconds > GMPI_MIN_COMP_SECONDS ){
 			schedule[ idx ].seconds_per_insn = 
 				schedule[ idx ].observed_comp_seconds/
@@ -862,12 +861,7 @@ schedule_computation( int idx ){
 				 I,
 				 schedule[idx].observed_comp_seconds, 
 				 schedule[idx].observed_comm_seconds);
-#endif
-	/*! @todo this is wrong
-	schedule[idx].desired_ratio = 
-		min(1.0, schedule[idx].observed_comp_seconds / d);
-	*/
-	
+#endif	
 	schedule[idx].desired_ratio = updatedRatio;
 	
 	// If the fastest frequency isn't fast enough, use f0 all the time.

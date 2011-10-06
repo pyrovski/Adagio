@@ -2,6 +2,10 @@
 #include "md5.h"
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
+
+/*! @todo this might be modified to give consistent hashes 
+across program runs and hosts
+*/
 int hash_backtrace(int fid) {
 	unw_cursor_t cursor; unw_context_t uc;
 	unw_word_t ip, sp;
