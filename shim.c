@@ -512,7 +512,9 @@ Log( int shim_id, union shim_parameters *p ){
 
 #ifndef _DEBUG
 	if(schedule[current_hash].observed_comp_seconds >= GMPI_MIN_COMP_SECONDS ||
-		 schedule[current_hash].observed_comm_seconds >= GMPI_MIN_COMM_SECONDS){
+		 schedule[current_hash].observed_comm_seconds >= GMPI_MIN_COMM_SECONDS || 
+		 shim_id == GMPI_INIT || 
+		 shim_id == GMPI_FINALIZE){
 #endif
 		// Write to the logfile.
 		if(g_trace)
