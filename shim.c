@@ -510,8 +510,10 @@ Log( int shim_id, union shim_parameters *p ){
 			MsgSz = -1;	// We don't have complete coverage, obviously.
 	}
 
+#ifndef _DEBUG
 	if(schedule[current_hash].observed_comp_seconds >= GMPI_MIN_COMP_SECONDS ||
 		 schedule[current_hash].observed_comm_seconds >= GMPI_MIN_COMM_SECONDS){
+#endif
 		// Write to the logfile.
 		if(g_trace)
 			fprintf(logfile, var_format, rank, 
@@ -534,7 +536,9 @@ Log( int shim_id, union shim_parameters *p ){
 		if(g_trace)
 			fflush( logfile );
 #endif
+#ifndef _DEBUG
 	}
+#endif
 	/*! @todo add up interval times, compare to total program time,
 		defined as time between MPI_Init and MPI_Finalize
 	 */
