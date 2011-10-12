@@ -282,6 +282,8 @@ pre_MPI_Init( union shim_parameters *p ){
 	if(env_trace && strlen(env_trace) > 0){
 		g_trace &= strstr(env_trace, "none"    ) ? trace_NONE  	: ~trace_NONE;
 		g_trace |= strstr(env_trace, "all"     ) ? trace_ALL   	: 0;
+		g_trace |= strstr(env_trace, "thresh"  ) ? trace_THRESH : 0;
+		/*
 		g_trace |= strstr(env_trace, "ts"      ) ? trace_TS    	: 0;
 		g_trace |= strstr(env_trace, "file"    ) ? trace_FILE  	: 0;
 		g_trace |= strstr(env_trace, "line"    ) ? trace_LINE  	: 0;
@@ -290,6 +292,7 @@ pre_MPI_Init( union shim_parameters *p ){
 		g_trace |= strstr(env_trace, "comm"    ) ? trace_COMM  	: 0;
 		g_trace |= strstr(env_trace, "rank"    ) ? trace_RANK  	: 0;
 		g_trace |= strstr(env_trace, "pcontrol") ? trace_PCONTROL: 0;
+		*/
 #ifdef _DEBUG
 		g_trace = trace_ALL;
 		printf("g_trace=%s %d\n", env_trace, g_trace);
@@ -453,10 +456,12 @@ Log( int shim_id, union shim_parameters *p ){
 	static int initialized=0;
 	MPI_Aint lb; 
 	MPI_Aint extent;
-	int MsgSz=-1;
+	int MsgSz = -1;
+	int MsgSrc = -1;
+	int MsgDest = -1;
 
-	char var_format[] = "%5d %13s %06d %9.6lf %9.6f %9.6lf %e %9.6f %9.6lf %9.6lf %8.6lf %7d\n";
-	char hdr_format[] = "%4s %13s %6s %9s %9s %9s %9s %9s %9s %9s %8s %7s\n";
+	char var_format[] = "%5d %13s %06d %9.6lf %9.6f %9.6lf %e %9.6f %9.6lf %8.6lf %7d %7d %7d\n";
+	char hdr_format[] = "%4s %13s %6s %9s %9s %9s %12s %9s %9s %8s %7s %7s %7s\n";
 
 	// One-time initialization.
 	if(!initialized){
@@ -467,55 +472,74 @@ Log( int shim_id, union shim_parameters *p ){
 				fprintf(logfile, hdr_format,
 								"Rank", "Function", "Hash", 
 								"Time_in", "Time_out",
-								"Comp", "Insn", "Ratio", "GHz", 
+								"Comp", "Insn", "Ratio",  
 								"T_Ratio",
-								"Comm", "MsgSz");		
+								"Comm", "MsgSz", "MsgDest", "MsgSrc");
 			}
 		}
 		initialized=1;
 	}
 	
 	// Determine message size for selected function calls.
+	/*! @todo in order to make a task graph, need to deal with tags, 
+		communicators, MPI_Wait_any, and MPI_Wait_all.
+	 */
 	switch(shim_id){
-		case GMPI_ISEND: 
-			PMPI_Type_get_extent( p->MPI_Isend_p.datatype, &lb, &extent ); 
-			MsgSz = p->MPI_Isend_p.count * extent;
-			break;
-		case GMPI_IRECV: 
-			PMPI_Type_get_extent( p->MPI_Irecv_p.datatype, &lb, &extent );
-			MsgSz = p->MPI_Irecv_p.count * extent;
-			break;
-		case GMPI_SEND:
-			PMPI_Type_get_extent( p->MPI_Send_p.datatype, &lb, &extent );
-			MsgSz = p->MPI_Send_p.count * extent;
-			break;
-		case GMPI_RECV:
-			PMPI_Type_get_extent( p->MPI_Recv_p.datatype, &lb, &extent );
-			MsgSz = p->MPI_Recv_p.count * extent;
-			break;
-		case GMPI_SSEND: 
-			PMPI_Type_get_extent( p->MPI_Ssend_p.datatype, &lb, &extent ); 
-			MsgSz = p->MPI_Ssend_p.count * extent;
-			break;
-		case GMPI_REDUCE:
-			PMPI_Type_get_extent( p->MPI_Reduce_p.datatype, &lb, &extent ); 
-			MsgSz = p->MPI_Reduce_p.count * extent;
-			break;
-		case GMPI_ALLREDUCE:
-			PMPI_Type_get_extent( p->MPI_Allreduce_p.datatype, &lb, &extent ); 
-			MsgSz = p->MPI_Allreduce_p.count * extent;
-			break;
-			
-		default:
-			MsgSz = -1;	// We don't have complete coverage, obviously.
+	case GMPI_ISEND: 
+		PMPI_Type_get_extent( p->MPI_Isend_p.datatype, &lb, &extent ); 
+		MsgSz = p->MPI_Isend_p.count * extent;
+		MsgDest = p->MPI_Isend_p.dest;
+		MsgSrc = rank;
+		break;
+	case GMPI_IRECV: 
+		PMPI_Type_get_extent( p->MPI_Irecv_p.datatype, &lb, &extent );
+		MsgSz = p->MPI_Irecv_p.count * extent;
+		MsgSrc = p->MPI_Irecv_p.source;
+		MsgDest = rank;
+		break;
+	case GMPI_SEND:
+		PMPI_Type_get_extent( p->MPI_Send_p.datatype, &lb, &extent );
+		MsgSz = p->MPI_Send_p.count * extent;
+		MsgDest = p->MPI_Send_p.dest;
+		MsgSrc = rank;
+		break;
+	case GMPI_RECV:
+		PMPI_Type_get_extent( p->MPI_Recv_p.datatype, &lb, &extent );
+		MsgSz = p->MPI_Recv_p.count * extent;
+		MsgSrc = p->MPI_Recv_p.source;
+		MsgDest = rank;
+		break;
+	case GMPI_SSEND: 
+		PMPI_Type_get_extent( p->MPI_Ssend_p.datatype, &lb, &extent ); 
+		MsgSz = p->MPI_Ssend_p.count * extent;
+		MsgDest = p->MPI_Ssend_p.dest;
+		MsgSrc = rank;
+		break;
+	case GMPI_REDUCE:
+		PMPI_Type_get_extent( p->MPI_Reduce_p.datatype, &lb, &extent ); 
+		MsgSz = p->MPI_Reduce_p.count * extent;
+		MsgDest = p->MPI_Reduce_p.root;
+		MsgSrc = rank;
+		break;
+	case GMPI_ALLREDUCE:
+		PMPI_Type_get_extent( p->MPI_Allreduce_p.datatype, &lb, &extent ); 
+		MsgSz = p->MPI_Allreduce_p.count * extent;
+		break;
+	case GMPI_BCAST:
+		PMPI_Type_get_extent(p->MPI_Bcast_p.datatype, &lb, &extent);
+		MsgSz = p->MPI_Bcast_p.count * extent;
+		MsgDest = p->MPI_Bcast_p.root;
+		MsgSrc = rank;
+		break;
+	default:
+		MsgSz = -1;	// We don't have complete coverage, obviously.
 	}
 
-#ifndef _DEBUG
-	if(schedule[current_hash].observed_comp_seconds >= GMPI_MIN_COMP_SECONDS ||
-		 schedule[current_hash].observed_comm_seconds >= GMPI_MIN_COMM_SECONDS){
-#endif
+	if((g_trace & trace_THRESH) && 
+		 (schedule[current_hash].observed_comp_seconds >= GMPI_MIN_COMP_SECONDS ||
+			schedule[current_hash].observed_comm_seconds >= GMPI_MIN_COMM_SECONDS) || 
+		 (g_trace & trace_ALL)){
 		// Write to the logfile.
-		if(g_trace)
 			fprintf(logfile, var_format, rank, 
 							f2str(p->MPI_Dummy_p.shim_id),	
 							current_hash,
@@ -526,19 +550,17 @@ Log( int shim_id, union shim_parameters *p ){
 							schedule[current_hash].observed_comp_seconds,
 							schedule[current_hash].observed_comp_insn,
 							schedule[current_hash].observed_ratio,
-							schedule[current_hash].observed_freq / 1000000000.0, //! @todo this could go away if we keep FASTEST_FREQ somewhere
 							schedule[current_hash].desired_ratio == 0.0 ? 1.0 : 
 							schedule[current_hash].desired_ratio,
 							schedule[current_hash].observed_comm_seconds,
-							MsgSz);
+							MsgSz,
+							MsgDest,
+							MsgSrc);
 
 #ifdef BLR_USE_EAGER_LOGGING
-		if(g_trace)
 			fflush( logfile );
 #endif
-#ifndef _DEBUG
 	}
-#endif
 	/*! @todo add up interval times, compare to total program time,
 		defined as time between MPI_Init and MPI_Finalize
 	 */

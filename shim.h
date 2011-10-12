@@ -51,6 +51,7 @@ enum{
 	mods_TURBOBOOST = 0x800,  // allow turboboost
 
 	trace_NONE    = 0x000,
+	/*
 	trace_TS      = 0x001,	// Timestamp.
 	trace_FILE    = 0x002,	// Filename where MPI call occurred.
 	trace_LINE    = 0x004,	// Line # where MPI call occurred.
@@ -60,7 +61,9 @@ enum{
 	trace_COMM	  = 0x020,	// Elapsed comm time spend in mpi lib.
 	trace_RANK	  = 0x040,	// MPI rank.
 	trace_PCONTROL= 0x080,	// Most recent pcontrol.
-	trace_ALL	    = 0xFFF,
+	*/
+	trace_THRESH   = 0x100, // only tasks above thresholds
+	trace_ALL      = 0xFFF,
 
 	bind_COLLAPSE = 1
 };
