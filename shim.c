@@ -532,7 +532,7 @@ Log( int shim_id, union shim_parameters *p ){
 		MsgSrc = rank;
 		break;
 	default:
-		MsgSz = -1;	// We don't have complete coverage, obviously.
+		break;// We don't have complete coverage, obviously.
 	}
 
 	if((g_trace & trace_THRESH) && 
