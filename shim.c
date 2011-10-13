@@ -632,6 +632,7 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	// Write the schedule entry.  MUST COME BEFORE LOGGING.
 	schedule[current_hash].observed_freq = time_comp.freq;
 	schedule[current_hash].observed_ratio = time_comp.ratio;
+	schedule[current_hash].c0_ratio = (double)time_comp.mperf_accum / time_comp.tsc_accum;
 #if _DEBUG > 1
 	printf("rank %d set comp r: %f tr: %f hash: %06d f: %f GHz tsc f: %f GHz tsc: %llu aperf: %lu "
 				 "mperf: %lu s: %f\n", 
