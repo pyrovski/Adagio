@@ -33,7 +33,7 @@ struct entry{
   double end_time; // from previous
   int following_entry; // from previous, for next
   double c0_ratio; // from previous
-  int requested_freq; // for next?
+  float requested_ratio; // for next?
 };
 
 enum{ 

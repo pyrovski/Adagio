@@ -460,7 +460,7 @@ Log( int shim_id, union shim_parameters *p ){
 	int MsgSrc = -1;
 	int MsgDest = -1;
 
-	char var_format[] = "%5d %13s %06d %9.6lf %9.6f %9.6lf %e %9.6f %9.6lf %d %9f %8.6lf %7d %7d %7d\n";
+	char var_format[] = "%5d %13s %06d %9.6lf %9.6f %9.6lf %e %9.6f %9.6lf %9f %9f %8.6lf %7d %7d %7d\n";
 	char hdr_format[] = "%4s %13s %6s %9s %9s %9s %12s %9s %9s %9s %9s %8s %7s %7s %7s\n";
 
 	// One-time initialization.
@@ -473,7 +473,7 @@ Log( int shim_id, union shim_parameters *p ){
 								"Rank", "Function", "Hash", 
 								"Time_in", "Time_out",
 								"Comp", "Insn", "Ratio",  
-								"T_Ratio", "ReqFreq", "C0_Ratio",
+								"T_Ratio", "ReqRatio", "C0_Ratio",
 								"Comm", "MsgSz", "MsgDest", "MsgSrc");
 			}
 		}
@@ -552,7 +552,7 @@ Log( int shim_id, union shim_parameters *p ){
 							schedule[current_hash].observed_ratio,
 							schedule[current_hash].desired_ratio == 0.0 ? 1.0 : 
 							schedule[current_hash].desired_ratio,
-							schedule[current_hash].requested_freq,
+							schedule[current_hash].requested_ratio,
 							schedule[current_hash].c0_ratio,
 							schedule[current_hash].observed_comm_seconds,
 							MsgSz,
@@ -819,7 +819,7 @@ schedule_computation( int idx ){
 	// If we have no data to work with, go home.
 	if( idx==0 ){ return; }
 
-	schedule[idx].requested_freq = current_freq;
+	schedule[idx].requested_ratio = frequencies[current_freq] / frequencies[FASTEST_FREQ];
 
 	// On the first time through, establish worst-case slowdown rates.
 	//! @todo fix for average frequency
@@ -988,5 +988,5 @@ schedule_computation( int idx ){
 			}
 		}
 	}
-	schedule[idx].requested_freq = current_freq;
+	schedule[idx].requested_ratio = frequencies[current_freq] / frequencies[FASTEST_FREQ];
 }
