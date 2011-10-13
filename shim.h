@@ -20,18 +20,19 @@ void Log( int shim_id, union shim_parameters *p );
 
 // Schedule entry
 struct entry{
-  double observed_comm_seconds;
+  double observed_comm_seconds; // from previous
   
-  double observed_comp_seconds;
-  double observed_comp_insn;
-  double seconds_per_insn;
+  double observed_comp_seconds; // from previous
+  double observed_comp_insn; // from previous
+  double seconds_per_insn; // from previous
 
-  double observed_freq;
-  double observed_ratio;
-  double desired_ratio;
-  double start_time;
-  double end_time;
-  int following_entry;
+  double observed_freq; // from previous
+  double observed_ratio; // from previous
+  double desired_ratio; // for next
+  double start_time; // from previous
+  double end_time; // from previous
+  int following_entry; // from previous, for next
+  double c0_ratio; // from previous
 };
 
 enum{ 
