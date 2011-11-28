@@ -291,8 +291,8 @@ pre_MPI_Init( union shim_parameters *p ){
 		g_trace |= strstr(env_trace, "comp"    ) ? trace_COMP  	: 0;
 		g_trace |= strstr(env_trace, "comm"    ) ? trace_COMM  	: 0;
 		g_trace |= strstr(env_trace, "rank"    ) ? trace_RANK  	: 0;
-		g_trace |= strstr(env_trace, "pcontrol") ? trace_PCONTROL: 0;
 		*/
+		g_trace |= strstr(env_trace, "pcontrol") ? trace_PCONTROL: 0;
 #ifdef _DEBUG
 		g_trace = trace_ALL;
 		printf("g_trace=%s %d\n", env_trace, g_trace);
@@ -459,6 +459,7 @@ Log( int shim_id, union shim_parameters *p ){
 	int MsgSz = -1;
 	int MsgSrc = -1;
 	int MsgDest = -1;
+	int log = 0;
 
 	char var_format[] = "%5d %13s %06d %9.6lf %9.6f %9.6lf %e %9.6f %9.6lf %9f %9f %8.6lf %7d %7d %7d\n";
 	char hdr_format[] = "%4s %13s %6s %9s %9s %9s %12s %9s %9s %9s %9s %8s %7s %7s %7s\n";
@@ -479,7 +480,7 @@ Log( int shim_id, union shim_parameters *p ){
 		}
 		initialized=1;
 	}
-	
+
 	// Determine message size for selected function calls.
 	/*! @todo in order to make a task graph, need to deal with tags, 
 		communicators, MPI_Wait_any, and MPI_Wait_all.
@@ -535,10 +536,22 @@ Log( int shim_id, union shim_parameters *p ){
 		break;// We don't have complete coverage, obviously.
 	}
 
+	/*! @todo log filter 
+		
+	 */
+
 	if((g_trace & trace_THRESH) && 
-		 (schedule[current_hash].observed_comp_seconds >= GMPI_MIN_COMP_SECONDS ||
-			schedule[current_hash].observed_comm_seconds >= GMPI_MIN_COMM_SECONDS) || 
-		 (g_trace & trace_ALL)){
+		 schedule[current_hash].observed_comp_seconds >= GMPI_MIN_COMP_SECONDS ||
+		 schedule[current_hash].observed_comm_seconds >= GMPI_MIN_COMM_SECONDS)
+		log = 1;
+	
+	if(shim_id == GMPI_PCONTROL && (g_trace & trace_PCONTROL))
+		log = 1;
+
+	if(g_trace & trace_ALL)
+		log = 1;
+	
+	if(log){
 		// Write to the logfile.
 			fprintf(logfile, var_format, rank, 
 							f2str(p->MPI_Dummy_p.shim_id),	

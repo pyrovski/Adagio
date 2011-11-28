@@ -8,7 +8,6 @@
 #include "shim.h"
 
 #define BLR_USE_SHIFT
-//#undef BLR_USE_SHIFT
 
 /*! @todo FASTEST_FREQ, turboboost_present, current_freq are initialized
   assuming turboboost is present.

@@ -62,8 +62,8 @@ enum{
 	                        // the previous MPI comm call.
 	trace_COMM	  = 0x020,	// Elapsed comm time spend in mpi lib.
 	trace_RANK	  = 0x040,	// MPI rank.
-	trace_PCONTROL= 0x080,	// Most recent pcontrol.
 	*/
+	trace_PCONTROL = 0x080,	// Most recent pcontrol.
 	trace_THRESH   = 0x100, // only tasks above thresholds
 	trace_ALL      = 0xFFF,
 

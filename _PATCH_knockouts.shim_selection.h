@@ -68,7 +68,7 @@
  #define USE_MPI_INFO_FREE
  #define USE_MPI_INFO_GET
  #define USE_MPI_INFO_GET_NKEYS
-@@ -195,16 +195,16 @@
+@@ -195,12 +195,12 @@
  #define USE_MPI_KEYVAL_CREATE
  #define USE_MPI_KEYVAL_FREE
  #define USE_MPI_LOOKUP_NAME
@@ -83,12 +83,7 @@
  #define USE_MPI_PACK_EXTERNAL_SIZE
  #define USE_MPI_PACK
  #define USE_MPI_PACK_SIZE
--#define USE_MPI_PCONTROL
-+//#define USE_MPI_PCONTROL
- #define USE_MPI_PROBE
- #define USE_MPI_PUBLISH_NAME
- #define USE_MPI_PUT
-@@ -214,8 +214,8 @@
+@@ -217,8 +217,8 @@
  #define USE_MPI_REDUCE
  #define USE_MPI_REDUCE_SCATTER
  #define USE_MPI_REGISTER_DATAREP
