@@ -830,7 +830,7 @@ schedule_computation( int idx ){
 		fprintf( logfile, "#==> schedule_computation called with idx=%d\n", idx);
 #endif
 	// If we have no data to work with, go home.
-	if( idx==0 ){ return; }
+	if( idx==0 ){ goto schedule_computation_exit; }
 
 	schedule[idx].requested_ratio = frequencies[current_freq] / frequencies[FASTEST_FREQ];
 
@@ -846,7 +846,7 @@ schedule_computation( int idx ){
 				if(g_trace)
 					fprintf( logfile, "#==> schedule_computation min_seconds violation.\n");
 #endif
-			return;
+			goto schedule_computation_exit;
 		}
 		schedule[ idx ].seconds_per_insn = 
 			schedule[ idx ].observed_comp_seconds /
@@ -888,13 +888,18 @@ schedule_computation( int idx ){
 	// If there's not enough computation to bother scaling, skip it.
 	if( d <= GMPI_MIN_COMP_SECONDS ){
 		//fprintf( logfile, "==> schedule_computation min_seconds total violation.\n");
-		return;
+		goto schedule_computation_exit;
 	}
 
 	// The deadline includes blocking time, minus a buffer.
 	d += schedule[ idx ].observed_comm_seconds - GMPI_BLOCKING_BUFFER;
 
 	// Create the schedule.
+	/*! @todo this is broken; see RAxML Adagio results.  
+		Desired frequencies for task 4713 are decreasing on rank 127
+		@todo base on previous instruction rate
+	 */
+	#warning fixme
 	double updatedRatio = min(1.0, (schedule[idx].observed_comp_seconds * 
 																	schedule[idx].observed_freq) / 
 														(d * frequencies[FASTEST_FREQ]));
@@ -1001,5 +1006,7 @@ schedule_computation( int idx ){
 			}
 		}
 	}
+ schedule_computation_exit:
 	schedule[idx].requested_ratio = frequencies[current_freq] / frequencies[FASTEST_FREQ];
+	return;
 }
