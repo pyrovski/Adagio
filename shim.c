@@ -630,7 +630,7 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	mark_time(&time_comp, 0);
 
 	// Which call is this?
-	current_hash=hash_backtrace(shim_id);
+	current_hash=hash_backtrace(shim_id, rank);
 	
 	// Function-specific intercept code.
 	if(shim_id == GMPI_INIT){ pre_MPI_Init( p ); }
