@@ -27,9 +27,6 @@ int hash_backtrace(int fid, int rank) {
 	if(status != 0)
 	  fprintf(stderr, "unw_getcontext() error\n");
 
-#ifdef _DEBUG
-	printf("rank %d id %d", rank, fid);
-#endif
 	while ((status = unw_step(&cursor)) > 0) {
 	  status = unw_get_reg(&cursor, UNW_REG_IP, &ip);
 	  if(status != 0)
@@ -43,14 +40,8 @@ int hash_backtrace(int fid, int rank) {
 
 	  md5_append( &pms, (md5_byte_t *)(&ip), sizeof(unw_word_t) );
 	  //md5_append( &pms, (md5_byte_t *)(&sp), sizeof(unw_word_t) );
-#ifdef _DEBUG
-	  printf(", ip 0x%lx sp 0x%lx", ip, sp);
-#endif
 	  status = 0;
 	}
-#ifdef _DEBUG
-	printf("\n");
-#endif
 	if(status < 0)
 	  fprintf(stderr, "unw_step() error\n");
 

@@ -636,6 +636,10 @@ shim_pre( int shim_id, union shim_parameters *p ){
 
 	// Which call is this?
 	current_hash=hash_backtrace(shim_id, rank);
+
+	// rotate schedule entry for this hash
+	schedule[current_hash].index = 
+		(schedule[current_hash].index + 1) % histEntries;
 	
 	// Function-specific intercept code.
 	if(shim_id == GMPI_INIT){ pre_MPI_Init( p ); }
@@ -730,9 +734,6 @@ shim_post( int shim_id, union shim_parameters *p ){
 	}else{
 		current_freq = FASTEST_FREQ;	// Default case.
 	}
-
-	// rotate schedule entry for this hash
-	schedule[current_hash].index = (schedule[current_hash].index + 1) % histEntries;
 
 	// Regardless of computation scheduling algorithm, always shift here.
 	// (Most of the time it should have no effect.)
@@ -903,41 +904,26 @@ schedule_computation( int idx ){
 	// On the first time through, establish worst-case slowdown rates.
 	//! @todo fix for average frequency
 	//! @todo this should never be executed
-	if( indp(schedule[ idx ]).observed_comp_seconds == 0.0 ){
+	if( ind(schedule[ idx ]).observed_comp_seconds == 0.0  || 
+			ind(schedule[ idx ]).observed_comp_insn == 0 ){
 		printf("fixme %s:%d\n", __FILE__, __LINE__);
 #ifdef _DEBUG
 		if(g_trace)
 			fprintf( logfile, "#==> schedule_computation First time through.\n");
 #endif
-		if( indp(schedule[ idx ]).observed_comp_seconds <= GMPI_MIN_COMP_SECONDS ){
-#ifdef _DEBUG
-				if(g_trace)
-					fprintf( logfile, "#==> schedule_computation min_seconds violation.\n");
-#endif
-			goto schedule_computation_exit;
-		}
-		indp(schedule[ idx ]).seconds_per_insn = 
-			indp(schedule[ idx ]).observed_comp_seconds /
-			indp(schedule[ idx ]).observed_comp_insn;
-#ifdef _DEBUG
-		if(!isnan(schedule[idx].seconds_per_insn))
-			if(g_trace)
-				fprintf(logfile, "#&&& SPI = %16.15lf\n", 
-								schedule[idx].seconds_per_insn);
-#endif
 	}
 
 	// only update where we have data.
-	if( indp(schedule[ idx ]).observed_comp_seconds > GMPI_MIN_COMP_SECONDS ){
-			indp(schedule[ idx ]).seconds_per_insn = 
-				indp(schedule[ idx ]).observed_comp_seconds/
-				indp(schedule[ idx ]).observed_comp_insn;
-		}
+	if( ind(schedule[ idx ]).observed_comp_seconds > GMPI_MIN_COMP_SECONDS ){
+		ind(schedule[ idx ]).seconds_per_insn = 
+			ind(schedule[ idx ]).observed_comp_seconds/
+			ind(schedule[ idx ]).observed_comp_insn;
+	}
 #ifdef _DEBUG
-	if(!isnan(schedule[idx].seconds_per_insn))
+	if(!isnan(ind(schedule[idx]).seconds_per_insn))
 			if(g_trace)
 				fprintf(logfile, "#&&& SPI = %16.15lf\n", 
-								schedule[idx].seconds_per_insn);
+								ind(schedule[idx]).seconds_per_insn);
 #endif
 	//}
 
@@ -952,7 +938,7 @@ schedule_computation( int idx ){
 	
 	//d = ind(schedule[ idx ]).observed_comp_seconds;
 	d = updateDeadlineComp(&schedule[idx]);
-	I = indp(schedule[ idx ]).observed_comp_insn;
+	I = ind(schedule[ idx ]).observed_comp_insn;
 	
 	// If there's not enough computation to bother scaling, skip it.
 	if( d <= GMPI_MIN_COMP_SECONDS ){
