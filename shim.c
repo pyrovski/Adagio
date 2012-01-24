@@ -84,7 +84,7 @@ FILE *runTimeLog = 0;
 
 // Don't change this without altering the hash function.
 //! @todo change hash function?
-static struct entry schedule[8192];
+static struct entryHist schedule[8192];
 
 //static double current_comp_seconds;
 static double current_comp_insn;
@@ -327,14 +327,19 @@ pre_MPI_Init( union shim_parameters *p ){
 		g_bind = 0;
 	
 #ifdef _DEBUG
-		printf("g_bind=%s %d\n", env_bind, g_bind);
-		if(g_bind)
-			printf("g_cores_per_socket: %d\n", g_cores_per_socket);
+	printf("g_bind=%s %d\n", env_bind, g_bind);
+	if(g_bind)
+		printf("g_cores_per_socket: %d\n", g_cores_per_socket);
 #endif
-		
+	
+	memset(schedule, 0, sizeof(schedule));
+
 	// Put a reasonable value in.
 	clear_time(&time_comp);
+
+	//! @todo perhaps this should come after MPI_Init()?
 	clear_time(&time_total);
+
 	mark_time(&time_comp, 1);
 	mark_time(&time_comp, 0);
 	mark_time(&time_total, 1);
@@ -541,8 +546,8 @@ Log( int shim_id, union shim_parameters *p ){
 	 */
 
 	if((g_trace & trace_THRESH) && 
-		 schedule[current_hash].observed_comp_seconds >= GMPI_MIN_COMP_SECONDS ||
-		 schedule[current_hash].observed_comm_seconds >= GMPI_MIN_COMM_SECONDS)
+		 (ind(schedule[current_hash]).observed_comp_seconds >= GMPI_MIN_COMP_SECONDS ||
+			ind(schedule[current_hash]).observed_comm_seconds >= GMPI_MIN_COMM_SECONDS))
 		log = 1;
 	
 	if(shim_id == GMPI_PCONTROL && (g_trace & trace_PCONTROL))
@@ -556,18 +561,18 @@ Log( int shim_id, union shim_parameters *p ){
 			fprintf(logfile, var_format, rank, 
 							f2str(p->MPI_Dummy_p.shim_id),	
 							current_hash,
-							schedule[current_hash].start_time - 
+							ind(schedule[current_hash]).start_time - 
 							(time_total.start.tv_sec + time_total.start.tv_usec / 1000000.0),
-							schedule[current_hash].end_time - 
+							ind(schedule[current_hash]).end_time - 
 							(time_total.start.tv_sec + time_total.start.tv_usec / 1000000.0),
-							schedule[current_hash].observed_comp_seconds,
-							schedule[current_hash].observed_comp_insn,
-							schedule[current_hash].observed_ratio,
+							ind(schedule[current_hash]).observed_comp_seconds,
+							ind(schedule[current_hash]).observed_comp_insn,
+							ind(schedule[current_hash]).observed_ratio,
 							schedule[current_hash].desired_ratio == 0.0 ? 1.0 : 
 							schedule[current_hash].desired_ratio,
 							schedule[current_hash].requested_ratio,
-							schedule[current_hash].c0_ratio,
-							schedule[current_hash].observed_comm_seconds,
+							ind(schedule[current_hash]).c0_ratio,
+							ind(schedule[current_hash]).observed_comm_seconds,
 							MsgSz,
 							MsgDest,
 							MsgSrc);
@@ -644,9 +649,9 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	current_comp_insn=stop_papi();
 	
 	// Write the schedule entry.  MUST COME BEFORE LOGGING.
-	schedule[current_hash].observed_freq = time_comp.freq;
-	schedule[current_hash].observed_ratio = time_comp.ratio;
-	schedule[current_hash].c0_ratio = (double)time_comp.mperf_accum / time_comp.tsc_accum;
+	ind(schedule[current_hash]).observed_freq = time_comp.freq;
+	ind(schedule[current_hash]).observed_ratio = time_comp.ratio;
+	ind(schedule[current_hash]).c0_ratio = (double)time_comp.mperf_accum / time_comp.tsc_accum;
 #if _DEBUG > 1
 	printf("rank %d set comp r: %f tr: %f hash: %06d f: %f GHz tsc f: %f GHz tsc: %llu aperf: %lu "
 				 "mperf: %lu s: %f\n", 
@@ -667,12 +672,12 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	//current_comp_seconds = 0;
 
 	// Copy insn accrued before we shifted into current freq.
-	schedule[current_hash].observed_comp_insn = current_comp_insn;
+	ind(schedule[current_hash]).observed_comp_insn = current_comp_insn;
 	current_comp_insn = 0;
 	
 	/*! @todo multiple assignment to observed_comp_seconds;
 	 which is correct? */
-	schedule[current_hash].observed_comp_seconds = time_comp.elapsed_time;
+	ind(schedule[current_hash]).observed_comp_seconds = time_comp.elapsed_time;
 
 	// Schedule communication.
 	clear_time(&time_comm);
@@ -695,11 +700,12 @@ shim_post( int shim_id, union shim_parameters *p ){
 	// (Most) Function-specific intercept code.
 	if(shim_id == GMPI_INIT){ post_MPI_Init( p ); }
 	
-	schedule[current_hash].observed_comm_seconds = time_comm.elapsed_time;
-	schedule[current_hash].start_time = current_start_time;
-	schedule[current_hash].end_time = time_comm.stop.tv_sec + 
+	ind(schedule[current_hash]).observed_comm_seconds = time_comm.elapsed_time;
+	ind(schedule[current_hash]).start_time = current_start_time;
+	ind(schedule[current_hash]).end_time = time_comm.stop.tv_sec + 
 		time_comm.stop.tv_usec / 1000000.0;
 	if( previous_hash >= 0 ){
+		//! @todo we can detect mispredictions here
 		schedule[previous_hash].following_entry = current_hash;
 	}
 
@@ -724,6 +730,10 @@ shim_post( int shim_id, union shim_parameters *p ){
 	}else{
 		current_freq = FASTEST_FREQ;	// Default case.
 	}
+
+	// rotate schedule entry for this hash
+	schedule[current_hash].index = (schedule[current_hash].index + 1) % histEntries;
+
 	// Regardless of computation scheduling algorithm, always shift here.
 	// (Most of the time it should have no effect.)
 	if( ! (g_algo & mods_FAKEFREQ) ) { shift_core( my_core, current_freq ); }
@@ -801,7 +811,7 @@ schedule_communication( int idx ){
 
 	// If we haven't measured communication time yet, or there isn't 
 	// enough to bother with, go home.
-	if( schedule[ idx ].observed_comm_seconds < 2*GMPI_MIN_COMM_SECONDS ){
+	if( indp(schedule[ idx ]).observed_comm_seconds < 2*GMPI_MIN_COMM_SECONDS ){
 		return;
 	}
 
@@ -815,10 +825,68 @@ schedule_communication( int idx ){
 	 */
 }
 
+/*!
+	Examine history for this entry, and make a prediction for the next iteration.
+	For now, assume min(previous three times).
+*/
+static double updateDeadlineComp(struct entryHist *eh){
+	double minTime = __builtin_inf();
+	int i;
+	
+	for(i = 0; i < histEntries; i++)
+		// if we have data
+		if(eh->hist[i].observed_comp_seconds)
+			minTime = min(minTime, eh->hist[i].observed_comp_seconds);
+	
+	return minTime;
+}
+
+static double updateDeadline(struct entryHist *eh){
+	double minTime = __builtin_inf();
+	int i;
+	
+	for(i = 0; i < histEntries; i++)
+		if(eh->hist[i].observed_comp_seconds)
+			minTime = min(minTime, eh->hist[i].observed_comp_seconds + 
+										eh->hist[i].observed_comm_seconds);
+	
+	return minTime;
+}
+
+/*! this is the core scheduling decision.
+	If the last task execution experienced short comm time 
+	(< comm threshold, indicating it was on the critical path), speed up. 
+	Otherwise, adjust according to worst-case slowdown
+ */
+static double updateRatio(struct entryHist *eh, double deadline){
+	double newRatio;
+	
+	//! @todo this is good for global sync, but probably not much else
+	if(indd(eh).observed_comm_seconds < GMPI_BLOCKING_BUFFER){
+		newRatio = 1.0;
+	} else{
+		// calculate observed effective frequency ratio
+		double oldRatio = 0.0, totalCompTime = 0.0;
+		int i;
+
+		for(i = 0; i < histEntries; i++)
+			totalCompTime += eh->hist[i].observed_comp_seconds;
+		
+		for(i = 0; i < histEntries; i++)
+			oldRatio += (eh->hist[i].observed_comp_seconds / totalCompTime) * 
+				eh->hist[i].observed_ratio;
+		
+		newRatio = (totalCompTime * oldRatio) / 
+			(deadline * frequencies[FASTEST_FREQ]);
+	}
+
+	return(min(1.0, newRatio));
+}
+
 static void
 schedule_computation( int idx ){
 	int i; 
-	double p=0.0, d=0.0, I=0.0, seconds_until_interrupt=0.0;
+	double p=0.0, d, I, seconds_until_interrupt=0.0;
 
 	// WARNING:  The actual shift to the value placed in current_freq
 	// happens after this function returns.  The default case is to 
@@ -832,25 +900,25 @@ schedule_computation( int idx ){
 	// If we have no data to work with, go home.
 	if( idx==0 ){ goto schedule_computation_exit; }
 
-	schedule[idx].requested_ratio = frequencies[current_freq] / frequencies[FASTEST_FREQ];
-
 	// On the first time through, establish worst-case slowdown rates.
 	//! @todo fix for average frequency
-	if( schedule[ idx ].seconds_per_insn == 0.0 ){
+	//! @todo this should never be executed
+	if( indp(schedule[ idx ]).observed_comp_seconds == 0.0 ){
+		printf("fixme %s:%d\n", __FILE__, __LINE__);
 #ifdef _DEBUG
 		if(g_trace)
 			fprintf( logfile, "#==> schedule_computation First time through.\n");
 #endif
-		if( schedule[ idx ].observed_comp_seconds <= GMPI_MIN_COMP_SECONDS ){
+		if( indp(schedule[ idx ]).observed_comp_seconds <= GMPI_MIN_COMP_SECONDS ){
 #ifdef _DEBUG
 				if(g_trace)
 					fprintf( logfile, "#==> schedule_computation min_seconds violation.\n");
 #endif
 			goto schedule_computation_exit;
 		}
-		schedule[ idx ].seconds_per_insn = 
-			schedule[ idx ].observed_comp_seconds /
-			schedule[ idx ].observed_comp_insn;
+		indp(schedule[ idx ]).seconds_per_insn = 
+			indp(schedule[ idx ]).observed_comp_seconds /
+			indp(schedule[ idx ]).observed_comp_insn;
 #ifdef _DEBUG
 		if(!isnan(schedule[idx].seconds_per_insn))
 			if(g_trace)
@@ -859,11 +927,11 @@ schedule_computation( int idx ){
 #endif
 	}
 
-	// On subsequent execution, only update where we have data.
-	if( schedule[ idx ].observed_comp_seconds > GMPI_MIN_COMP_SECONDS ){
-			schedule[ idx ].seconds_per_insn = 
-				schedule[ idx ].observed_comp_seconds/
-				schedule[ idx ].observed_comp_insn;
+	// only update where we have data.
+	if( indp(schedule[ idx ]).observed_comp_seconds > GMPI_MIN_COMP_SECONDS ){
+			indp(schedule[ idx ]).seconds_per_insn = 
+				indp(schedule[ idx ]).observed_comp_seconds/
+				indp(schedule[ idx ]).observed_comp_insn;
 		}
 #ifdef _DEBUG
 	if(!isnan(schedule[idx].seconds_per_insn))
@@ -882,8 +950,9 @@ schedule_computation( int idx ){
 	//
 	// p = ( d - Ir[i+1] )/( Ir[i] - Ir[i+1] ) 
 	
-	d += schedule[ idx ].observed_comp_seconds;
-	I += schedule[ idx ].observed_comp_insn;
+	//d = ind(schedule[ idx ]).observed_comp_seconds;
+	d = updateDeadlineComp(&schedule[idx]);
+	I = indp(schedule[ idx ]).observed_comp_insn;
 	
 	// If there's not enough computation to bother scaling, skip it.
 	if( d <= GMPI_MIN_COMP_SECONDS ){
@@ -892,17 +961,32 @@ schedule_computation( int idx ){
 	}
 
 	// The deadline includes blocking time, minus a buffer.
-	d += schedule[ idx ].observed_comm_seconds - GMPI_BLOCKING_BUFFER;
+	//d += ind(schedule[ idx ]).observed_comm_seconds - GMPI_BLOCKING_BUFFER;
+	d = updateDeadline(&schedule[idx]) - GMPI_BLOCKING_BUFFER;
 
 	// Create the schedule.
 	/*! @todo this is broken; see RAxML Adagio results.  
 		Desired frequencies for task 4713 are decreasing on rank 127
 		@todo base on previous instruction rate
 	 */
-	#warning fixme
-	double updatedRatio = min(1.0, (schedule[idx].observed_comp_seconds * 
-																	schedule[idx].observed_freq) / 
-														(d * frequencies[FASTEST_FREQ]));
+	#warning this needs much verification
+	schedule[idx].desired_ratio = updateRatio(&schedule[idx], d);
+
+	//! @todo generate discrete index from ratio
+	current_freq = SLOWEST_FREQ;
+	for(i = SLOWEST_FREQ; i <= FASTEST_FREQ; i++)
+		if(schedule[idx].desired_ratio > ratios[i])
+			current_freq = min(i+1, FASTEST_FREQ);
+
+	//! @todo use alarm to implement split freqs
+
+	/*
+		min(1.0, (schedule[idx].observed_comp_seconds * 
+		schedule[idx].observed_freq) / 
+		(d * frequencies[FASTEST_FREQ]));
+	*/
+
+	/*! @todo integrate into updateRatio
 #if _DEBUG > 1
 	printf("rank %d updating hash %06d target ratio from %f to %f; insn: %le comp: %f comm: %f\n",
 				 rank, idx, schedule[idx].desired_ratio,
@@ -911,21 +995,20 @@ schedule_computation( int idx ){
 				 schedule[idx].observed_comp_seconds, 
 				 schedule[idx].observed_comm_seconds);
 #endif	
-	schedule[idx].desired_ratio = updatedRatio;
 	
 	// If the fastest frequency isn't fast enough, use f0 all the time.
 	//! @todo fix for average frequency measurement; need prediction
-	if( I * schedule[ idx ].seconds_per_insn * 
-			schedule[ idx ].observed_freq/frequencies[FASTEST_FREQ] >= d ){
+	if( I * ind(schedule[ idx ]).seconds_per_insn * 
+			ind(schedule[ idx ]).observed_ratio >= d ){
 #ifdef _DEBUG
 		if(g_trace){
 			fprintf( logfile, "#==> schedule_computation GO FASTEST.\n");
 			fprintf( logfile, "#==>     I=%lf\n", I);
 			fprintf( logfile, "#==>   SPI=%16.15lf\n",   
-							 schedule[ idx ].seconds_per_insn * 
+							 ind(schedule[ idx ]).seconds_per_insn * 
 							 schedule[idx].observed_freq / frequencies[FASTEST_FREQ]);
 			fprintf( logfile, "#==> I*SPI=%16.15lf\n", 
-							 I*schedule[ idx ].seconds_per_insn *
+							 I*ind(schedule[ idx ]).seconds_per_insn *
 							 schedule[idx].observed_freq / frequencies[FASTEST_FREQ]);
 			fprintf( logfile, "#==>     d=%lf\n", d
 							 );
@@ -935,17 +1018,17 @@ schedule_computation( int idx ){
 	}
 	// If the slowest frequency isn't slow enough, use that.
 	//! @todo fix for average frequency measurement; need prediction
-	else if( I * schedule[ idx ].seconds_per_insn * 
-					 schedule[ idx ].observed_freq/frequencies[ SLOWEST_FREQ ] <= d ){
+	else if( I * ind(schedule[ idx ]).seconds_per_insn * 
+					 ind(schedule[ idx ]).observed_freq/frequencies[ SLOWEST_FREQ ] <= d ){
 #ifdef _DEBUG
 		if(g_trace){
 			fprintf( logfile, "#==> schedule_computation GO SLOWEST.\n");
 			fprintf( logfile, "#==>     I=%lf\n", I);
 			fprintf( logfile, "#==>   SPI=%16.15lf\n",   
-							 schedule[ idx ].seconds_per_insn * 
+							 ind(schedule[ idx ]).seconds_per_insn * 
 							 schedule[idx].observed_freq / frequencies[ SLOWEST_FREQ ]);
 			fprintf( logfile, "#==> I*SPI=%16.15lf\n", 
-							 I*schedule[ idx ].seconds_per_insn * 
+							 I*ind(schedule[ idx ]).seconds_per_insn * 
 							 schedule[idx].observed_freq / frequencies[ SLOWEST_FREQ ]);
 			fprintf( logfile, "#==>     d=%lf\n", d);
 		}
@@ -955,18 +1038,18 @@ schedule_computation( int idx ){
 	// Find the slowest frequency that allows the work to be completed in time.
 	else{
 		for( i=SLOWEST_FREQ-1; i>FASTEST_FREQ; i-- ){
-			if( I * schedule[ idx ].seconds_per_insn * 
-					schedule[ idx ].observed_freq/frequencies[ i ] < d ){
+			if( I * ind(schedule[ idx ]).seconds_per_insn * 
+					ind(schedule[ idx ]).observed_freq/frequencies[ i ] < d ){
 				// We have a winner.
 				//! @todo adjust for average frequency measurement
 				p = 
-					( d - I * schedule[ idx ].seconds_per_insn * 
-						schedule[ idx ].observed_freq/frequencies[ i+1 ] )
+					( d - I * ind(schedule[ idx ]).seconds_per_insn * 
+						ind(schedule[ idx ]).observed_freq/frequencies[ i+1 ] )
 					/
-					( I * schedule[ idx ].seconds_per_insn * 
-						schedule[ idx ].observed_freq/frequencies[ i ] - 
-					  I * schedule[ idx ].seconds_per_insn * 
-						schedule[ idx ].observed_freq/frequencies[ i+1 ] );
+					( I * ind(schedule[ idx ]).seconds_per_insn * 
+						ind(schedule[ idx ]).observed_freq/frequencies[ i ] - 
+					  I * ind(schedule[ idx ]).seconds_per_insn * 
+						ind(schedule[ idx ]).observed_freq/frequencies[ i+1 ] );
 
 #ifdef _DEBUG
 				if(g_trace){
@@ -986,14 +1069,14 @@ schedule_computation( int idx ){
 				current_freq = i;
 
 				// Do we need to shift down partway through?
-				if((    p * I * schedule[idx].seconds_per_insn * 
-								schedule[ idx ].observed_freq/frequencies[i  ]>GMPI_MIN_COMP_SECONDS)
-				&& (1.0-p * I * schedule[idx].seconds_per_insn * 
-						schedule[ idx ].observed_freq/frequencies[i+1]>GMPI_MIN_COMP_SECONDS)
+				if((    p * I * ind(schedule[idx]).seconds_per_insn * 
+								ind(schedule[ idx ]).observed_freq/frequencies[i  ]>GMPI_MIN_COMP_SECONDS)
+					 && (1.0-p * I * ind(schedule[idx]).seconds_per_insn * 
+						ind(schedule[ idx ]).observed_freq/frequencies[i+1]>GMPI_MIN_COMP_SECONDS)
 				){
 					seconds_until_interrupt = 
-						p * I * schedule[ idx ].seconds_per_insn * 
-						schedule[ idx ].observed_freq/frequencies[ i ];
+						p * I * ind(schedule[ idx ]).seconds_per_insn * 
+						ind(schedule[ idx ]).observed_freq/frequencies[ i ];
 					next_freq = i+1;
 #ifdef _DEBUG
 					if(g_trace)
@@ -1006,6 +1089,7 @@ schedule_computation( int idx ){
 			}
 		}
 	}
+	*/
  schedule_computation_exit:
 	schedule[idx].requested_ratio = frequencies[current_freq] / frequencies[FASTEST_FREQ];
 	return;

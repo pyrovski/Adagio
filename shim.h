@@ -28,19 +28,37 @@ struct entry{
 
   double observed_freq; // from previous
   double observed_ratio; // from previous
-  double desired_ratio; // for next
   double start_time; // from previous
   double end_time; // from previous
-  int following_entry; // from previous, for next
   double c0_ratio; // from previous
+};
+
+#define histEntries 3
+
+struct entryHist{
+  struct entry hist[histEntries];
+  unsigned index;
+
+  double desired_ratio; // for next
+  int following_entry; // from previous, for next
   float requested_ratio; // for next?
 };
+
+// indirection
+#define ind(eh)(eh.hist[eh.index])
+
+// double indirection
+#define indd(eh)(eh->hist[eh->index])
+
+// indirection to previous instance
+#define indp(eh)(eh.hist[(eh.index + histEntries - 1) % histEntries])
+
 
 enum{ 
 	// To run without library overhead, use the .pristine binary.
 	algo_NONE	      = 0x000,	// Identical to CLEAN.
 	algo_FERMATA 	  = 0x001,	// slow communication
-	algo_ANDANTE 	  = 0x002,	// slow comp before global sync pts.
+	algo_ANDANTE 	  = 0x002,	// slow comp before sync pts.
 	algo_ADAGIO  	  = 0x004,	// fermata + andante
 	algo_ALLEGRO 	  = 0x008,	// slow computation everywhere.
 	algo_FIXEDFREQ	= 0x010,	// run whole program at single freq.
