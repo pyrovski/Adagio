@@ -864,12 +864,18 @@ static double updateRatio(struct entryHist *eh, double deadline){
 	
 	//! @todo this is good for global sync, but probably not much else
 	if(indd(eh).observed_comm_seconds < GMPI_BLOCKING_BUFFER){
+#ifdef _DEBUG
+		if(g_trace)
+			fprintf( logfile, "on critical path?\n");
+#endif
 		newRatio = 1.0;
 	} else{
 		// calculate observed effective frequency ratio
+		
+		/* for now, just base rate on previous entry
 		double oldRatio = 0.0, totalCompTime = 0.0;
 		int i;
-
+		
 		for(i = 0; i < histEntries; i++)
 			totalCompTime += eh->hist[i].observed_comp_seconds;
 		
@@ -877,8 +883,15 @@ static double updateRatio(struct entryHist *eh, double deadline){
 			oldRatio += (eh->hist[i].observed_comp_seconds / totalCompTime) * 
 				eh->hist[i].observed_ratio;
 		
-		newRatio = (totalCompTime * oldRatio) / 
-			(deadline * frequencies[FASTEST_FREQ]);
+		if(g_trace)
+			fprintf( logfile, "\n");
+
+		newRatio = (totalCompTime / histEntries * oldRatio) / 
+			(deadline * ratios[FASTEST_FREQ]);
+		*/
+
+		newRatio = (indd(eh).observed_comp_seconds * indd(eh).observed_ratio) /
+			(deadline * ratios[FASTEST_FREQ]);
 	}
 
 	return(min(1.0, newRatio));
@@ -938,6 +951,11 @@ schedule_computation( int idx ){
 	
 	//d = ind(schedule[ idx ]).observed_comp_seconds;
 	d = updateDeadlineComp(&schedule[idx]);
+#ifdef _DEBUG
+	if(g_trace)
+		fprintf( logfile, "hash %d comp deadline: %le\n", idx, d);
+#endif
+
 	I = ind(schedule[ idx ]).observed_comp_insn;
 	
 	// If there's not enough computation to bother scaling, skip it.
@@ -950,19 +968,32 @@ schedule_computation( int idx ){
 	//d += ind(schedule[ idx ]).observed_comm_seconds - GMPI_BLOCKING_BUFFER;
 	d = updateDeadline(&schedule[idx]) - GMPI_BLOCKING_BUFFER;
 
+#ifdef _DEBUG
+	if(g_trace)
+		fprintf( logfile, "hash %d deadline: %le\n", idx, d);
+#endif
+
 	// Create the schedule.
-	/*! @todo this is broken; see RAxML Adagio results.  
-		Desired frequencies for task 4713 are decreasing on rank 127
-		@todo base on previous instruction rate
+	/*! @todo base on previous instruction rate
 	 */
 	#warning this needs much verification
 	schedule[idx].desired_ratio = updateRatio(&schedule[idx], d);
 
-	//! @todo generate discrete index from ratio
+#ifdef _DEBUG
+	if(g_trace)
+		fprintf( logfile, "hash %d T_Ratio: %le\n", idx, schedule[idx].desired_ratio);
+#endif
+
+	// generate discrete index from ratio
 	current_freq = SLOWEST_FREQ;
-	for(i = SLOWEST_FREQ; i <= FASTEST_FREQ; i++)
+	for(i = SLOWEST_FREQ; i >= FASTEST_FREQ; i--)
 		if(schedule[idx].desired_ratio > ratios[i])
-			current_freq = min(i+1, FASTEST_FREQ);
+			current_freq = max(i-1, FASTEST_FREQ);
+
+#ifdef _DEBUG
+	if(g_trace)
+		fprintf( logfile, "hash %d ReqRatio: %le\n", idx, ratios[current_freq]);
+#endif
 
 	//! @todo use alarm to implement split freqs
 
@@ -1077,6 +1108,6 @@ schedule_computation( int idx ){
 	}
 	*/
  schedule_computation_exit:
-	schedule[idx].requested_ratio = frequencies[current_freq] / frequencies[FASTEST_FREQ];
+	schedule[idx].requested_ratio = ratios[current_freq];
 	return;
 }
