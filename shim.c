@@ -334,18 +334,6 @@ pre_MPI_Init( union shim_parameters *p ){
 	
 	memset(schedule, 0, sizeof(schedule));
 
-	// Put a reasonable value in.
-	clear_time(&time_comp);
-
-	//! @todo perhaps this should come after MPI_Init()?
-	clear_time(&time_total);
-
-	mark_time(&time_comp, 1);
-	mark_time(&time_comp, 0);
-	mark_time(&time_total, 1);
-	current_start_time = time_total.start.tv_sec + 
-		time_total.start.tv_usec / 1000000.0;
-	
 	// get list of available frequencies
 	// assume all processors support the same options
 	shift_parse_freqs();
@@ -375,15 +363,6 @@ pre_MPI_Init( union shim_parameters *p ){
 		for(i = 0; i < NUM_FREQS; i++)
 			ratios[i] = frequencies[i] / frequencies[FASTEST_FREQ];
 	}
-
-	// Pretend computation started here.
-	start_papi();	
-	
-	// Set up signal handling.
-	initialize_handler();
-
-	MPI_Initialized_Already=1;
-
 }
 
 static void
@@ -412,7 +391,26 @@ post_MPI_Init( union shim_parameters *p ){
 		assert(runTimeLog);
 	}
 		
+	// Set up signal handling.
+	initialize_handler();
+
+	// Put a reasonable value in.
+	clear_time(&time_comp);
+
+	//! @todo perhaps this should come after MPI_Init()?
+	clear_time(&time_total);
+
+	mark_time(&time_comp, 1);
+	mark_time(&time_comp, 0);
+	mark_time(&time_total, 1);
+	current_start_time = time_total.start.tv_sec + 
+		time_total.start.tv_usec / 1000000.0;
+
+	MPI_Initialized_Already=1;
 	mark_joules(rank, size);
+
+	// Pretend computation started here.
+	start_papi();	
 }
 	
 ////////////////////////////////////////////////////////////////////////////////
@@ -863,6 +861,7 @@ static double updateRatio(struct entryHist *eh, double deadline){
 	double newRatio;
 	
 #ifdef detectCritical
+	//! @todo look into MPI_Iprobe
 	//! @todo this is good for global sync, but probably not much else
 	if(indd(eh).observed_comm_seconds < GMPI_BLOCKING_BUFFER){
 #ifdef _DEBUG
