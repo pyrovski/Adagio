@@ -862,6 +862,7 @@ static double updateDeadline(struct entryHist *eh){
 static double updateRatio(struct entryHist *eh, double deadline){
 	double newRatio;
 	
+#ifdef detectCritical
 	//! @todo this is good for global sync, but probably not much else
 	if(indd(eh).observed_comm_seconds < GMPI_BLOCKING_BUFFER){
 #ifdef _DEBUG
@@ -869,30 +870,32 @@ static double updateRatio(struct entryHist *eh, double deadline){
 			fprintf( logfile, "on critical path?\n");
 #endif
 		newRatio = 1.0;
-	} else{
-		// calculate observed effective frequency ratio
+	} else
+#endif // #ifdef detectCritical
+		{
+			// calculate observed effective frequency ratio
 		
-		/* for now, just base rate on previous entry
-		double oldRatio = 0.0, totalCompTime = 0.0;
-		int i;
+			/* for now, just base rate on previous entry
+				 double oldRatio = 0.0, totalCompTime = 0.0;
+				 int i;
 		
-		for(i = 0; i < histEntries; i++)
-			totalCompTime += eh->hist[i].observed_comp_seconds;
+				 for(i = 0; i < histEntries; i++)
+				 totalCompTime += eh->hist[i].observed_comp_seconds;
 		
-		for(i = 0; i < histEntries; i++)
-			oldRatio += (eh->hist[i].observed_comp_seconds / totalCompTime) * 
-				eh->hist[i].observed_ratio;
+				 for(i = 0; i < histEntries; i++)
+				 oldRatio += (eh->hist[i].observed_comp_seconds / totalCompTime) * 
+				 eh->hist[i].observed_ratio;
 		
-		if(g_trace)
-			fprintf( logfile, "\n");
+				 if(g_trace)
+				 fprintf( logfile, "\n");
 
-		newRatio = (totalCompTime / histEntries * oldRatio) / 
-			(deadline * ratios[FASTEST_FREQ]);
-		*/
+				 newRatio = (totalCompTime / histEntries * oldRatio) / 
+				 (deadline * ratios[FASTEST_FREQ]);
+			*/
 
-		newRatio = (indd(eh).observed_comp_seconds * indd(eh).observed_ratio) /
-			(deadline * ratios[FASTEST_FREQ]);
-	}
+			newRatio = (indd(eh).observed_comp_seconds * indd(eh).observed_ratio) /
+				(deadline * ratios[FASTEST_FREQ]);
+		}
 
 	return(min(1.0, newRatio));
 }
