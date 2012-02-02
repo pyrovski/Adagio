@@ -262,10 +262,6 @@ pre_MPI_Init( union shim_parameters *p ){
 			g_freq = 0;
 		}
 		
-#ifdef _DEBUG
-		printf("g_algo=%s %d\n", env_algo, g_algo);
-		printf("g_bind=%s %d\n", env_bind, g_bind);
-#endif
 	} else {
 #ifdef _DEBUG
 	  printf("g_algo empty\n");
@@ -327,6 +323,7 @@ pre_MPI_Init( union shim_parameters *p ){
 		g_bind = 0;
 	
 #ifdef _DEBUG
+	printf("g_algo=%s %d\n", env_algo, g_algo);
 	printf("g_bind=%s %d\n", env_bind, g_bind);
 	if(g_bind)
 		printf("g_cores_per_socket: %d\n", g_cores_per_socket);
@@ -363,6 +360,10 @@ pre_MPI_Init( union shim_parameters *p ){
 		for(i = 0; i < NUM_FREQS; i++)
 			ratios[i] = frequencies[i] / frequencies[FASTEST_FREQ];
 	}
+	MPI_Initialized_Already=1;
+
+	// we won't use the data gathered between pre_MPI_Init and shim_pre
+	start_papi();	
 }
 
 static void
@@ -406,11 +407,10 @@ post_MPI_Init( union shim_parameters *p ){
 	current_start_time = time_total.start.tv_sec + 
 		time_total.start.tv_usec / 1000000.0;
 
-	MPI_Initialized_Already=1;
 	mark_joules(rank, size);
 
 	// Pretend computation started here.
-	start_papi();	
+	//start_papi();	
 }
 	
 ////////////////////////////////////////////////////////////////////////////////
