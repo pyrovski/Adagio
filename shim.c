@@ -88,7 +88,7 @@ static struct entryHist schedule[8192];
 
 //static double current_comp_seconds;
 static double current_comp_insn;
-static double current_start_time;
+//static double current_start_time;
 
 static inline uint64_t rdtsc(void)
 {
@@ -396,21 +396,23 @@ post_MPI_Init( union shim_parameters *p ){
 	initialize_handler();
 
 	// Put a reasonable value in.
+	/* from this point to the end of the function exists mostly to make 
+		 the timing values for MPI_Init sensible.  We don't count any time before 
+		 MPI_Init, which makes timing accounting more complicated.
+	 */
 	clear_time(&time_comp);
-
-	//! @todo perhaps this should come after MPI_Init()?
 	clear_time(&time_total);
 
-	mark_time(&time_comp, 1);
-	mark_time(&time_comp, 0);
 	mark_time(&time_total, 1);
-	current_start_time = time_total.start.tv_sec + 
-		time_total.start.tv_usec / 1000000.0;
+	time_comp = time_total;
+	mark_time(&time_comp, 0);
+	ind(schedule[current_hash]).observed_comp_seconds = time_comp.elapsed_time;
+
+	clear_time(&time_comm);
+	mark_time(&time_comm, 1);
+	mark_time(&time_comm, 0);
 
 	mark_joules(rank, size);
-
-	// Pretend computation started here.
-	//start_papi();	
 }
 	
 ////////////////////////////////////////////////////////////////////////////////
@@ -703,7 +705,8 @@ shim_post( int shim_id, union shim_parameters *p ){
 	if(shim_id == GMPI_INIT){ post_MPI_Init( p ); }
 	
 	ind(schedule[current_hash]).observed_comm_seconds = time_comm.elapsed_time;
-	ind(schedule[current_hash]).start_time = current_start_time;
+	ind(schedule[current_hash]).start_time = time_comp.start.tv_sec + 
+		time_comp.start.tv_usec / 1000000.0;
 	ind(schedule[current_hash]).end_time = time_comm.stop.tv_sec + 
 		time_comm.stop.tv_usec / 1000000.0;
 	if( previous_hash >= 0 ){
@@ -718,8 +721,10 @@ shim_post( int shim_id, union shim_parameters *p ){
 	previous_hash = current_hash;
 	clear_time(&time_comp);
 	mark_time(&time_comp, 1);
+	/*
 	current_start_time = time_comp.start.tv_sec + 
 		time_comp.start.tv_usec / 1000000.0;
+	*/
 	//dump_timeval(logfile, "COMPUTATION started.  ", &ts_start_computation);
 	start_papi();	//Computation.
 
