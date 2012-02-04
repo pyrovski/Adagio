@@ -23,6 +23,10 @@
 #include "meters.h"     // power meters
 #include "cpuid.h"
 
+#define ARCH_SANDY_BRIDGE
+#include "msr_rapl.h"
+#include "msr_core.h"
+
 #define max(a,b) (a > b ? a : b)
 #define min(a,b) (a < b ? a : b)
 
@@ -43,6 +47,10 @@ static void set_alarm			( double s );
 
 int rank;
 static int size;
+
+static char rapl_filename[1024];
+FILE *rapl_file = 0;
+static struct rapl_state_s *rapl_state; 
 
 typedef struct {
 	struct timeval start, stop;
@@ -395,6 +403,16 @@ post_MPI_Init( union shim_parameters *p ){
 	// Set up signal handling.
 	initialize_handler();
 
+	init_msr();
+	rapl_filename[1023] = 0;
+	snprintf(rapl_filename, 1023, "rapl.%04d.dat", rank);
+	rapl_file = fopen(rapl_filename, "w");
+	if(!rapl_file){
+		perror("error opening rapl file");
+		MPI_Abort(MPI_COMM_WORLD, 1);
+	}
+	rapl_state = rapl_init(0, 0, rapl_file);
+
 	// Put a reasonable value in.
 	/* from this point to the end of the function exists mostly to make 
 		 the timing values for MPI_Init sensible.  We don't count any time before 
@@ -424,6 +442,7 @@ pre_MPI_Finalize( union shim_parameters *p ){
 	mark_joules(rank, size);
 	PMPI_Barrier( MPI_COMM_WORLD );
 	mark_time(&time_total, 0);
+	rapl_finalize(rapl_state);
 	if(!rank)
 		fprintf(runTimeLog, "%lf\n", time_total.elapsed_time);
 	// Leave us in a known frequency.  
