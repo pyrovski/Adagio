@@ -46,7 +46,7 @@ endif
 CFLAGS=-Wall $(DBG) $(OPT_FLAGS)
 LIBDIR=-L. -L$(HOME)/local/lib
 INCDIR=-I$(HOME)/local/include
-LIBS=-lc -lm -lnuma -lrt -Xlinker -rpath $(HOME)/local/lib -lunwind -lmd5 -lpapi
+LIBS=-lc -lm -lnuma -lrt -Xlinker -rpath $(HOME)/local/lib -lunwind -lmd5 -lpapi -lmsr
 GENERATED_SHIMFILES = shim_enumeration.h shim_functions.c shim_parameters.h 	\
 shim_selection.h  shim_str.h  shim_structs.h  shim_union.h			
 
