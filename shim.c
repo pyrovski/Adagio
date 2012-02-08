@@ -62,6 +62,7 @@ typedef struct {
 } timing_t;
 
 static timing_t time_comp, time_comm, time_total;
+static unsigned critical_path_fires = 0;
 
 static int g_algo;	// which algorithm(s) to use.
 static int g_freq;	// frequency to use with fixedfreq.  
@@ -89,6 +90,7 @@ double frequencies[MAX_NUM_FREQUENCIES], ratios[MAX_NUM_FREQUENCIES];
 
 FILE *logfile = NULL;
 FILE *runTimeLog = 0;
+FILE *runTimeStats = 0;
 
 // Don't change this without altering the hash function.
 //! @todo change hash function?
@@ -399,6 +401,8 @@ post_MPI_Init( union shim_parameters *p ){
 		runTimeLog = fopen("globalRunTime.dat", "w");
 		assert(runTimeLog);
 	}
+
+	runTimeStats = initialize_global_logfile(rank);
 		
 	// Set up signal handling.
 	initialize_handler();
@@ -443,8 +447,24 @@ pre_MPI_Finalize( union shim_parameters *p ){
 	PMPI_Barrier( MPI_COMM_WORLD );
 	mark_time(&time_total, 0);
 	rapl_finalize(rapl_state);
-	if(!rank)
+	if(!rank){
 		fprintf(runTimeLog, "%lf\n", time_total.elapsed_time);
+		fprintf(runTimeStats, "rank\td_time\td_mperf\td_aperf\td_tsc\tratio\tcrit_path_fires\n");
+	}
+
+ 	/*!
+		log total mperf, aperf, tsc, elapsed time, ratio
+	 */
+	fprintf(runTimeStats, 
+					"%d\t%le\t%llu\t%llu\t%llu\t%f\t%u\n", 
+					rank, 
+					time_total.elapsed_time,
+					time_total.mperf_stop - time_total.mperf_start,
+					time_total.aperf_stop - time_total.aperf_start,
+					time_total.tsc_stop - time_total.tsc_start,
+					time_total.ratio,
+					critical_path_fires
+					);
 	// Leave us in a known frequency.  
 	// This should always be the fastest available.
   if(!socket_rank){
@@ -483,8 +503,16 @@ Log( int shim_id, union shim_parameters *p ){
 	int MsgDest = -1;
 	int log = 0;
 
-	char var_format[] = "%5d %13s %06d %9.6lf %9.6f %9.6lf %e %9.6f %9.6lf %9f %9f %8.6lf %7d %7d %7d\n";
-	char hdr_format[] = "%4s %13s %6s %9s %9s %9s %12s %9s %9s %9s %9s %8s %7s %7s %7s\n";
+	char var_format[] = 
+		"%5d %13s %06d %9.6lf %9.6f"
+		" %9.6lf %e %9.6f %9.6lf %9f"
+		" %9f %8.6lf %9.6lf %8.6lf %8d "
+		"%7d %7d\n";
+	char hdr_format[] = 
+		"%4s %13s %6s %9s %9s"
+		" %9s %12s %9s %9s %9s"
+		" %9s %8s %7s %8s %8s"
+		" %7s %7s\n";
 
 	// One-time initialization.
 	if(!initialized){
@@ -493,11 +521,10 @@ Log( int shim_id, union shim_parameters *p ){
 			if(g_trace){
 				fprintf(logfile, " ");
 				fprintf(logfile, hdr_format,
-								"Rank", "Function", "Hash", 
-								"Time_in", "Time_out",
-								"Comp", "Insn", "Ratio",  
-								"T_Ratio", "ReqRatio", "C0_Ratio",
-								"Comm", "MsgSz", "MsgDest", "MsgSrc");
+								"Rank", "Function", "Hash", "Time_in", "Time_out",
+								"Comp", "Insn", "Ratio", "T_Ratio", "ReqRatio", 
+								"C0_Ratio", "Comm", "CommRatio", "CommC0", "MsgSz", 
+								"MsgDest", "MsgSrc");
 			}
 		}
 		initialized=1;
@@ -590,6 +617,8 @@ Log( int shim_id, union shim_parameters *p ){
 							schedule[current_hash].requested_ratio,
 							ind(schedule[current_hash]).c0_ratio,
 							ind(schedule[current_hash]).observed_comm_seconds,
+							ind(schedule[current_hash]).observed_comm_ratio,
+							ind(schedule[current_hash]).observed_comm_c0,
 							MsgSz,
 							MsgDest,
 							MsgSrc);
@@ -726,6 +755,9 @@ shim_post( int shim_id, union shim_parameters *p ){
 		time_comp.start.tv_usec / 1000000.0;
 	ind(schedule[current_hash]).end_time = time_comm.stop.tv_sec + 
 		time_comm.stop.tv_usec / 1000000.0;
+	ind(schedule[current_hash]).observed_comm_ratio = time_comm.ratio;
+	ind(schedule[current_hash]).observed_comm_c0 = 
+		(double)time_comm.mperf_accum / time_comm.tsc_accum;
 	if( previous_hash >= 0 ){
 		//! @todo we can detect mispredictions here
 		schedule[previous_hash].following_entry = current_hash;
@@ -890,6 +922,7 @@ static double updateRatio(struct entryHist *eh, double deadline){
 		if(g_trace)
 			fprintf( logfile, "on critical path?\n");
 #endif
+		critical_path_fires++;
 		newRatio = 1.0;
 	} else
 #endif // #ifdef detectCritical
