@@ -464,8 +464,16 @@ Log( int shim_id, union shim_parameters *p ){
 	int MsgDest = -1;
 	int log = 0;
 
-	char var_format[] = "%5d %13s %06d %9.6lf %9.6f %9.6lf %e %9.6f %9.6lf %9f %9f %8.6lf %7d %7d %7d\n";
-	char hdr_format[] = "%4s %13s %6s %9s %9s %9s %12s %9s %9s %9s %9s %8s %7s %7s %7s\n";
+	char var_format[] = 
+		"%5d %13s %06d %9.6lf %9.6f"
+		" %9.6lf %e %9.6f %9.6lf %9f"
+		" %9f %8.6lf %9.6lf %8.6lf %8d "
+		"%7d %7d\n";
+	char hdr_format[] = 
+		"%4s %13s %6s %9s %9s"
+		" %9s %12s %9s %9s %9s"
+		" %9s %8s %7s %8s %8s"
+		" %7s %7s\n";
 
 	// One-time initialization.
 	if(!initialized){
@@ -474,11 +482,10 @@ Log( int shim_id, union shim_parameters *p ){
 			if(g_trace){
 				fprintf(logfile, " ");
 				fprintf(logfile, hdr_format,
-								"Rank", "Function", "Hash", 
-								"Time_in", "Time_out",
-								"Comp", "Insn", "Ratio",  
-								"T_Ratio", "ReqRatio", "C0_Ratio",
-								"Comm", "MsgSz", "MsgDest", "MsgSrc");
+								"Rank", "Function", "Hash", "Time_in", "Time_out",
+								"Comp", "Insn", "Ratio", "T_Ratio", "ReqRatio", 
+								"C0_Ratio", "Comm", "CommRatio", "CommC0", "MsgSz", 
+								"MsgDest", "MsgSrc");
 			}
 		}
 		initialized=1;
@@ -571,6 +578,8 @@ Log( int shim_id, union shim_parameters *p ){
 							schedule[current_hash].requested_ratio,
 							ind(schedule[current_hash]).c0_ratio,
 							ind(schedule[current_hash]).observed_comm_seconds,
+							ind(schedule[current_hash]).observed_comm_ratio,
+							ind(schedule[current_hash]).observed_comm_c0,
 							MsgSz,
 							MsgDest,
 							MsgSrc);
@@ -707,6 +716,9 @@ shim_post( int shim_id, union shim_parameters *p ){
 		time_comp.start.tv_usec / 1000000.0;
 	ind(schedule[current_hash]).end_time = time_comm.stop.tv_sec + 
 		time_comm.stop.tv_usec / 1000000.0;
+	ind(schedule[current_hash]).observed_comm_ratio = time_comm.ratio;
+	ind(schedule[current_hash]).observed_comm_c0 = 
+		(double)time_comm.mperf_accum / time_comm.tsc_accum;
 	if( previous_hash >= 0 ){
 		//! @todo we can detect mispredictions here
 		schedule[previous_hash].following_entry = current_hash;

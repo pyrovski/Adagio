@@ -31,6 +31,8 @@ struct entry{
   double start_time; // from previous
   double end_time; // from previous
   double c0_ratio; // from previous
+  double observed_comm_ratio;
+  double observed_comm_c0;
 };
 
 #define histEntries 3
