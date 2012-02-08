@@ -54,6 +54,7 @@ typedef struct {
 } timing_t;
 
 static timing_t time_comp, time_comm, time_total;
+static unsigned critical_path_fires = 0;
 
 static int g_algo;	// which algorithm(s) to use.
 static int g_freq;	// frequency to use with fixedfreq.  
@@ -429,20 +430,21 @@ pre_MPI_Finalize( union shim_parameters *p ){
 	mark_time(&time_total, 0);
 	if(!rank){
 		fprintf(runTimeLog, "%lf\n", time_total.elapsed_time);
-		fprintf(runTimeStats, "rank\td_time\td_mperf\td_aperf\td_tsc\tratio\n");
+		fprintf(runTimeStats, "rank\td_time\td_mperf\td_aperf\td_tsc\tratio\tcrit_path_fires\n");
 	}
 
  	/*!
 		log total mperf, aperf, tsc, elapsed time, ratio
 	 */
 	fprintf(runTimeStats, 
-					"%d\t%le\t%llu\t%llu\t%llu\t%f\n", 
+					"%d\t%le\t%llu\t%llu\t%llu\t%f\t%u\n", 
 					rank, 
 					time_total.elapsed_time,
 					time_total.mperf_stop - time_total.mperf_start,
 					time_total.aperf_stop - time_total.aperf_start,
 					time_total.tsc_stop - time_total.tsc_start,
-					time_total.ratio
+					time_total.ratio,
+					critical_path_fires
 					);
 	// Leave us in a known frequency.  
 	// This should always be the fastest available.
@@ -901,6 +903,7 @@ static double updateRatio(struct entryHist *eh, double deadline){
 		if(g_trace)
 			fprintf( logfile, "on critical path?\n");
 #endif
+		critical_path_fires++;
 		newRatio = 1.0;
 	} else
 #endif // #ifdef detectCritical
