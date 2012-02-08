@@ -81,6 +81,7 @@ double frequencies[MAX_NUM_FREQUENCIES], ratios[MAX_NUM_FREQUENCIES];
 
 FILE *logfile = NULL;
 FILE *runTimeLog = 0;
+FILE *runTimeStats = 0;
 
 // Don't change this without altering the hash function.
 //! @todo change hash function?
@@ -391,6 +392,8 @@ post_MPI_Init( union shim_parameters *p ){
 		runTimeLog = fopen("globalRunTime.dat", "w");
 		assert(runTimeLog);
 	}
+
+	runTimeStats = initialize_global_logfile(rank);
 		
 	// Set up signal handling.
 	initialize_handler();
@@ -426,6 +429,20 @@ pre_MPI_Finalize( union shim_parameters *p ){
 	mark_time(&time_total, 0);
 	if(!rank)
 		fprintf(runTimeLog, "%lf\n", time_total.elapsed_time);
+
+	/*!
+		log total mperf, aperf, tsc, elapsed time, ratio
+	 */
+	fprintf(runTimeStats, "rank\td_time\td_mperf\td_aperf\td_tsc\tratio\n");
+	fprintf(runTimeStats, 
+					"%d %le %llu %llu %llu %f\n", 
+					rank, 
+					time_total.elapsed_time,
+					time_total.mperf_stop - time_total.mperf_start,
+					time_total.aperf_stop - time_total.aperf_start,
+					time_total.tsc_stop - time_total.tsc_start,
+					time_total.ratio
+					);
 	// Leave us in a known frequency.  
 	// This should always be the fastest available.
   if(!socket_rank){

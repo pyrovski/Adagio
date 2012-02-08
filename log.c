@@ -11,3 +11,12 @@ initialize_logfile(int rank){
         return fp;
 }
 
+FILE *initialize_global_logfile(int rank){
+  FILE *fp=NULL;
+  char format[]="globalStats.%04d.dat";
+  char fname[64];
+  sprintf(fname, format, rank);
+  fp = fopen(fname, "w");
+  assert(fp);
+  return fp;
+}
