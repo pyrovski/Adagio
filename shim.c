@@ -435,7 +435,7 @@ pre_MPI_Finalize( union shim_parameters *p ){
 	 */
 	fprintf(runTimeStats, "rank\td_time\td_mperf\td_aperf\td_tsc\tratio\n");
 	fprintf(runTimeStats, 
-					"%d %le %llu %llu %llu %f\n", 
+					"%d\t%le\t%llu\t%llu\t%llu\t%f\n", 
 					rank, 
 					time_total.elapsed_time,
 					time_total.mperf_stop - time_total.mperf_start,
