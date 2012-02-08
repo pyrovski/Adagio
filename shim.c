@@ -427,13 +427,14 @@ pre_MPI_Finalize( union shim_parameters *p ){
 	mark_joules(rank, size);
 	PMPI_Barrier( MPI_COMM_WORLD );
 	mark_time(&time_total, 0);
-	if(!rank)
+	if(!rank){
 		fprintf(runTimeLog, "%lf\n", time_total.elapsed_time);
+		fprintf(runTimeStats, "rank\td_time\td_mperf\td_aperf\td_tsc\tratio\n");
+	}
 
-	/*!
+ 	/*!
 		log total mperf, aperf, tsc, elapsed time, ratio
 	 */
-	fprintf(runTimeStats, "rank\td_time\td_mperf\td_aperf\td_tsc\tratio\n");
 	fprintf(runTimeStats, 
 					"%d\t%le\t%llu\t%llu\t%llu\t%f\n", 
 					rank, 
