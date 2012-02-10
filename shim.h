@@ -33,6 +33,8 @@ struct entry{
   double c0_ratio; // from previous
   double observed_comm_ratio;
   double observed_comm_c0;
+  double observed_comp_joules;
+  double observed_comm_joules;    
 };
 
 #define histEntries 3

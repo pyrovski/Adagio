@@ -50,7 +50,7 @@ static int size;
 
 static char rapl_filename[16];
 FILE *rapl_file = 0;
-static struct rapl_state_s *rapl_state; 
+static struct rapl_state_s rapl_state; 
 
 typedef struct {
 	struct timeval start, stop;
@@ -58,7 +58,7 @@ typedef struct {
 		mperf_start, mperf_stop, mperf_accum,
 		tsc_start, tsc_stop, tsc_accum;
 
-	double freq, ratio, elapsed_time;
+	double freq, ratio, elapsed_time, joules;
 } timing_t;
 
 static timing_t time_comp, time_comm, time_total;
@@ -197,15 +197,17 @@ static inline void mark_time(timing_t *t, int start_stop){
 		gettimeofday(&t->start, 0);
 		t->tsc_start = rdtsc();
 		read_aperf_mperf(&t->aperf_start, &t->mperf_start);
-		get_all_status(my_socket, rapl_state);
-	} else {
+		//if(!socket_rank)
+		get_all_status(my_socket, &rapl_state);
+	} else { // stop
 		/*
 			elapsed_time should be initialized to zero and added to on each stop.
 		 */
 		gettimeofday(&t->stop, 0);
 		t->tsc_stop = rdtsc();
 		read_aperf_mperf(&t->aperf_stop, &t->mperf_stop);
-		get_all_status(my_socket, rapl_state);
+		//if(!socket_rank)
+		get_all_status(my_socket, &rapl_state);
 		calc_rates(t);
 #if _DEBUG > 1
 		printf("rank %d timing stop 0x%lx delta: %11.7f ratio: %f min ratio: %f "
@@ -374,10 +376,12 @@ pre_MPI_Init( union shim_parameters *p ){
 			ratios[i] = frequencies[i] / frequencies[FASTEST_FREQ];
 	}
 
-	init_msr();
 
 	// dummy init; we don't keep these measurements
-	rapl_state = rapl_init(0, 0, 0, 0);
+  //if(!socket_rank){
+		init_msr();
+		rapl_init(&rapl_state, 0, 0, 0, 0);
+		//}
 
 	MPI_Initialized_Already=1;
 
@@ -427,16 +431,18 @@ post_MPI_Init( union shim_parameters *p ){
 	clear_time(&time_total);
 
 	// clear rapl
-	//! @todo only one core per socket needs to do this
-	rapl_filename[15] = 0;
-	snprintf(rapl_filename, 14, "rapl.%04d.dat", rank);
-	rapl_file = fopen(rapl_filename, "w");
-	if(!rapl_file){
-		perror("error opening rapl file");
-		MPI_Abort(MPI_COMM_WORLD, 1);
-	}
-	rapl_init(0, 0, rapl_file, 0);
-
+	//! only one core per socket needs to do this
+  //if(!socket_rank){
+		rapl_filename[15] = 0;
+		snprintf(rapl_filename, 14, "rapl.%04d.dat", rank);
+		rapl_file = fopen(rapl_filename, "w");
+		if(!rapl_file){
+			perror("error opening rapl file");
+			MPI_Abort(MPI_COMM_WORLD, 1);
+		}
+		rapl_init(&rapl_state, 0, 0, rapl_file, 0);
+		//}
+	
 	mark_time(&time_total, 1);
 	time_comp = time_total;
 	mark_time(&time_comp, 0);
@@ -458,7 +464,7 @@ pre_MPI_Finalize( union shim_parameters *p ){
 	mark_joules(rank, size);
 	PMPI_Barrier( MPI_COMM_WORLD );
 	mark_time(&time_total, 0);
-	rapl_finalize(rapl_state);
+	rapl_finalize(&rapl_state);
 	if(!rank){
 		fprintf(runTimeLog, "%lf\n", time_total.elapsed_time);
 		fprintf(runTimeStats, "rank\td_time\td_mperf\td_aperf\td_tsc\tratio\tcrit_path_fires\n");
@@ -518,13 +524,13 @@ Log( int shim_id, union shim_parameters *p ){
 	char var_format[] = 
 		"%5d %13s %06d %9.6lf %9.6f"
 		" %9.6lf %e %9.6f %9.6lf %9f"
-		" %9f %8.6lf %9.6lf %8.6lf %8d "
-		"%7d %7d\n";
+		" %9f %8.6lf %9.6lf %8.6lf %8.6lf "
+		" %8.6lf %8d %7d %7d\n";
 	char hdr_format[] = 
 		"%4s %13s %6s %9s %9s"
 		" %9s %12s %9s %9s %9s"
 		" %9s %8s %7s %8s %8s"
-		" %7s %7s\n";
+		" %8s %8s %7s %7s\n";
 
 	// One-time initialization.
 	if(!initialized){
@@ -535,8 +541,8 @@ Log( int shim_id, union shim_parameters *p ){
 				fprintf(logfile, hdr_format,
 								"Rank", "Function", "Hash", "Time_in", "Time_out",
 								"Comp", "Insn", "Ratio", "T_Ratio", "ReqRatio", 
-								"C0_Ratio", "Comm", "CommRatio", "CommC0", "MsgSz", 
-								"MsgDest", "MsgSrc");
+								"C0_Ratio", "Comm", "CommRatio", "CommC0", "CompPP0J"
+								"CommPP0J", "MsgSz", "MsgDest", "MsgSrc");
 			}
 		}
 		initialized=1;
@@ -631,6 +637,8 @@ Log( int shim_id, union shim_parameters *p ){
 							ind(schedule[current_hash]).observed_comm_seconds,
 							ind(schedule[current_hash]).observed_comm_ratio,
 							ind(schedule[current_hash]).observed_comm_c0,
+							ind(schedule[current_hash]).observed_comp_joules,
+							ind(schedule[current_hash]).observed_comm_joules,
 							MsgSz,
 							MsgDest,
 							MsgSrc);
