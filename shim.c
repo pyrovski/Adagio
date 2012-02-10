@@ -48,7 +48,7 @@ static void set_alarm			( double s );
 int rank;
 static int size;
 
-static char rapl_filename[1024];
+static char rapl_filename[16];
 FILE *rapl_file = 0;
 static struct rapl_state_s *rapl_state; 
 
@@ -208,7 +208,8 @@ static inline void mark_time(timing_t *t, int start_stop){
 		get_all_status(my_socket, rapl_state);
 		calc_rates(t);
 #if _DEBUG > 1
-		printf("rank %d timing stop 0x%lx delta: %11.7f ratio: %f min ratio: %f hash: %06d f: %f GHz tsc f: %f GHz aperf: 0x%lx mperf: 0x%lx\n", 
+		printf("rank %d timing stop 0x%lx delta: %11.7f ratio: %f min ratio: %f "
+					 "hash: %06d f: %f GHz tsc f: %f GHz aperf: 0x%lx mperf: 0x%lx\n", 
 					 rank, t, 
 					 t->elapsed_time, t->ratio, 
 					 ratios[current_freq],
@@ -372,6 +373,12 @@ pre_MPI_Init( union shim_parameters *p ){
 		for(i = 0; i < NUM_FREQS; i++)
 			ratios[i] = frequencies[i] / frequencies[FASTEST_FREQ];
 	}
+
+	init_msr();
+
+	// dummy init; we don't keep these measurements
+	rapl_state = rapl_init(0, 0, 0, 0);
+
 	MPI_Initialized_Already=1;
 
 	// we won't use the data gathered between pre_MPI_Init and shim_pre
@@ -409,23 +416,26 @@ post_MPI_Init( union shim_parameters *p ){
 	// Set up signal handling.
 	initialize_handler();
 
-	init_msr();
-	rapl_filename[1023] = 0;
-	snprintf(rapl_filename, 1023, "rapl.%04d.dat", rank);
-	rapl_file = fopen(rapl_filename, "w");
-	if(!rapl_file){
-		perror("error opening rapl file");
-		MPI_Abort(MPI_COMM_WORLD, 1);
-	}
-	rapl_state = rapl_init(0, 0, rapl_file);
-
 	// Put a reasonable value in.
 	/* from this point to the end of the function exists mostly to make 
 		 the timing values for MPI_Init sensible.  We don't count any time before 
 		 MPI_Init, which makes timing accounting more complicated.
 	 */
+
+	// clear timers
 	clear_time(&time_comp);
 	clear_time(&time_total);
+
+	// clear rapl
+	//! @todo only one core per socket needs to do this
+	rapl_filename[15] = 0;
+	snprintf(rapl_filename, 14, "rapl.%04d.dat", rank);
+	rapl_file = fopen(rapl_filename, "w");
+	if(!rapl_file){
+		perror("error opening rapl file");
+		MPI_Abort(MPI_COMM_WORLD, 1);
+	}
+	rapl_init(0, 0, rapl_file, 0);
 
 	mark_time(&time_total, 1);
 	time_comp = time_total;
@@ -678,9 +688,19 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	// Kill the timer.
 	set_alarm(0.0);
 
+	// Function-specific intercept code.
+	if(shim_id == GMPI_INIT){ pre_MPI_Init( p ); }
+	if(shim_id == GMPI_FINALIZE){ pre_MPI_Finalize( p ); }
+	
+	// If we aren't initialized yet, stop here.
+	if(!MPI_Initialized_Already){ return; }
+
 	// Bookkeeping.
 	in_computation = 0;
 	mark_time(&time_comp, 0);
+
+	//!  this count may correspond to multiple frequencies
+	current_comp_insn=stop_papi();
 
 	// Which call is this?
 	current_hash=hash_backtrace(shim_id, rank);
@@ -688,17 +708,6 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	// rotate schedule entry for this hash
 	schedule[current_hash].index = 
 		(schedule[current_hash].index + 1) % histEntries;
-	
-	// Function-specific intercept code.
-	if(shim_id == GMPI_INIT){ pre_MPI_Init( p ); }
-	if(shim_id == GMPI_FINALIZE){ pre_MPI_Finalize( p ); }
-	
-	// If we aren't initialized yet, stop here.
-	if(!MPI_Initialized_Already){ return; }
-	
-	// Bookkeeping.
-	//!  this count may correspond to multiple frequencies
-	current_comp_insn=stop_papi();
 	
 	// Write the schedule entry.  MUST COME BEFORE LOGGING.
 	ind(schedule[current_hash]).observed_freq = time_comp.freq;
