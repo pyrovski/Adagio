@@ -197,6 +197,7 @@ static inline void mark_time(timing_t *t, int start_stop){
 		gettimeofday(&t->start, 0);
 		t->tsc_start = rdtsc();
 		read_aperf_mperf(&t->aperf_start, &t->mperf_start);
+		get_all_status(my_socket, rapl_state);
 	} else {
 		/*
 			elapsed_time should be initialized to zero and added to on each stop.
@@ -204,6 +205,7 @@ static inline void mark_time(timing_t *t, int start_stop){
 		gettimeofday(&t->stop, 0);
 		t->tsc_stop = rdtsc();
 		read_aperf_mperf(&t->aperf_stop, &t->mperf_stop);
+		get_all_status(my_socket, rapl_state);
 		calc_rates(t);
 #if _DEBUG > 1
 		printf("rank %d timing stop 0x%lx delta: %11.7f ratio: %f min ratio: %f hash: %06d f: %f GHz tsc f: %f GHz aperf: 0x%lx mperf: 0x%lx\n", 
