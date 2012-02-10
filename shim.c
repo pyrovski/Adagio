@@ -206,9 +206,13 @@ static inline void mark_time(timing_t *t, int start_stop){
 		gettimeofday(&t->stop, 0);
 		t->tsc_stop = rdtsc();
 		read_aperf_mperf(&t->aperf_stop, &t->mperf_stop);
-		//if(!socket_rank)
-		get_all_status(my_socket, &rapl_state);
 		calc_rates(t);
+		//if(!socket_rank)
+		//!	joules counter only updates once every 0.0009765625s.
+		if(t->elapsed_time >= 2 * 0.0009765625){
+			get_all_status(my_socket, &rapl_state);
+			t->joules = rapl_state.energy_status[my_socket][PP0_DOMAIN];
+		}
 #if _DEBUG > 1
 		printf("rank %d timing stop 0x%lx delta: %11.7f ratio: %f min ratio: %f "
 					 "hash: %06d f: %f GHz tsc f: %f GHz aperf: 0x%lx mperf: 0x%lx\n", 
@@ -721,6 +725,7 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	ind(schedule[current_hash]).observed_freq = time_comp.freq;
 	ind(schedule[current_hash]).observed_ratio = time_comp.ratio;
 	ind(schedule[current_hash]).c0_ratio = (double)time_comp.mperf_accum / time_comp.tsc_accum;
+	ind(schedule[current_hash]).observed_comp_joules = time_comp.joules;
 #if _DEBUG > 1
 	printf("rank %d set comp r: %f tr: %f hash: %06d f: %f GHz tsc f: %f GHz tsc: %llu aperf: %lu "
 				 "mperf: %lu s: %f\n", 
@@ -777,6 +782,7 @@ shim_post( int shim_id, union shim_parameters *p ){
 	ind(schedule[current_hash]).observed_comm_ratio = time_comm.ratio;
 	ind(schedule[current_hash]).observed_comm_c0 = 
 		(double)time_comm.mperf_accum / time_comm.tsc_accum;
+	ind(schedule[current_hash]).observed_comm_joules = time_comm.joules;
 	if( previous_hash >= 0 ){
 		//! @todo we can detect mispredictions here
 		schedule[previous_hash].following_entry = current_hash;
