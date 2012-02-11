@@ -58,7 +58,11 @@ typedef struct {
 		mperf_start, mperf_stop, mperf_accum,
 		tsc_start, tsc_stop, tsc_accum;
 
-	double freq, ratio, elapsed_time, joules;
+	double freq, ratio, elapsed_time, 
+		Pkg_joules, PP0_joules;
+#ifdef ARCH_062D
+	double DRAM_joules;
+#endif
 } timing_t;
 
 static timing_t time_comp, time_comm, time_total;
@@ -211,7 +215,11 @@ static inline void mark_time(timing_t *t, int start_stop){
 		//!	joules counter only updates once every 0.0009765625s.
 		if(t->elapsed_time >= 2 * 0.0009765625){
 			get_all_status(my_socket, &rapl_state);
-			t->joules = rapl_state.energy_status[my_socket][PP0_DOMAIN];
+			t->Pkg_joules = rapl_state.energy_status[my_socket][PKG_DOMAIN];
+			t->PP0_joules = rapl_state.energy_status[my_socket][PP0_DOMAIN];
+#ifdef ARCH_062D
+			t->DRAM_joules = rapl_state.energy_status[my_socket][DRAM_DOMAIN];
+#endif
 		}
 #if _DEBUG > 1
 		printf("rank %d timing stop 0x%lx delta: %11.7f ratio: %f min ratio: %f "
@@ -526,15 +534,29 @@ Log( int shim_id, union shim_parameters *p ){
 	int log = 0;
 
 	char var_format[] = 
-		"%5d %13s %06d %9.6lf %9.6f"
-		" %9.6lf %e %9.6f %9.6lf %9f"
-		" %9f %8.6lf %9.6lf %8.6lf %8.6lf"
-		" %8.6lf %8d %7d %7d\n";
+		"%5d %13s %06d %9.6lf %9.6f "
+		"%9.6lf %e %9.6f %9.6lf %9f "
+		"%9f %8.6lf %9.6lf %8.6lf "
+		 "%8le "// CompPkgJ
+		 "%8le "// CommPkgJ
+		 "%8le "// CompPP0J
+		 "%8le "// CommPP0J
+		 "%9le "// CompDRAMJ
+		 "%9le "// CommDRAMJ
+		"%8d %7d %7d\n";
 	char hdr_format[] = 
-		"%4s %13s %6s %9s %9s"
-		" %9s %12s %9s %9s %9s"
-		" %9s %8s %7s %8s %8s"
-		" %8s %8s %7s %7s\n";
+		"%4s %13s %6s %9s %9s "
+		"%9s %12s %9s %9s %9s "
+		"%9s %8s %7s %8s "
+		"%8s "// CompPkgJ
+		"%8s "// CommPkgJ
+		"%8s "// CompPP0J
+		"%8s "// CommPP0J
+#ifdef ARCH_062D
+		"%9s "// CompDRAMJ
+		"%9s "// CommDRAMJ
+#endif
+		"%8s %7s %7s\n";
 
 	// One-time initialization.
 	if(!initialized){
@@ -545,8 +567,13 @@ Log( int shim_id, union shim_parameters *p ){
 				fprintf(logfile, hdr_format,
 								"Rank", "Function", "Hash", "Time_in", "Time_out",
 								"Comp", "Insn", "Ratio", "T_Ratio", "ReqRatio", 
-								"C0_Ratio", "Comm", "CommRatio", "CommC0", "CompPP0J",
-								"CommPP0J", "MsgSz", "MsgDest", "MsgSrc");
+								"C0_Ratio", "Comm", "CommRatio", "CommC0", 
+								"CompPkgJ", "CommPkgJ",
+								"CompPP0J", "CommPP0J", 
+#ifdef ARCH_062D
+								"CompDRAMJ", "CommDRAMJ",
+#endif
+								"MsgSz", "MsgDest", "MsgSrc");
 			}
 		}
 		initialized=1;
@@ -641,8 +668,14 @@ Log( int shim_id, union shim_parameters *p ){
 							ind(schedule[current_hash]).observed_comm_seconds,
 							ind(schedule[current_hash]).observed_comm_ratio,
 							ind(schedule[current_hash]).observed_comm_c0,
-							ind(schedule[current_hash]).observed_comp_joules,
-							ind(schedule[current_hash]).observed_comm_joules,
+							ind(schedule[current_hash]).comp_Pkg_joules,
+							ind(schedule[current_hash]).comm_Pkg_joules,
+							ind(schedule[current_hash]).comp_PP0_joules,
+							ind(schedule[current_hash]).comm_PP0_joules,
+#ifdef ARCH_062D
+							ind(schedule[current_hash]).comp_DRAM_joules,
+							ind(schedule[current_hash]).comm_DRAM_joules,
+#endif
 							MsgSz,
 							MsgDest,
 							MsgSrc);
@@ -725,7 +758,11 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	ind(schedule[current_hash]).observed_freq = time_comp.freq;
 	ind(schedule[current_hash]).observed_ratio = time_comp.ratio;
 	ind(schedule[current_hash]).c0_ratio = (double)time_comp.mperf_accum / time_comp.tsc_accum;
-	ind(schedule[current_hash]).observed_comp_joules = time_comp.joules;
+	ind(schedule[current_hash]).comp_Pkg_joules = time_comp.Pkg_joules;
+	ind(schedule[current_hash]).comp_PP0_joules = time_comp.PP0_joules;
+#ifdef ARCH_062D
+	ind(schedule[current_hash]).comp_DRAM_joules = time_comp.DRAM_joules;
+#endif
 #if _DEBUG > 1
 	printf("rank %d set comp r: %f tr: %f hash: %06d f: %f GHz tsc f: %f GHz tsc: %llu aperf: %lu "
 				 "mperf: %lu s: %f\n", 
@@ -782,7 +819,11 @@ shim_post( int shim_id, union shim_parameters *p ){
 	ind(schedule[current_hash]).observed_comm_ratio = time_comm.ratio;
 	ind(schedule[current_hash]).observed_comm_c0 = 
 		(double)time_comm.mperf_accum / time_comm.tsc_accum;
-	ind(schedule[current_hash]).observed_comm_joules = time_comm.joules;
+	ind(schedule[current_hash]).comm_Pkg_joules = time_comm.Pkg_joules;
+	ind(schedule[current_hash]).comm_PP0_joules = time_comm.PP0_joules;
+#ifdef ARCH_062D
+	ind(schedule[current_hash]).comm_DRAM_joules = time_comm.DRAM_joules;
+#endif
 	if( previous_hash >= 0 ){
 		//! @todo we can detect mispredictions here
 		schedule[previous_hash].following_entry = current_hash;
