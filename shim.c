@@ -44,6 +44,8 @@ static void initialize_handler    	(void);
 static void signal_handler        	( int signal);
 static void set_alarm			( double s );
 
+// Logging
+void Log( int shim_id, union shim_parameters *p );
 
 int rank;
 static int size;
@@ -695,36 +697,7 @@ Log( int shim_id, union shim_parameters *p ){
 ////////////////////////////////////////////////////////////////////////////////
 // Interception redirect.
 ////////////////////////////////////////////////////////////////////////////////
-void 
-shim_pre( int shim_id, union shim_parameters *p ){
-	// ft kludge.
-	// In the normal case, any MPI call on or close to the critical path
-	// will take less than GMPI_BLOCKING_BUFFER.  ft messages are so large,
-	// though, that it takes ~10 seconds to complete an MPI_Alltoall on 32
-	// nodes.  This makes it look like every process than slow down -- 
-	// there's plenty of communiation time -- which inevitably leads to 
-	// the process(es) on the critical path slowing down.
-	//
-	// If we had a reliable way to distinguish blocking time from 
-	// communication time, we might be able to work with this.  However, 
-	// I don't think that even a complex scheme will hold up over 32 
-	// processes trying to communicate with 31 other processes, each
-	// starting at a slightly different time.
-	//
-	// To fix the problem, we're going to stick a barrier in front of the
-	// MPI_Alltoall call.  This will do two things:
-	//
-	// 1)  The communication time for the barrier is much less than 
-	// GMPI_BLOCKING_BUFFER.  Any extra time spent here is real blocking
-	// time, and computation can be slowed to take advantage of this.
-	// Processes on the critical path will see very little communication
-	// time and no blocking time, and thus their computation will not
-	// be slowed.
-	// 
-	// 2)  The task preceding the MPI_Alltoall will take to little time
-	// to be scheduled, leaving the fermata algorithm to kick in to 
-	// pick up the energy savings.
-	
+void shim_pre_1(){
 	// DO NOT MOVE THIS CALL.  This code isn't particularly reentrant,
 	// so this needs to be executed before any bookkeeping occurs.
 	if( (g_algo  &  algo_ANDANTE || g_algo & algo_FERMATA) 
@@ -734,10 +707,9 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	
 	// Kill the timer.
 	set_alarm(0.0);
+}
 
-	// Function-specific intercept code.
-	if(shim_id == GMPI_INIT){ pre_MPI_Init( p ); }
-	if(shim_id == GMPI_FINALIZE){ pre_MPI_Finalize( p ); }
+void shim_pre_2(){
 	
 	// If we aren't initialized yet, stop here.
 	if(!MPI_Initialized_Already){ return; }
@@ -799,7 +771,40 @@ shim_pre( int shim_id, union shim_parameters *p ){
 }
 
 void 
-shim_post( int shim_id, union shim_parameters *p ){
+shim_pre( int shim_id, union shim_parameters *p ){
+	// ft kludge.
+	// In the normal case, any MPI call on or close to the critical path
+	// will take less than GMPI_BLOCKING_BUFFER.  ft messages are so large,
+	// though, that it takes ~10 seconds to complete an MPI_Alltoall on 32
+	// nodes.  This makes it look like every process than slow down -- 
+	// there's plenty of communiation time -- which inevitably leads to 
+	// the process(es) on the critical path slowing down.
+	//
+	// If we had a reliable way to distinguish blocking time from 
+	// communication time, we might be able to work with this.  However, 
+	// I don't think that even a complex scheme will hold up over 32 
+	// processes trying to communicate with 31 other processes, each
+	// starting at a slightly different time.
+	//
+	// To fix the problem, we're going to stick a barrier in front of the
+	// MPI_Alltoall call.  This will do two things:
+	//
+	// 1)  The communication time for the barrier is much less than 
+	// GMPI_BLOCKING_BUFFER.  Any extra time spent here is real blocking
+	// time, and computation can be slowed to take advantage of this.
+	// Processes on the critical path will see very little communication
+	// time and no blocking time, and thus their computation will not
+	// be slowed.
+	// 
+	// 2)  The task preceding the MPI_Alltoall will take to little time
+	// to be scheduled, leaving the fermata algorithm to kick in to 
+	// pick up the energy savings.
+
+	shim_pre_1();
+	shim_pre_2();
+}
+
+void shim_post_1(){
 	// If we aren't initialized yet, stop here.
 	if(!MPI_Initialized_Already){ return; }
 	
@@ -809,10 +814,9 @@ shim_post( int shim_id, union shim_parameters *p ){
 	// Bookkeeping.
 	mark_time(&time_comm, 0);
 	//dump_timeval(logfile, "Communication halted. ", &ts_stop_communication);
+}
 
-	// (Most) Function-specific intercept code.
-	if(shim_id == GMPI_INIT){ post_MPI_Init( p ); }
-	
+void shim_post_2(){
 	ind(schedule[current_hash]).observed_comm_seconds = time_comm.elapsed_time;
 	ind(schedule[current_hash]).start_time = time_comp.start.tv_sec + 
 		time_comp.start.tv_usec / 1000000.0;
@@ -830,10 +834,10 @@ shim_post( int shim_id, union shim_parameters *p ){
 		//! @todo we can detect mispredictions here
 		schedule[previous_hash].following_entry = current_hash;
 	}
+}
 
-	// Logging occurs as we're about to leave the task.
-	if(g_trace){ Log( shim_id, p ); };
-	
+void 
+shim_post_3( int shim_id, union shim_parameters *p ){	
 	// Bookkeeping.  MUST COME AFTER LOGGING.
 	previous_hash = current_hash;
 	clear_time(&time_comp);
@@ -859,9 +863,6 @@ shim_post( int shim_id, union shim_parameters *p ){
 	// (Most of the time it should have no effect.)
 	if( ! (g_algo & mods_FAKEFREQ) ) { shift_core( my_core, current_freq ); }
 
-	// NOTE:  THIS HAS TO GO LAST.  Otherwise the logfile will be closed
-	// prematurely.
-	if(shim_id == GMPI_FINALIZE){ post_MPI_Finalize( p ); }
 	in_computation = 1;
 }
 

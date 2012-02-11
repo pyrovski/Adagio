@@ -16,7 +16,6 @@ extern int binding_stable;
 void shim_pre( int shim_id, union shim_parameters *p );
 void shim_post( int shim_id, union shim_parameters *p );
 char* f2str( int shim_id );
-void Log( int shim_id, union shim_parameters *p );
 
 // Schedule entry
 struct entry{
