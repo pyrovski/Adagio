@@ -1,6 +1,5 @@
 /*
-Wrap all MPI functions.
-Each function will have an associated integer descriptor.
+Wrap all relevant MPI functions.
 For MPI_Init and MPI_Finalize, do extra setup/teardown work.
 For some functions that send or receive, record extra message info.
 Idea: don't ship around the shim_parameters union; just pass parameters directly
@@ -36,7 +35,11 @@ Idea: don't ship around the shim_parameters union; just pass parameters directly
      post_MPI_Finalize();
 {{endfn}}
 
+/*
+for all functions except init and finalize, use
 {{fnall foo MPI_Init MPI_Finalize}}
+*/
+{{fn foo MPI_Send MPI_Recv MPI_Reduce MPI_Alltoall MPI_ALltoallv MPI_Allreduce MPI_Barrier MPI_Bcast MPI_Pcontrol MPI_Waitall MPI_Wait}}
 {
      shim_pre();
      {{callfn}}

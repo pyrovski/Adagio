@@ -697,6 +697,36 @@ Log( int shim_id, union shim_parameters *p ){
 ////////////////////////////////////////////////////////////////////////////////
 // Interception redirect.
 ////////////////////////////////////////////////////////////////////////////////
+/*
+ ft kludge.
+ In the normal case, any MPI call on or close to the critical path
+ will take less than GMPI_BLOCKING_BUFFER.  ft messages are so large,
+ though, that it takes ~10 seconds to complete an MPI_Alltoall on 32
+ nodes.  This makes it look like every process than slow down -- 
+ there's plenty of communiation time -- which inevitably leads to 
+ the process(es) on the critical path slowing down.
+
+ If we had a reliable way to distinguish blocking time from 
+ communication time, we might be able to work with this.  However, 
+ I don't think that even a complex scheme will hold up over 32 
+ processes trying to communicate with 31 other processes, each
+ starting at a slightly different time.
+
+ To fix the problem, we're going to stick a barrier in front of the
+ MPI_Alltoall call.  This will do two things:
+
+ 1)  The communication time for the barrier is much less than 
+ GMPI_BLOCKING_BUFFER.  Any extra time spent here is real blocking
+ time, and computation can be slowed to take advantage of this.
+ Processes on the critical path will see very little communication
+ time and no blocking time, and thus their computation will not
+ be slowed.
+ 
+ 2)  The task preceding the MPI_Alltoall will take to little time
+ to be scheduled, leaving the fermata algorithm to kick in to 
+ pick up the energy savings.
+*/
+
 void shim_pre_1(){
 	// DO NOT MOVE THIS CALL.  This code isn't particularly reentrant,
 	// so this needs to be executed before any bookkeeping occurs.
@@ -770,40 +800,6 @@ void shim_pre_2(){
 	if( g_algo & algo_FERMATA ) { schedule_communication( current_hash ); }
 }
 
-void 
-shim_pre( int shim_id, union shim_parameters *p ){
-	// ft kludge.
-	// In the normal case, any MPI call on or close to the critical path
-	// will take less than GMPI_BLOCKING_BUFFER.  ft messages are so large,
-	// though, that it takes ~10 seconds to complete an MPI_Alltoall on 32
-	// nodes.  This makes it look like every process than slow down -- 
-	// there's plenty of communiation time -- which inevitably leads to 
-	// the process(es) on the critical path slowing down.
-	//
-	// If we had a reliable way to distinguish blocking time from 
-	// communication time, we might be able to work with this.  However, 
-	// I don't think that even a complex scheme will hold up over 32 
-	// processes trying to communicate with 31 other processes, each
-	// starting at a slightly different time.
-	//
-	// To fix the problem, we're going to stick a barrier in front of the
-	// MPI_Alltoall call.  This will do two things:
-	//
-	// 1)  The communication time for the barrier is much less than 
-	// GMPI_BLOCKING_BUFFER.  Any extra time spent here is real blocking
-	// time, and computation can be slowed to take advantage of this.
-	// Processes on the critical path will see very little communication
-	// time and no blocking time, and thus their computation will not
-	// be slowed.
-	// 
-	// 2)  The task preceding the MPI_Alltoall will take to little time
-	// to be scheduled, leaving the fermata algorithm to kick in to 
-	// pick up the energy savings.
-
-	shim_pre_1();
-	shim_pre_2();
-}
-
 void shim_post_1(){
 	// If we aren't initialized yet, stop here.
 	if(!MPI_Initialized_Already){ return; }
@@ -837,7 +833,7 @@ void shim_post_2(){
 }
 
 void 
-shim_post_3( int shim_id, union shim_parameters *p ){	
+shim_post_3(){	
 	// Bookkeeping.  MUST COME AFTER LOGGING.
 	previous_hash = current_hash;
 	clear_time(&time_comp);

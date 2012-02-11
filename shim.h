@@ -13,8 +13,11 @@ extern int my_core, my_socket, my_local; // intialized in post_MPI_Init
 extern int rank;
 extern int binding_stable;
 
-void shim_pre( int shim_id, union shim_parameters *p );
-void shim_post( int shim_id, union shim_parameters *p );
+void shim_pre_1();
+void shim_pre_2();
+void shim_post_1();
+void shim_post_2();
+void shim_post_3();
 char* f2str( int shim_id );
 
 // Schedule entry

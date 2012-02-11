@@ -65,7 +65,7 @@ umt_jitter:
 	cd ../umt2k-1.2.2/bin; $(MAKE) jitter "MPIRUN=$(MPIRUN)" 
 paradis:
 	cd ../ParaDiS/blr; $(MAKE) paradis "MPIRUN=$(MPIRUN)"
-4paradis_jitter:
+paradis_jitter:
 	cd ../ParaDiS/blr; $(MAKE) jitter "MPIRUN=$(MPIRUN)" 
 
 # Test runs
@@ -181,8 +181,12 @@ shift.o: Makefile shift.c shift.h
 meters.o: Makefile meters.c meters.h gettimeofday_helpers.o 
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c meters.c
 
-$(GENERATED_SHIMFILES): Makefile shim.py shim.sh
-	echo $(SHELL)
-	rm -f $(GENERATED_SHIMFILES)
-	./shim.sh
-	chmod 440 $(GENERATED_SHIMFILES)
+#$(GENERATED_SHIMFILES): Makefile shim.py shim.sh
+#	echo $(SHELL)
+#	rm -f $(GENERATED_SHIMFILES)
+#	./shim.sh
+#	chmod 440 $(GENERATED_SHIMFILES)
+
+#:
+#	wrap.py -o ... shim.w
+#	wrap.py -o ... shim_h.w

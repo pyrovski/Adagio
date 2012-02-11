@@ -4,9 +4,6 @@
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 
-/*! @todo this might be modified to give consistent hashes 
-across program runs and hosts
-*/
 int hash_backtrace(int fid, int rank) {
 	unw_cursor_t cursor; unw_context_t uc;
 	unw_word_t ip;
@@ -45,7 +42,7 @@ int hash_backtrace(int fid, int rank) {
 	if(status < 0)
 	  fprintf(stderr, "unw_step() error\n");
 
-	md5_append( &pms, (md5_byte_t*)(&fid), sizeof(int) );
+	md5_append( &pms, (md5_byte_t*)(&fid), sizeof(fid) );
 	md5_finish( &pms, digest );
 	return *((int*)digest) & 0x1fff; //8192 entries.
 }
