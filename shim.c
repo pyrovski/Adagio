@@ -534,15 +534,17 @@ Log( int shim_id, union shim_parameters *p ){
 	int log = 0;
 
 	char var_format[] = 
-		"%5d %13s %06d %9.6lf %9.6f "
-		"%9.6lf %e %9.6f %9.6lf %9f "
-		"%9f %8.6lf %9.6lf %8.6lf "
-		 "%8le "// CompPkgJ
-		 "%8le "// CommPkgJ
-		 "%8le "// CompPP0J
-		 "%8le "// CommPP0J
-		 "%9le "// CompDRAMJ
-		 "%9le "// CommDRAMJ
+		"%5d %13s %06d %9.6f %9.6f "
+		"%9.6f %e %9.6f %9.6f %9f "
+		"%9f %8.6f %9.6f %8.6f "
+		 "%8.2e "// CompPkgJ
+		 "%8.2e "// CommPkgJ
+		 "%8.2e "// CompPP0J
+		 "%8.2e "// CommPP0J
+#ifdef ARCH_062D
+		 "%9.2e "// CompDRAMJ
+		 "%9.2e "// CommDRAMJ
+#endif
 		"%8d %7d %7d\n";
 	char hdr_format[] = 
 		"%4s %13s %6s %9s %9s "
