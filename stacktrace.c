@@ -42,6 +42,7 @@ int hash_backtrace(int fid, int rank) {
 	if(status < 0)
 	  fprintf(stderr, "unw_step() error\n");
 
+	//! @todo this should be unnecessary
 	md5_append( &pms, (md5_byte_t*)(&fid), sizeof(fid) );
 	md5_finish( &pms, digest );
 	return *((int*)digest) & 0x1fff; //8192 entries.

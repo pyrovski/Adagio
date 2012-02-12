@@ -176,9 +176,11 @@ meters.o: Makefile meters.c meters.h gettimeofday_helpers.o
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c meters.c
 
 shim_functions.c: Makefile shim.w shim_h.w
+	rm -f $@
 	$(wrap) -o shim_functions.c shim.w
 	chmod 440 $@
 
 shim_enumeration.h: Makefile shim_h.w
+	rm -f $@
 	$(wrap) -o shim_enumeration.h shim_h.w
 	chmod 440 $@

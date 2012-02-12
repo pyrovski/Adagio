@@ -4,18 +4,25 @@
  * shim_functions file when an MPI call is intercepted.
  */
 #include "shift.h"
-#include "shim_parameters.h"
 
 extern double frequencies[MAX_NUM_FREQUENCIES], ratios[MAX_NUM_FREQUENCIES];
 extern int current_freq;
 extern int g_bind;
 extern int g_trace;
+extern int g_algo;
 extern int my_core, my_socket, my_local; // intialized in post_MPI_Init
 extern int rank;
 extern int binding_stable;
 
+// MPI_Init
+void pre_MPI_Init 	();
+void post_MPI_Init	(char ** argv);
+// MPI_Finalize
+void pre_MPI_Finalize 	();
+void post_MPI_Finalize	();
+
 void shim_pre_1();
-void shim_pre_2();
+void shim_pre_2(int shim_id);
 void shim_post_1();
 void shim_post_2();
 void shim_post_3();

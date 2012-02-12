@@ -7,15 +7,15 @@ Idea: don't ship around the shim_parameters union; just pass parameters directly
 */
 
 #include "shim.h"
-#include "shim_h.h"
+#include "shim_enumeration.h"
 
 {{fn foo MPI_Init}}{
      shim_pre_1();
      pre_MPI_Init();
-     shim_pre_2();
+     shim_pre_2(G{{foo}});
      {{callfn}}
-     shim_post1();
-     post_MPI_Init();
+     shim_post_1();
+     post_MPI_Init({{1}});
      shim_post_2();
      if(g_trace)
        Log("{{foo}}", -1, -1, -1);
@@ -26,7 +26,7 @@ Idea: don't ship around the shim_parameters union; just pass parameters directly
 {{fn foo MPI_Finalize}}{
      shim_pre_1();
      pre_MPI_Finalize();
-     shim_pre_2();
+     shim_pre_2(G{{foo}});
      {{callfn}}
      shim_post_1();
      shim_post_2();
@@ -44,7 +44,8 @@ for all functions except init and finalize, use
 
 {{fn foo MPI_Alltoallv MPI_Barrier MPI_Pcontrol MPI_Waitall MPI_Wait}}
 {
-  shim_pre();
+  shim_pre_1();
+  shim_pre_2(G{{foo}});
   {{callfn}}
   shim_post_1();
   shim_post_2();
@@ -60,7 +61,8 @@ for all functions except init and finalize, use
   MPI_Aint extent;
   int msgSize, msgSrc, msgDest;
   
-  shim_pre();
+  shim_pre_1();
+  shim_pre_2(G{{foo}});
   {{callfn}}
   shim_post_1();
   shim_post_2();
@@ -80,7 +82,8 @@ for all functions except init and finalize, use
   MPI_Aint extent;
   int msgSize, msgSrc, msgDest;
   
-  shim_pre();
+  shim_pre_1();
+  shim_pre_2(G{{foo}});
   {{callfn}}
   shim_post_1();
   shim_post_2();
@@ -101,7 +104,8 @@ for all functions except init and finalize, use
   MPI_Aint extent;
   int msgSize, msgSrc, msgDest;
   
-  shim_pre();
+  shim_pre_1();
+  shim_pre_2(G{{foo}});
   {{callfn}}
   shim_post_1();
   shim_post_2();
@@ -122,7 +126,17 @@ for all functions except init and finalize, use
   MPI_Aint extent;
   int msgSize, msgSrc, msgDest;
   
-  shim_pre();
+  if(G{{foo}} == GMPI_Alltoall){
+    // DO NOT MOVE THIS CALL.  This code isn't particularly reentrant,
+    // so this needs to be executed before any bookkeeping occurs.
+    if( (g_algo  &  algo_ANDANTE || g_algo & algo_FERMATA) 
+	&&  (g_algo  &  mods_BIGCOMM)) {
+      MPI_Barrier( MPI_COMM_WORLD ); 	//NOT PMPI.  
+    }
+  }
+  
+  shim_pre_1();
+  shim_pre_2(G{{foo}});
   {{callfn}}
   shim_post_1();
   shim_post_2();
