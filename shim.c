@@ -469,7 +469,6 @@ post_MPI_Init(char ** argv){
 ////////////////////////////////////////////////////////////////////////////////
 void
 pre_MPI_Finalize(){
-	p=p;
 	mark_joules(rank, size);
 	PMPI_Barrier( MPI_COMM_WORLD );
 	mark_time(&time_total, 0);
@@ -576,9 +575,11 @@ Log( const char *fname, int MsgSz, int MsgDest, int MsgSrc){
 		 (ind(schedule[current_hash]).observed_comp_seconds >= GMPI_MIN_COMP_SECONDS ||
 			ind(schedule[current_hash]).observed_comm_seconds >= GMPI_MIN_COMM_SECONDS))
 		log = 1;
-	
+
+	/*! @todo
 	if(shim_id == GMPI_PCONTROL && (g_trace & trace_PCONTROL))
 		log = 1;
+	*/
 
 	if(g_trace & trace_ALL)
 		log = 1;
