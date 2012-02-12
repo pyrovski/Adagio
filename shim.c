@@ -44,9 +44,6 @@ static void initialize_handler    	(void);
 static void signal_handler        	( int signal);
 static void set_alarm			( double s );
 
-// Logging
-void Log( int shim_id, union shim_parameters *p );
-
 int rank;
 static int size;
 

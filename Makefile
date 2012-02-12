@@ -28,14 +28,10 @@ export BADNODE_FLAGS= -mca gmpi_badnode opt09,opt13
 export NAS_BADNODE_FLAGS= -mca gmpi_badnode opt01,opt09,opt13
 export NAS_EXTRA_FLAGS= -mca gmpi_mods bigcomm
 
-# Runtime environment
-NP ?=32
-MPIRUN=mpirun -bind-to-core -np $(NP) -hostfile $(HOSTFILE) $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) $(BADNODE_FLAGS)
-NAS_MPIRUN=mpirun -bind-to-core $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) $(NAS_BADNODE_FLAGS) $(NAS_EXTRA_FLAGS) 
-
 # Compile environment
 
 MPICC=mpicc
+wrap=../wrap/wrap.py
 ifneq ($(dbg),)
 DBG=-D_DEBUG=$(dbg) -DBLR_USE_EAGER_LOGGING -g -pg
 # -DVERBOSE
@@ -47,9 +43,7 @@ CFLAGS=-Wall $(DBG) $(OPT_FLAGS)
 LIBDIR=-L. -L$(HOME)/local/lib
 INCDIR=-I$(HOME)/local/include
 LIBS=-lc -lm -lnuma -lrt -Xlinker -rpath $(HOME)/local/lib -lunwind -lmd5 -lpapi -lmsr
-GENERATED_SHIMFILES = shim_enumeration.h shim_functions.c shim_parameters.h 	\
-shim_selection.h  shim_str.h  shim_structs.h  shim_union.h			
-
+GENERATED_SHIMFILES = shim_enumeration.h shim_functions.c
 
 all: Makefile harness_pristine harness harness_static cpuidTest
 	@echo Done
@@ -181,12 +175,10 @@ shift.o: Makefile shift.c shift.h
 meters.o: Makefile meters.c meters.h gettimeofday_helpers.o 
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c meters.c
 
-#$(GENERATED_SHIMFILES): Makefile shim.py shim.sh
-#	echo $(SHELL)
-#	rm -f $(GENERATED_SHIMFILES)
-#	./shim.sh
-#	chmod 440 $(GENERATED_SHIMFILES)
+shim_functions.c: Makefile shim.w shim_h.w
+	$(wrap) -o shim_functions.c shim.w
+	chmod 440 $@
 
-#:
-#	wrap.py -o ... shim.w
-#	wrap.py -o ... shim_h.w
+shim_enumeration.h: Makefile shim_h.w
+	$(wrap) -o shim_enumeration.h shim_h.w
+	chmod 440 $@

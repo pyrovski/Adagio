@@ -42,7 +42,8 @@ for all functions except init and finalize, use
 {{fnall foo MPI_Init MPI_Finalize}}
 */
 
-{{fn foo MPI_Alltoallv MPI_Barrier MPI_Pcontrol MPI_Waitall MPI_Wait}}{
+{{fn foo MPI_Alltoallv MPI_Barrier MPI_Pcontrol MPI_Waitall MPI_Wait}}
+{
   shim_pre();
   {{callfn}}
   shim_post_1();
