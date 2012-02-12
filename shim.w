@@ -15,7 +15,7 @@ Idea: don't ship around the shim_parameters union; just pass parameters directly
      shim_pre_2(G{{foo}});
      {{callfn}}
      shim_post_1();
-     post_MPI_Init({{1}});
+     post_MPI_Init(*{{1}});
      shim_post_2();
      if(g_trace)
        Log("{{foo}}", -1, -1, -1);
