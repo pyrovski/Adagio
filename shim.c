@@ -31,11 +31,11 @@
 #define min(a,b) (a < b ? a : b)
 
 // MPI_Init
-static void pre_MPI_Init 	( union shim_parameters *p );
-static void post_MPI_Init	( union shim_parameters *p );
+void pre_MPI_Init 	();
+void post_MPI_Init	(char ** argv);
 // MPI_Finalize
-static void pre_MPI_Finalize 	( union shim_parameters *p );
-static void post_MPI_Finalize	( union shim_parameters *p );
+void pre_MPI_Finalize 	();
+void post_MPI_Finalize	();
 
 // Scheduling
 static void schedule_communication	( int idx );
@@ -67,7 +67,7 @@ typedef struct {
 static timing_t time_comp, time_comm, time_total;
 static unsigned critical_path_fires = 0;
 
-static int g_algo;	// which algorithm(s) to use.
+int g_algo;	// which algorithm(s) to use.
 static int g_freq;	// frequency to use with fixedfreq.  
 int g_trace;	// tracing level.  
 int g_bind;  // cpu binding
@@ -250,13 +250,12 @@ static inline void clear_time(timing_t *t){
 ////////////////////////////////////////////////////////////////////////////////
 // Init
 ////////////////////////////////////////////////////////////////////////////////
-static void
-pre_MPI_Init( union shim_parameters *p ){
+void
+pre_MPI_Init(){
 
 	struct utsname utsname;	// Holds hostname.
 	char  *hostname;
 	char *env_algo, *env_trace, *env_freq, *env_badnode, *env_mods, *env_bind;
-	p=p;
 
 	// Using "-mca key value" on the command line, the environment variable
 	// "OMPI_MCA_key" is set to "value".  mpirun doesn't check the validity
@@ -400,9 +399,8 @@ pre_MPI_Init( union shim_parameters *p ){
 	start_papi();	
 }
 
-static void
-post_MPI_Init( union shim_parameters *p ){
-	p=p;
+void
+post_MPI_Init(char ** argv){
 	// Now that PMPI_Init has ostensibly succeeded, grab the rank & size.
 	PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	PMPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -414,7 +412,7 @@ post_MPI_Init( union shim_parameters *p ){
 	
 	/*! setup shared memory and interprocess semaphore
 	 */
-	shm_setup(*((struct MPI_Init_p*)p)->argv, rank);
+	shm_setup(argv, rank);
 
 	// Start us in a known frequency.
 	shift_core(my_core, FASTEST_FREQ);
@@ -469,8 +467,8 @@ post_MPI_Init( union shim_parameters *p ){
 ////////////////////////////////////////////////////////////////////////////////
 // Finalize
 ////////////////////////////////////////////////////////////////////////////////
-static void
-pre_MPI_Finalize( union shim_parameters *p ){
+void
+pre_MPI_Finalize(){
 	p=p;
 	mark_joules(rank, size);
 	PMPI_Barrier( MPI_COMM_WORLD );
@@ -502,24 +500,14 @@ pre_MPI_Finalize( union shim_parameters *p ){
 	shm_teardown();
 }
 	
-static void
-post_MPI_Finalize( union shim_parameters *p ){
-	p=p;
+void
+post_MPI_Finalize(){
 	if(g_trace){fclose(logfile);}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Logging
 ////////////////////////////////////////////////////////////////////////////////
-char*
-f2str( int shim_id ){
-	char *str;
-	switch(shim_id){
-#include "shim_str.h"
-		default:  str = "Unknown"; break;
-	}
-	return str;
-}
 
 void
 Log( const char *fname, int MsgSz, int MsgDest, int MsgSrc){
