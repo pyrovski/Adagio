@@ -72,7 +72,7 @@ static unsigned critical_path_fires = 0;
 
 static int g_algo;	// which algorithm(s) to use.
 static int g_freq;	// frequency to use with fixedfreq.  
-static int g_trace;	// tracing level.  
+int g_trace;	// tracing level.  
 int g_bind;  // cpu binding
 int g_cores_per_socket; // 
 int my_core, my_socket, my_local;

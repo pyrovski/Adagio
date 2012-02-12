@@ -9,6 +9,7 @@
 extern double frequencies[MAX_NUM_FREQUENCIES], ratios[MAX_NUM_FREQUENCIES];
 extern int current_freq;
 extern int g_bind;
+extern int g_trace;
 extern int my_core, my_socket, my_local; // intialized in post_MPI_Init
 extern int rank;
 extern int binding_stable;
