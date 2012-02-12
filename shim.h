@@ -19,7 +19,8 @@ void shim_pre_2();
 void shim_post_1();
 void shim_post_2();
 void shim_post_3();
-char* f2str( int shim_id );
+
+void Log( const char *fname, int MsgSz, int MsgDest, int MsgSrc);
 
 // Schedule entry
 struct entry{

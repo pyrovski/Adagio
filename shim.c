@@ -525,14 +525,9 @@ f2str( int shim_id ){
 }
 
 void
-Log( int shim_id, union shim_parameters *p ){
+Log( const char *fname, int MsgSz, int MsgDest, int MsgSrc){
 
 	static int initialized=0;
-	MPI_Aint lb; 
-	MPI_Aint extent;
-	int MsgSz = -1;
-	int MsgSrc = -1;
-	int MsgDest = -1;
 	int log = 0;
 
 	char var_format[] = 
@@ -587,56 +582,6 @@ Log( int shim_id, union shim_parameters *p ){
 	/*! @todo in order to make a task graph, need to deal with tags, 
 		communicators, MPI_Wait_any, and MPI_Wait_all.
 	 */
-	switch(shim_id){
-	case GMPI_ISEND: 
-		PMPI_Type_get_extent( p->MPI_Isend_p.datatype, &lb, &extent ); 
-		MsgSz = p->MPI_Isend_p.count * extent;
-		MsgDest = p->MPI_Isend_p.dest;
-		MsgSrc = rank;
-		break;
-	case GMPI_IRECV: 
-		PMPI_Type_get_extent( p->MPI_Irecv_p.datatype, &lb, &extent );
-		MsgSz = p->MPI_Irecv_p.count * extent;
-		MsgSrc = p->MPI_Irecv_p.source;
-		MsgDest = rank;
-		break;
-	case GMPI_SEND:
-		PMPI_Type_get_extent( p->MPI_Send_p.datatype, &lb, &extent );
-		MsgSz = p->MPI_Send_p.count * extent;
-		MsgDest = p->MPI_Send_p.dest;
-		MsgSrc = rank;
-		break;
-	case GMPI_RECV:
-		PMPI_Type_get_extent( p->MPI_Recv_p.datatype, &lb, &extent );
-		MsgSz = p->MPI_Recv_p.count * extent;
-		MsgSrc = p->MPI_Recv_p.source;
-		MsgDest = rank;
-		break;
-	case GMPI_SSEND: 
-		PMPI_Type_get_extent( p->MPI_Ssend_p.datatype, &lb, &extent ); 
-		MsgSz = p->MPI_Ssend_p.count * extent;
-		MsgDest = p->MPI_Ssend_p.dest;
-		MsgSrc = rank;
-		break;
-	case GMPI_REDUCE:
-		PMPI_Type_get_extent( p->MPI_Reduce_p.datatype, &lb, &extent ); 
-		MsgSz = p->MPI_Reduce_p.count * extent;
-		MsgDest = p->MPI_Reduce_p.root;
-		MsgSrc = rank;
-		break;
-	case GMPI_ALLREDUCE:
-		PMPI_Type_get_extent( p->MPI_Allreduce_p.datatype, &lb, &extent ); 
-		MsgSz = p->MPI_Allreduce_p.count * extent;
-		break;
-	case GMPI_BCAST:
-		PMPI_Type_get_extent(p->MPI_Bcast_p.datatype, &lb, &extent);
-		MsgSz = p->MPI_Bcast_p.count * extent;
-		MsgDest = p->MPI_Bcast_p.root;
-		MsgSrc = rank;
-		break;
-	default:
-		break;// We don't have complete coverage, obviously.
-	}
 
 	/*! @todo log filter 
 		
@@ -656,7 +601,7 @@ Log( int shim_id, union shim_parameters *p ){
 	if(log){
 		// Write to the logfile.
 			fprintf(logfile, var_format, rank, 
-							f2str(p->MPI_Dummy_p.shim_id),	
+							fname,	
 							current_hash,
 							ind(schedule[current_hash]).start_time - 
 							(time_total.start.tv_sec + time_total.start.tv_usec / 1000000.0),
