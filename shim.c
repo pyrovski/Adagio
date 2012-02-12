@@ -30,13 +30,6 @@
 #define max(a,b) (a > b ? a : b)
 #define min(a,b) (a < b ? a : b)
 
-// MPI_Init
-void pre_MPI_Init 	();
-void post_MPI_Init	(char ** argv);
-// MPI_Finalize
-void pre_MPI_Finalize 	();
-void post_MPI_Finalize	();
-
 // Scheduling
 static void schedule_communication	( int idx );
 static void schedule_computation  	( int idx );
@@ -659,18 +652,11 @@ Log( const char *fname, int MsgSz, int MsgDest, int MsgSrc){
 */
 
 void shim_pre_1(){
-	// DO NOT MOVE THIS CALL.  This code isn't particularly reentrant,
-	// so this needs to be executed before any bookkeeping occurs.
-	if( (g_algo  &  algo_ANDANTE || g_algo & algo_FERMATA) 
-	&&  (g_algo  &  mods_BIGCOMM) 
-	&&  (shim_id == GMPI_ALLTOALL)
-	  ) { MPI_Barrier( MPI_COMM_WORLD ); }	//NOT PMPI.  
-	
 	// Kill the timer.
 	set_alarm(0.0);
 }
 
-void shim_pre_2(){
+void shim_pre_2(int shim_id){
 	
 	// If we aren't initialized yet, stop here.
 	if(!MPI_Initialized_Already){ return; }
