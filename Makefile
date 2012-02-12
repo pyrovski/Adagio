@@ -1,4 +1,3 @@
-# WARNING:  $(HOSTFILE) and ${MPI_INCLUDE_PATH} must be defined elsewhere.
 # $(installDest) can optionally be set in the file installPath
 #
 # greenMPI mca parameters, remember that these can be comma-seperataed with no spaces,
@@ -30,7 +29,7 @@ export NAS_EXTRA_FLAGS= -mca gmpi_mods bigcomm
 
 # Compile environment
 
-MPICC=mpicc
+MPICC=$(HOME)/local/bin/mpicc
 wrap=../wrap/wrap.py
 ifneq ($(dbg),)
 DBG=-D_DEBUG=$(dbg) -DBLR_USE_EAGER_LOGGING -g -pg
