@@ -18,7 +18,7 @@ Idea: don't ship around the shim_parameters union; just pass parameters directly
      post_MPI_Init();
      shim_post_2();
      if(g_trace)
-          Log();
+       Log("{{foo}}", -1, -1, -1);
      shim_post_3();
 }
 {{endfn}}
@@ -31,7 +31,7 @@ Idea: don't ship around the shim_parameters union; just pass parameters directly
      shim_post_1();
      shim_post_2();
      if(g_trace)
-          Log();
+       Log("{{foo}}", -1, -1, -1);
      shim_post_3();
      post_MPI_Finalize();
 }
