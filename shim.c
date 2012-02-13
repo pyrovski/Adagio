@@ -212,6 +212,12 @@ static inline void mark_time(timing_t *t, int start_stop){
 #ifdef ARCH_062D
 			t->DRAM_joules = rapl_state.energy_status[my_socket][DRAM_DOMAIN];
 #endif
+		}else{
+			t->Pkg_joules = 0;
+			t->PP0_joules = 0;
+#ifdef ARCH_062D
+			t->DRAM_joules = 0;
+#endif
 		}
 #if _DEBUG > 1
 		printf("rank %d timing stop 0x%lx delta: %11.7f ratio: %f min ratio: %f "
