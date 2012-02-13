@@ -104,8 +104,10 @@ static inline uint64_t rdtsc(void)
 
 static FILE *perf_file = 0;
 
-/*! @todo perhaps there should be one perf file per core
+/*! the currently associated core will read unique aperf/mperf values, 
+	despite accessing them through a single /proc file
  */
+///*
 static inline void read_aperf_mperf(uint64_t *aperf, uint64_t *mperf){
 	uint64_t mperf_aperf[2];
 	if(!perf_file){
@@ -118,26 +120,19 @@ static inline void read_aperf_mperf(uint64_t *aperf, uint64_t *mperf){
 		*mperf = mperf_aperf[0];
 	if(aperf)
 		*aperf = mperf_aperf[1];
-	/*
-	status = fseek(perf_file, 0, SEEK_SET);
-	assert(!status);
-	*/
 	fclose(perf_file);
 	perf_file = 0;
-	/*
-#ifdef _DEBUG
-	printf("core %d aperf: 0x%llx mperf: 0x%llx\n", my_core, 
-				 mperf_aperf[1], mperf_aperf[0]);
-#endif
-	*/
 }
+//*/
 
 /*!
 	calculate aperf/mperf ratio and corresponding frequency, elapsed time
 	@todo deal with counter overflow; see turbostat code
  */
 static void calc_rates(timing_t *t){
+#ifdef _DEBUG
 	assert(t);
+#endif
 
 	t->elapsed_time += delta_seconds(&t->start, &t->stop);
 
