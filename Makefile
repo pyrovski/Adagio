@@ -153,7 +153,8 @@ install: libGreenMPI.so harness
 shim.o: Makefile shim.c shim.h log.o stacktrace.o 			\
 		gettimeofday_helpers.o wpapi.o shift.o  		\
 		$(GENERATED_SHIMFILES) 
-	$(MPICC) $(CFLAGS) -fPIC -c shim.c $(INCDIR) -DdetectCritical
+	$(MPICC) $(CFLAGS) -fPIC -c shim.c $(INCDIR) -DdetectCritical \
+	-DARCH_062D
 	$(MPICC) $(CFLAGS) -fPIC -c shim_functions.c
 
 log.o: Makefile log.c log.h
