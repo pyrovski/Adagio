@@ -41,7 +41,7 @@ endif
 CFLAGS=-Wall $(DBG) $(OPT_FLAGS)
 LIBDIR=-L. -L$(HOME)/local/lib
 INCDIR=-I$(HOME)/local/include
-LIBS=-lc -lm -lnuma -lrt -Xlinker -rpath $(HOME)/local/lib -lunwind -lmd5 -lpapi -lmsr
+LIBS=-lc -lm -lnuma -lrt -Xlinker -rpath $(HOME)/local/lib -lunwind -lmd5 -lpapi
 GENERATED_SHIMFILES = shim_enumeration.h shim_functions.c
 
 all: Makefile harness_pristine harness harness_static cpuidTest
@@ -153,8 +153,7 @@ install: libGreenMPI.so harness
 shim.o: Makefile shim.c shim.h log.o stacktrace.o 			\
 		gettimeofday_helpers.o wpapi.o shift.o  		\
 		$(GENERATED_SHIMFILES) 
-	$(MPICC) $(CFLAGS) -fPIC -c shim.c $(INCDIR) -DdetectCritical \
-	-DARCH_062D
+	$(MPICC) $(CFLAGS) -fPIC -c shim.c $(INCDIR) -DdetectCritical
 	$(MPICC) $(CFLAGS) -fPIC -c shim_functions.c
 
 log.o: Makefile log.c log.h

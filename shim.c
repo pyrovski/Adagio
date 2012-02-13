@@ -23,10 +23,6 @@
 #include "meters.h"     // power meters
 #include "cpuid.h"
 
-#define ARCH_SANDY_BRIDGE
-#include "msr_rapl.h"
-#include "msr_core.h"
-
 #define max(a,b) (a > b ? a : b)
 #define min(a,b) (a < b ? a : b)
 
@@ -40,21 +36,13 @@ static void set_alarm			( double s );
 int rank;
 static int size;
 
-static char rapl_filename[16];
-FILE *rapl_file = 0;
-static struct rapl_state_s rapl_state; 
-
 typedef struct {
 	struct timeval start, stop;
 	uint64_t aperf_start, aperf_stop, aperf_accum,
 		mperf_start, mperf_stop, mperf_accum,
 		tsc_start, tsc_stop, tsc_accum;
 
-	double freq, ratio, elapsed_time, 
-		Pkg_joules, PP0_joules;
-#ifdef ARCH_062D
-	double DRAM_joules;
-#endif
+	double freq, ratio, elapsed_time;
 } timing_t;
 
 static timing_t time_comp, time_comm, time_total;
@@ -193,8 +181,6 @@ static inline void mark_time(timing_t *t, int start_stop){
 		gettimeofday(&t->start, 0);
 		t->tsc_start = rdtsc();
 		read_aperf_mperf(&t->aperf_start, &t->mperf_start);
-		//if(!socket_rank)
-		get_all_status(my_socket, &rapl_state);
 	} else { // stop
 		/*
 			elapsed_time should be initialized to zero and added to on each stop.
@@ -203,22 +189,6 @@ static inline void mark_time(timing_t *t, int start_stop){
 		t->tsc_stop = rdtsc();
 		read_aperf_mperf(&t->aperf_stop, &t->mperf_stop);
 		calc_rates(t);
-		//if(!socket_rank)
-		//!	joules counter only updates once every 0.0009765625s.
-		if(t->elapsed_time >= 2 * 0.0009765625){
-			get_all_status(my_socket, &rapl_state);
-			t->Pkg_joules = rapl_state.energy_status[my_socket][PKG_DOMAIN];
-			t->PP0_joules = rapl_state.energy_status[my_socket][PP0_DOMAIN];
-#ifdef ARCH_062D
-			t->DRAM_joules = rapl_state.energy_status[my_socket][DRAM_DOMAIN];
-#endif
-		}else{
-			t->Pkg_joules = 0;
-			t->PP0_joules = 0;
-#ifdef ARCH_062D
-			t->DRAM_joules = 0;
-#endif
-		}
 #if _DEBUG > 1
 		printf("rank %d timing stop 0x%lx delta: %11.7f ratio: %f min ratio: %f "
 					 "hash: %06d f: %f GHz tsc f: %f GHz aperf: 0x%lx mperf: 0x%lx\n", 
@@ -385,13 +355,6 @@ pre_MPI_Init(){
 			ratios[i] = frequencies[i] / frequencies[FASTEST_FREQ];
 	}
 
-
-	// dummy init; we don't keep these measurements
-  //if(!socket_rank){
-		init_msr();
-		rapl_init(&rapl_state, 0, 0, 0, 0);
-		//}
-
 	MPI_Initialized_Already=1;
 
 	// we won't use the data gathered between pre_MPI_Init and shim_pre
@@ -437,19 +400,6 @@ post_MPI_Init(char ** argv){
 	// clear timers
 	clear_time(&time_comp);
 	clear_time(&time_total);
-
-	// clear rapl
-	//! only one core per socket needs to do this
-  //if(!socket_rank){
-		rapl_filename[15] = 0;
-		snprintf(rapl_filename, 14, "rapl.%04d.dat", rank);
-		rapl_file = fopen(rapl_filename, "w");
-		if(!rapl_file){
-			perror("error opening rapl file");
-			MPI_Abort(MPI_COMM_WORLD, 1);
-		}
-		rapl_init(&rapl_state, 0, 0, rapl_file, 0);
-		//}
 	
 	mark_time(&time_total, 1);
 	time_comp = time_total;
@@ -471,7 +421,6 @@ pre_MPI_Finalize(){
 	mark_joules(rank, size);
 	PMPI_Barrier( MPI_COMM_WORLD );
 	mark_time(&time_total, 0);
-	rapl_finalize(&rapl_state);
 	if(!rank){
 		fprintf(runTimeLog, "%lf\n", time_total.elapsed_time);
 		fprintf(runTimeStats, "rank\td_time\td_mperf\td_aperf\td_tsc\tratio\tcrit_path_fires\n");
@@ -517,27 +466,11 @@ Log( const char *fname, int MsgSz, int MsgDest, int MsgSrc){
 		"%5d %13s %06d %9.6f %9.6f "
 		"%9.6f %e %9.6f %9.6f %9f "
 		"%9f %8.6f %9.6f %8.6f "
-		 "%8.2e "// CompPkgJ
-		 "%8.2e "// CommPkgJ
-		 "%8.2e "// CompPP0J
-		 "%8.2e "// CommPP0J
-#ifdef ARCH_062D
-		 "%9.2e "// CompDRAMJ
-		 "%9.2e "// CommDRAMJ
-#endif
 		"%8d %7d %7d\n";
 	char hdr_format[] = 
 		"%4s %13s %6s %9s %9s "
 		"%9s %12s %9s %9s %9s "
 		"%9s %8s %7s %8s "
-		"%8s "// CompPkgJ
-		"%8s "// CommPkgJ
-		"%8s "// CompPP0J
-		"%8s "// CommPP0J
-#ifdef ARCH_062D
-		"%9s "// CompDRAMJ
-		"%9s "// CommDRAMJ
-#endif
 		"%8s %7s %7s\n";
 
 	// One-time initialization.
@@ -550,11 +483,6 @@ Log( const char *fname, int MsgSz, int MsgDest, int MsgSrc){
 								"Rank", "Function", "Hash", "Time_in", "Time_out",
 								"Comp", "Insn", "Ratio", "T_Ratio", "ReqRatio", 
 								"C0_Ratio", "Comm", "CommRatio", "CommC0", 
-								"CompPkgJ", "CommPkgJ",
-								"CompPP0J", "CommPP0J", 
-#ifdef ARCH_062D
-								"CompDRAMJ", "CommDRAMJ",
-#endif
 								"MsgSz", "MsgDest", "MsgSrc");
 			}
 		}
@@ -602,14 +530,6 @@ Log( const char *fname, int MsgSz, int MsgDest, int MsgSrc){
 							ind(schedule[current_hash]).observed_comm_seconds,
 							ind(schedule[current_hash]).observed_comm_ratio,
 							ind(schedule[current_hash]).observed_comm_c0,
-							ind(schedule[current_hash]).comp_Pkg_joules,
-							ind(schedule[current_hash]).comm_Pkg_joules,
-							ind(schedule[current_hash]).comp_PP0_joules,
-							ind(schedule[current_hash]).comm_PP0_joules,
-#ifdef ARCH_062D
-							ind(schedule[current_hash]).comp_DRAM_joules,
-							ind(schedule[current_hash]).comm_DRAM_joules,
-#endif
 							MsgSz,
 							MsgDest,
 							MsgSrc);
@@ -685,11 +605,6 @@ void shim_pre_2(int shim_id){
 	ind(schedule[current_hash]).observed_freq = time_comp.freq;
 	ind(schedule[current_hash]).observed_ratio = time_comp.ratio;
 	ind(schedule[current_hash]).c0_ratio = (double)time_comp.mperf_accum / time_comp.tsc_accum;
-	ind(schedule[current_hash]).comp_Pkg_joules = time_comp.Pkg_joules;
-	ind(schedule[current_hash]).comp_PP0_joules = time_comp.PP0_joules;
-#ifdef ARCH_062D
-	ind(schedule[current_hash]).comp_DRAM_joules = time_comp.DRAM_joules;
-#endif
 #if _DEBUG > 1
 	printf("rank %d set comp r: %f tr: %f hash: %06d f: %f GHz tsc f: %f GHz tsc: %llu aperf: %lu "
 				 "mperf: %lu s: %f\n", 
@@ -744,11 +659,6 @@ void shim_post_2(){
 	ind(schedule[current_hash]).observed_comm_ratio = time_comm.ratio;
 	ind(schedule[current_hash]).observed_comm_c0 = 
 		(double)time_comm.mperf_accum / time_comm.tsc_accum;
-	ind(schedule[current_hash]).comm_Pkg_joules = time_comm.Pkg_joules;
-	ind(schedule[current_hash]).comm_PP0_joules = time_comm.PP0_joules;
-#ifdef ARCH_062D
-	ind(schedule[current_hash]).comm_DRAM_joules = time_comm.DRAM_joules;
-#endif
 	if( previous_hash >= 0 ){
 		//! @todo we can detect mispredictions here
 		schedule[previous_hash].following_entry = current_hash;

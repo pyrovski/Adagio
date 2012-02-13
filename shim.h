@@ -44,14 +44,6 @@ struct entry{
   double c0_ratio; // from previous
   double observed_comm_ratio;
   double observed_comm_c0;
-  double comp_Pkg_joules;
-  double comm_Pkg_joules;
-  double comp_PP0_joules;
-  double comm_PP0_joules;
-#ifdef ARCH_062D
-  double comp_DRAM_joules;
-  double comm_DRAM_joules;
-#endif
 };
 
 #define histEntries 3
