@@ -1,4 +1,3 @@
-# WARNING:  $(HOSTFILE) and ${MPI_INCLUDE_PATH} must be defined elsewhere.
 # $(installDest) can optionally be set in the file installPath
 #
 # greenMPI mca parameters, remember that these can be comma-seperataed with no spaces,
@@ -28,14 +27,10 @@ export BADNODE_FLAGS= -mca gmpi_badnode opt09,opt13
 export NAS_BADNODE_FLAGS= -mca gmpi_badnode opt01,opt09,opt13
 export NAS_EXTRA_FLAGS= -mca gmpi_mods bigcomm
 
-# Runtime environment
-NP ?=32
-MPIRUN=mpirun -bind-to-core -np $(NP) -hostfile $(HOSTFILE) $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) $(BADNODE_FLAGS)
-NAS_MPIRUN=mpirun -bind-to-core $(GMPI_FLAGS) $(MCA_REQUIRED_FLAGS) $(NAS_BADNODE_FLAGS) $(NAS_EXTRA_FLAGS) 
-
 # Compile environment
 
-MPICC=mpicc
+MPICC=$(HOME)/local/bin/mpicc
+wrap=../wrap/wrap.py
 ifneq ($(dbg),)
 DBG=-D_DEBUG=$(dbg) -DBLR_USE_EAGER_LOGGING -g -pg
 # -DVERBOSE
@@ -47,9 +42,7 @@ CFLAGS=-Wall $(DBG) $(OPT_FLAGS)
 LIBDIR=-L. -L$(HOME)/local/lib
 INCDIR=-I$(HOME)/local/include
 LIBS=-lc -lm -lnuma -lrt -Xlinker -rpath $(HOME)/local/lib -lunwind -lmd5 -lpapi
-GENERATED_SHIMFILES = shim_enumeration.h shim_functions.c shim_parameters.h 	\
-shim_selection.h  shim_str.h  shim_structs.h  shim_union.h			
-
+GENERATED_SHIMFILES = shim_enumeration.h shim_functions.c
 
 all: Makefile harness_pristine harness harness_static cpuidTest
 	@echo Done
@@ -65,7 +58,7 @@ umt_jitter:
 	cd ../umt2k-1.2.2/bin; $(MAKE) jitter "MPIRUN=$(MPIRUN)" 
 paradis:
 	cd ../ParaDiS/blr; $(MAKE) paradis "MPIRUN=$(MPIRUN)"
-4paradis_jitter:
+paradis_jitter:
 	cd ../ParaDiS/blr; $(MAKE) jitter "MPIRUN=$(MPIRUN)" 
 
 # Test runs
@@ -160,7 +153,7 @@ install: libGreenMPI.so harness
 shim.o: Makefile shim.c shim.h log.o stacktrace.o 			\
 		gettimeofday_helpers.o wpapi.o shift.o  		\
 		$(GENERATED_SHIMFILES) 
-	$(MPICC) $(CFLAGS) -fPIC -c shim.c $(INCDIR)
+	$(MPICC) $(CFLAGS) -fPIC -c shim.c $(INCDIR) -DdetectCritical
 	$(MPICC) $(CFLAGS) -fPIC -c shim_functions.c
 
 log.o: Makefile log.c log.h
@@ -181,8 +174,12 @@ shift.o: Makefile shift.c shift.h
 meters.o: Makefile meters.c meters.h gettimeofday_helpers.o 
 	$(MPICC) $(CFLAGS) $(INCDIR) -fPIC -c meters.c
 
-$(GENERATED_SHIMFILES): Makefile shim.py shim.sh
-	echo $(SHELL)
-	rm -f $(GENERATED_SHIMFILES)
-	./shim.sh
-	chmod 440 $(GENERATED_SHIMFILES)
+shim_functions.c: Makefile shim_functions.w shim_enumeration.w
+	rm -f $@
+	$(wrap) -o shim_functions.c shim_functions.w
+	chmod 440 $@
+
+shim_enumeration.h: Makefile shim_enumeration.w
+	rm -f $@
+	$(wrap) -o shim_enumeration.h shim_enumeration.w
+	chmod 440 $@

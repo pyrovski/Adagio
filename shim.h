@@ -4,19 +4,30 @@
  * shim_functions file when an MPI call is intercepted.
  */
 #include "shift.h"
-#include "shim_parameters.h"
 
 extern double frequencies[MAX_NUM_FREQUENCIES], ratios[MAX_NUM_FREQUENCIES];
 extern int current_freq;
 extern int g_bind;
+extern int g_trace;
+extern int g_algo;
 extern int my_core, my_socket, my_local; // intialized in post_MPI_Init
 extern int rank;
 extern int binding_stable;
 
-void shim_pre( int shim_id, union shim_parameters *p );
-void shim_post( int shim_id, union shim_parameters *p );
-char* f2str( int shim_id );
-void Log( int shim_id, union shim_parameters *p );
+// MPI_Init
+void pre_MPI_Init 	();
+void post_MPI_Init	(char ** argv);
+// MPI_Finalize
+void pre_MPI_Finalize 	();
+void post_MPI_Finalize	();
+
+void shim_pre_1();
+void shim_pre_2(int shim_id);
+void shim_post_1();
+void shim_post_2();
+void shim_post_3();
+
+void Log( const char *fname, int MsgSz, int MsgDest, int MsgSrc);
 
 // Schedule entry
 struct entry{
@@ -28,19 +39,39 @@ struct entry{
 
   double observed_freq; // from previous
   double observed_ratio; // from previous
-  double desired_ratio; // for next
   double start_time; // from previous
   double end_time; // from previous
-  int following_entry; // from previous, for next
   double c0_ratio; // from previous
+  double observed_comm_ratio;
+  double observed_comm_c0;
+};
+
+#define histEntries 3
+
+struct entryHist{
+  struct entry hist[histEntries];
+  unsigned index;
+
+  double desired_ratio; // for next
+  int following_entry; // from previous, for next
   float requested_ratio; // for next?
 };
+
+// indirection
+#define ind(eh)(eh.hist[eh.index])
+
+// double indirection
+#define indd(eh)(eh->hist[eh->index])
+
+// indirection to previous instance
+#define indp(eh)(eh.hist[(eh.index + histEntries - 1) % histEntries])
+
 
 enum{ 
 	// To run without library overhead, use the .pristine binary.
 	algo_NONE	      = 0x000,	// Identical to CLEAN.
 	algo_FERMATA 	  = 0x001,	// slow communication
-	algo_ANDANTE 	  = 0x002,	// slow comp before global sync pts.
+	algo_ANDANTE 	  = 0x002,	// slow comp before sync pts.
 	algo_ADAGIO  	  = 0x004,	// fermata + andante
 	algo_ALLEGRO 	  = 0x008,	// slow computation everywhere.
 	algo_FIXEDFREQ	= 0x010,	// run whole program at single freq.

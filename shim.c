@@ -26,20 +26,12 @@
 #define max(a,b) (a > b ? a : b)
 #define min(a,b) (a < b ? a : b)
 
-// MPI_Init
-static void pre_MPI_Init 	( union shim_parameters *p );
-static void post_MPI_Init	( union shim_parameters *p );
-// MPI_Finalize
-static void pre_MPI_Finalize 	( union shim_parameters *p );
-static void post_MPI_Finalize	( union shim_parameters *p );
-
 // Scheduling
 static void schedule_communication	( int idx );
 static void schedule_computation  	( int idx );
 static void initialize_handler    	(void);
 static void signal_handler        	( int signal);
 static void set_alarm			( double s );
-
 
 int rank;
 static int size;
@@ -54,10 +46,11 @@ typedef struct {
 } timing_t;
 
 static timing_t time_comp, time_comm, time_total;
+static unsigned critical_path_fires = 0;
 
-static int g_algo;	// which algorithm(s) to use.
+int g_algo;	// which algorithm(s) to use.
 static int g_freq;	// frequency to use with fixedfreq.  
-static int g_trace;	// tracing level.  
+int g_trace;	// tracing level.  
 int g_bind;  // cpu binding
 int g_cores_per_socket; // 
 int my_core, my_socket, my_local;
@@ -81,14 +74,15 @@ double frequencies[MAX_NUM_FREQUENCIES], ratios[MAX_NUM_FREQUENCIES];
 
 FILE *logfile = NULL;
 FILE *runTimeLog = 0;
+FILE *runTimeStats = 0;
 
 // Don't change this without altering the hash function.
 //! @todo change hash function?
-static struct entry schedule[8192];
+static struct entryHist schedule[8192];
 
 //static double current_comp_seconds;
 static double current_comp_insn;
-static double current_start_time;
+//static double current_start_time;
 
 static inline uint64_t rdtsc(void)
 {
@@ -110,8 +104,10 @@ static inline uint64_t rdtsc(void)
 
 static FILE *perf_file = 0;
 
-/*! @todo perhaps there should be one perf file per core
+/*! the currently associated core will read unique aperf/mperf values, 
+	despite accessing them through a single /proc file
  */
+///*
 static inline void read_aperf_mperf(uint64_t *aperf, uint64_t *mperf){
 	uint64_t mperf_aperf[2];
 	if(!perf_file){
@@ -124,26 +120,19 @@ static inline void read_aperf_mperf(uint64_t *aperf, uint64_t *mperf){
 		*mperf = mperf_aperf[0];
 	if(aperf)
 		*aperf = mperf_aperf[1];
-	/*
-	status = fseek(perf_file, 0, SEEK_SET);
-	assert(!status);
-	*/
 	fclose(perf_file);
 	perf_file = 0;
-	/*
-#ifdef _DEBUG
-	printf("core %d aperf: 0x%llx mperf: 0x%llx\n", my_core, 
-				 mperf_aperf[1], mperf_aperf[0]);
-#endif
-	*/
 }
+//*/
 
 /*!
 	calculate aperf/mperf ratio and corresponding frequency, elapsed time
 	@todo deal with counter overflow; see turbostat code
  */
 static void calc_rates(timing_t *t){
+#ifdef _DEBUG
 	assert(t);
+#endif
 
 	t->elapsed_time += delta_seconds(&t->start, &t->stop);
 
@@ -187,7 +176,7 @@ static inline void mark_time(timing_t *t, int start_stop){
 		gettimeofday(&t->start, 0);
 		t->tsc_start = rdtsc();
 		read_aperf_mperf(&t->aperf_start, &t->mperf_start);
-	} else {
+	} else { // stop
 		/*
 			elapsed_time should be initialized to zero and added to on each stop.
 		 */
@@ -196,7 +185,8 @@ static inline void mark_time(timing_t *t, int start_stop){
 		read_aperf_mperf(&t->aperf_stop, &t->mperf_stop);
 		calc_rates(t);
 #if _DEBUG > 1
-		printf("rank %d timing stop 0x%lx delta: %11.7f ratio: %f min ratio: %f hash: %06d f: %f GHz tsc f: %f GHz aperf: 0x%lx mperf: 0x%lx\n", 
+		printf("rank %d timing stop 0x%lx delta: %11.7f ratio: %f min ratio: %f "
+					 "hash: %06d f: %f GHz tsc f: %f GHz aperf: 0x%lx mperf: 0x%lx\n", 
 					 rank, t, 
 					 t->elapsed_time, t->ratio, 
 					 ratios[current_freq],
@@ -224,13 +214,12 @@ static inline void clear_time(timing_t *t){
 ////////////////////////////////////////////////////////////////////////////////
 // Init
 ////////////////////////////////////////////////////////////////////////////////
-static void
-pre_MPI_Init( union shim_parameters *p ){
+void
+pre_MPI_Init(){
 
 	struct utsname utsname;	// Holds hostname.
 	char  *hostname;
 	char *env_algo, *env_trace, *env_freq, *env_badnode, *env_mods, *env_bind;
-	p=p;
 
 	// Using "-mca key value" on the command line, the environment variable
 	// "OMPI_MCA_key" is set to "value".  mpirun doesn't check the validity
@@ -262,10 +251,6 @@ pre_MPI_Init( union shim_parameters *p ){
 			g_freq = 0;
 		}
 		
-#ifdef _DEBUG
-		printf("g_algo=%s %d\n", env_algo, g_algo);
-		printf("g_bind=%s %d\n", env_bind, g_bind);
-#endif
 	} else {
 #ifdef _DEBUG
 	  printf("g_algo empty\n");
@@ -327,20 +312,14 @@ pre_MPI_Init( union shim_parameters *p ){
 		g_bind = 0;
 	
 #ifdef _DEBUG
-		printf("g_bind=%s %d\n", env_bind, g_bind);
-		if(g_bind)
-			printf("g_cores_per_socket: %d\n", g_cores_per_socket);
+	printf("g_algo=%s %d\n", env_algo, g_algo);
+	printf("g_bind=%s %d\n", env_bind, g_bind);
+	if(g_bind)
+		printf("g_cores_per_socket: %d\n", g_cores_per_socket);
 #endif
-		
-	// Put a reasonable value in.
-	clear_time(&time_comp);
-	clear_time(&time_total);
-	mark_time(&time_comp, 1);
-	mark_time(&time_comp, 0);
-	mark_time(&time_total, 1);
-	current_start_time = time_total.start.tv_sec + 
-		time_total.start.tv_usec / 1000000.0;
 	
+	memset(schedule, 0, sizeof(schedule));
+
 	// get list of available frequencies
 	// assume all processors support the same options
 	shift_parse_freqs();
@@ -371,19 +350,14 @@ pre_MPI_Init( union shim_parameters *p ){
 			ratios[i] = frequencies[i] / frequencies[FASTEST_FREQ];
 	}
 
-	// Pretend computation started here.
-	start_papi();	
-	
-	// Set up signal handling.
-	initialize_handler();
-
 	MPI_Initialized_Already=1;
 
+	// we won't use the data gathered between pre_MPI_Init and shim_pre
+	start_papi();	
 }
 
-static void
-post_MPI_Init( union shim_parameters *p ){
-	p=p;
+void
+post_MPI_Init(char ** argv){
 	// Now that PMPI_Init has ostensibly succeeded, grab the rank & size.
 	PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	PMPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -395,7 +369,7 @@ post_MPI_Init( union shim_parameters *p ){
 	
 	/*! setup shared memory and interprocess semaphore
 	 */
-	shm_setup(*((struct MPI_Init_p*)p)->argv, rank);
+	shm_setup(argv, rank);
 
 	// Start us in a known frequency.
 	shift_core(my_core, FASTEST_FREQ);
@@ -406,63 +380,93 @@ post_MPI_Init( union shim_parameters *p ){
 		runTimeLog = fopen("globalRunTime.dat", "w");
 		assert(runTimeLog);
 	}
+
+	runTimeStats = initialize_global_logfile(rank);
 		
+	// Set up signal handling.
+	initialize_handler();
+
+	// Put a reasonable value in.
+	/* from this point to the end of the function exists mostly to make 
+		 the timing values for MPI_Init sensible.  We don't count any time before 
+		 MPI_Init, which makes timing accounting more complicated.
+	 */
+
+	// clear timers
+	clear_time(&time_comp);
+	clear_time(&time_total);
+	
+	mark_time(&time_total, 1);
+	time_comp = time_total;
+	mark_time(&time_comp, 0);
+	ind(schedule[current_hash]).observed_comp_seconds = time_comp.elapsed_time;
+
+	clear_time(&time_comm);
+	mark_time(&time_comm, 1);
+	mark_time(&time_comm, 0);
+
 	mark_joules(rank, size);
 }
 	
 ////////////////////////////////////////////////////////////////////////////////
 // Finalize
 ////////////////////////////////////////////////////////////////////////////////
-static void
-pre_MPI_Finalize( union shim_parameters *p ){
-	p=p;
+void
+pre_MPI_Finalize(){
 	mark_joules(rank, size);
 	PMPI_Barrier( MPI_COMM_WORLD );
 	mark_time(&time_total, 0);
-	if(!rank)
+	if(!rank){
 		fprintf(runTimeLog, "%lf\n", time_total.elapsed_time);
+		fprintf(runTimeStats, "rank\td_time\td_mperf\td_aperf\td_tsc\tratio\tcrit_path_fires\n");
+	}
+
+ 	/*!
+		log total mperf, aperf, tsc, elapsed time, ratio
+	 */
+	fprintf(runTimeStats, 
+					"%d\t%le\t%llu\t%llu\t%llu\t%f\t%u\n", 
+					rank, 
+					time_total.elapsed_time,
+					time_total.mperf_stop - time_total.mperf_start,
+					time_total.aperf_stop - time_total.aperf_start,
+					time_total.tsc_stop - time_total.tsc_start,
+					time_total.ratio,
+					critical_path_fires
+					);
 	// Leave us in a known frequency.  
 	// This should always be the fastest available.
-	//! @todo shift socket
   if(!socket_rank){
     shift_init_socket(my_socket, "userspace", FASTEST_FREQ);
   }
-	shift_core(my_core, FASTEST_FREQ);
 	shm_teardown();
 }
 	
-static void
-post_MPI_Finalize( union shim_parameters *p ){
-	p=p;
+void
+post_MPI_Finalize(){
 	if(g_trace){fclose(logfile);}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Logging
 ////////////////////////////////////////////////////////////////////////////////
-char*
-f2str( int shim_id ){
-	char *str;
-	switch(shim_id){
-#include "shim_str.h"
-		default:  str = "Unknown"; break;
-	}
-	return str;
-}
 
 void
-Log( int shim_id, union shim_parameters *p ){
+Log( const char *fname, int MsgSz, int MsgDest, int MsgSrc){
 
 	static int initialized=0;
-	MPI_Aint lb; 
-	MPI_Aint extent;
-	int MsgSz = -1;
-	int MsgSrc = -1;
-	int MsgDest = -1;
 	int log = 0;
 
-	char var_format[] = "%5d %13s %06d %9.6lf %9.6f %9.6lf %e %9.6f %9.6lf %9f %9f %8.6lf %7d %7d %7d\n";
-	char hdr_format[] = "%4s %13s %6s %9s %9s %9s %12s %9s %9s %9s %9s %8s %7s %7s %7s\n";
+	char var_format[] = 
+		"%5d %13s %06d %9.6f %9.6f "
+		"%9.6f %e %9.6f %9.6f %9f "
+		"%9f %8.6f %9.6f %8.6f "
+		"%8d %7d %7d\n";
+	char hdr_format[] = 
+		"%4s %13s %6s %9s %9s "
+		"%9s %12s %9s %9s %9s "
+		"%9s %8s %7s %8s "
+		"%8s %7s %7s\n";
 
 	// One-time initialization.
 	if(!initialized){
@@ -471,11 +475,10 @@ Log( int shim_id, union shim_parameters *p ){
 			if(g_trace){
 				fprintf(logfile, " ");
 				fprintf(logfile, hdr_format,
-								"Rank", "Function", "Hash", 
-								"Time_in", "Time_out",
-								"Comp", "Insn", "Ratio",  
-								"T_Ratio", "ReqRatio", "C0_Ratio",
-								"Comm", "MsgSz", "MsgDest", "MsgSrc");
+								"Rank", "Function", "Hash", "Time_in", "Time_out",
+								"Comp", "Insn", "Ratio", "T_Ratio", "ReqRatio", 
+								"C0_Ratio", "Comm", "CommRatio", "CommC0", 
+								"MsgSz", "MsgDest", "MsgSrc");
 			}
 		}
 		initialized=1;
@@ -485,68 +488,20 @@ Log( int shim_id, union shim_parameters *p ){
 	/*! @todo in order to make a task graph, need to deal with tags, 
 		communicators, MPI_Wait_any, and MPI_Wait_all.
 	 */
-	switch(shim_id){
-	case GMPI_ISEND: 
-		PMPI_Type_get_extent( p->MPI_Isend_p.datatype, &lb, &extent ); 
-		MsgSz = p->MPI_Isend_p.count * extent;
-		MsgDest = p->MPI_Isend_p.dest;
-		MsgSrc = rank;
-		break;
-	case GMPI_IRECV: 
-		PMPI_Type_get_extent( p->MPI_Irecv_p.datatype, &lb, &extent );
-		MsgSz = p->MPI_Irecv_p.count * extent;
-		MsgSrc = p->MPI_Irecv_p.source;
-		MsgDest = rank;
-		break;
-	case GMPI_SEND:
-		PMPI_Type_get_extent( p->MPI_Send_p.datatype, &lb, &extent );
-		MsgSz = p->MPI_Send_p.count * extent;
-		MsgDest = p->MPI_Send_p.dest;
-		MsgSrc = rank;
-		break;
-	case GMPI_RECV:
-		PMPI_Type_get_extent( p->MPI_Recv_p.datatype, &lb, &extent );
-		MsgSz = p->MPI_Recv_p.count * extent;
-		MsgSrc = p->MPI_Recv_p.source;
-		MsgDest = rank;
-		break;
-	case GMPI_SSEND: 
-		PMPI_Type_get_extent( p->MPI_Ssend_p.datatype, &lb, &extent ); 
-		MsgSz = p->MPI_Ssend_p.count * extent;
-		MsgDest = p->MPI_Ssend_p.dest;
-		MsgSrc = rank;
-		break;
-	case GMPI_REDUCE:
-		PMPI_Type_get_extent( p->MPI_Reduce_p.datatype, &lb, &extent ); 
-		MsgSz = p->MPI_Reduce_p.count * extent;
-		MsgDest = p->MPI_Reduce_p.root;
-		MsgSrc = rank;
-		break;
-	case GMPI_ALLREDUCE:
-		PMPI_Type_get_extent( p->MPI_Allreduce_p.datatype, &lb, &extent ); 
-		MsgSz = p->MPI_Allreduce_p.count * extent;
-		break;
-	case GMPI_BCAST:
-		PMPI_Type_get_extent(p->MPI_Bcast_p.datatype, &lb, &extent);
-		MsgSz = p->MPI_Bcast_p.count * extent;
-		MsgDest = p->MPI_Bcast_p.root;
-		MsgSrc = rank;
-		break;
-	default:
-		break;// We don't have complete coverage, obviously.
-	}
 
 	/*! @todo log filter 
 		
 	 */
 
 	if((g_trace & trace_THRESH) && 
-		 schedule[current_hash].observed_comp_seconds >= GMPI_MIN_COMP_SECONDS ||
-		 schedule[current_hash].observed_comm_seconds >= GMPI_MIN_COMM_SECONDS)
+		 (ind(schedule[current_hash]).observed_comp_seconds >= GMPI_MIN_COMP_SECONDS ||
+			ind(schedule[current_hash]).observed_comm_seconds >= GMPI_MIN_COMM_SECONDS))
 		log = 1;
-	
+
+	/*! @todo
 	if(shim_id == GMPI_PCONTROL && (g_trace & trace_PCONTROL))
 		log = 1;
+	*/
 
 	if(g_trace & trace_ALL)
 		log = 1;
@@ -554,20 +509,22 @@ Log( int shim_id, union shim_parameters *p ){
 	if(log){
 		// Write to the logfile.
 			fprintf(logfile, var_format, rank, 
-							f2str(p->MPI_Dummy_p.shim_id),	
+							fname,	
 							current_hash,
-							schedule[current_hash].start_time - 
+							ind(schedule[current_hash]).start_time - 
 							(time_total.start.tv_sec + time_total.start.tv_usec / 1000000.0),
-							schedule[current_hash].end_time - 
+							ind(schedule[current_hash]).end_time - 
 							(time_total.start.tv_sec + time_total.start.tv_usec / 1000000.0),
-							schedule[current_hash].observed_comp_seconds,
-							schedule[current_hash].observed_comp_insn,
-							schedule[current_hash].observed_ratio,
+							ind(schedule[current_hash]).observed_comp_seconds,
+							ind(schedule[current_hash]).observed_comp_insn,
+							ind(schedule[current_hash]).observed_ratio,
 							schedule[current_hash].desired_ratio == 0.0 ? 1.0 : 
 							schedule[current_hash].desired_ratio,
 							schedule[current_hash].requested_ratio,
-							schedule[current_hash].c0_ratio,
-							schedule[current_hash].observed_comm_seconds,
+							ind(schedule[current_hash]).c0_ratio,
+							ind(schedule[current_hash]).observed_comm_seconds,
+							ind(schedule[current_hash]).observed_comm_ratio,
+							ind(schedule[current_hash]).observed_comm_c0,
 							MsgSz,
 							MsgDest,
 							MsgSrc);
@@ -585,68 +542,64 @@ Log( int shim_id, union shim_parameters *p ){
 ////////////////////////////////////////////////////////////////////////////////
 // Interception redirect.
 ////////////////////////////////////////////////////////////////////////////////
-void 
-shim_pre( int shim_id, union shim_parameters *p ){
-	// ft kludge.
-	// In the normal case, any MPI call on or close to the critical path
-	// will take less than GMPI_BLOCKING_BUFFER.  ft messages are so large,
-	// though, that it takes ~10 seconds to complete an MPI_Alltoall on 32
-	// nodes.  This makes it look like every process than slow down -- 
-	// there's plenty of communiation time -- which inevitably leads to 
-	// the process(es) on the critical path slowing down.
-	//
-	// If we had a reliable way to distinguish blocking time from 
-	// communication time, we might be able to work with this.  However, 
-	// I don't think that even a complex scheme will hold up over 32 
-	// processes trying to communicate with 31 other processes, each
-	// starting at a slightly different time.
-	//
-	// To fix the problem, we're going to stick a barrier in front of the
-	// MPI_Alltoall call.  This will do two things:
-	//
-	// 1)  The communication time for the barrier is much less than 
-	// GMPI_BLOCKING_BUFFER.  Any extra time spent here is real blocking
-	// time, and computation can be slowed to take advantage of this.
-	// Processes on the critical path will see very little communication
-	// time and no blocking time, and thus their computation will not
-	// be slowed.
-	// 
-	// 2)  The task preceding the MPI_Alltoall will take to little time
-	// to be scheduled, leaving the fermata algorithm to kick in to 
-	// pick up the energy savings.
-	
-	// DO NOT MOVE THIS CALL.  This code isn't particularly reentrant,
-	// so this needs to be executed before any bookkeeping occurs.
-	if( (g_algo  &  algo_ANDANTE || g_algo & algo_FERMATA) 
-	&&  (g_algo  &  mods_BIGCOMM) 
-	&&  (shim_id == GMPI_ALLTOALL)
-	  ) { MPI_Barrier( MPI_COMM_WORLD ); }	//NOT PMPI.  
-	
+/*
+ ft kludge.
+ In the normal case, any MPI call on or close to the critical path
+ will take less than GMPI_BLOCKING_BUFFER.  ft messages are so large,
+ though, that it takes ~10 seconds to complete an MPI_Alltoall on 32
+ nodes.  This makes it look like every process than slow down -- 
+ there's plenty of communiation time -- which inevitably leads to 
+ the process(es) on the critical path slowing down.
+
+ If we had a reliable way to distinguish blocking time from 
+ communication time, we might be able to work with this.  However, 
+ I don't think that even a complex scheme will hold up over 32 
+ processes trying to communicate with 31 other processes, each
+ starting at a slightly different time.
+
+ To fix the problem, we're going to stick a barrier in front of the
+ MPI_Alltoall call.  This will do two things:
+
+ 1)  The communication time for the barrier is much less than 
+ GMPI_BLOCKING_BUFFER.  Any extra time spent here is real blocking
+ time, and computation can be slowed to take advantage of this.
+ Processes on the critical path will see very little communication
+ time and no blocking time, and thus their computation will not
+ be slowed.
+ 
+ 2)  The task preceding the MPI_Alltoall will take to little time
+ to be scheduled, leaving the fermata algorithm to kick in to 
+ pick up the energy savings.
+*/
+
+void shim_pre_1(){
 	// Kill the timer.
 	set_alarm(0.0);
+}
+
+void shim_pre_2(int shim_id){
+	
+	// If we aren't initialized yet, stop here.
+	if(!MPI_Initialized_Already){ return; }
 
 	// Bookkeeping.
 	in_computation = 0;
 	mark_time(&time_comp, 0);
 
-	// Which call is this?
-	current_hash=hash_backtrace(shim_id);
-	
-	// Function-specific intercept code.
-	if(shim_id == GMPI_INIT){ pre_MPI_Init( p ); }
-	if(shim_id == GMPI_FINALIZE){ pre_MPI_Finalize( p ); }
-	
-	// If we aren't initialized yet, stop here.
-	if(!MPI_Initialized_Already){ return; }
-	
-	// Bookkeeping.
 	//!  this count may correspond to multiple frequencies
 	current_comp_insn=stop_papi();
+
+	// Which call is this?
+	current_hash=hash_backtrace(shim_id, rank);
+
+	// rotate schedule entry for this hash
+	schedule[current_hash].index = 
+		(schedule[current_hash].index + 1) % histEntries;
 	
 	// Write the schedule entry.  MUST COME BEFORE LOGGING.
-	schedule[current_hash].observed_freq = time_comp.freq;
-	schedule[current_hash].observed_ratio = time_comp.ratio;
-	schedule[current_hash].c0_ratio = (double)time_comp.mperf_accum / time_comp.tsc_accum;
+	ind(schedule[current_hash]).observed_freq = time_comp.freq;
+	ind(schedule[current_hash]).observed_ratio = time_comp.ratio;
+	ind(schedule[current_hash]).c0_ratio = (double)time_comp.mperf_accum / time_comp.tsc_accum;
 #if _DEBUG > 1
 	printf("rank %d set comp r: %f tr: %f hash: %06d f: %f GHz tsc f: %f GHz tsc: %llu aperf: %lu "
 				 "mperf: %lu s: %f\n", 
@@ -667,12 +620,12 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	//current_comp_seconds = 0;
 
 	// Copy insn accrued before we shifted into current freq.
-	schedule[current_hash].observed_comp_insn = current_comp_insn;
+	ind(schedule[current_hash]).observed_comp_insn = current_comp_insn;
 	current_comp_insn = 0;
 	
 	/*! @todo multiple assignment to observed_comp_seconds;
 	 which is correct? */
-	schedule[current_hash].observed_comp_seconds = time_comp.elapsed_time;
+	ind(schedule[current_hash]).observed_comp_seconds = time_comp.elapsed_time;
 
 	// Schedule communication.
 	clear_time(&time_comm);
@@ -680,8 +633,7 @@ shim_pre( int shim_id, union shim_parameters *p ){
 	if( g_algo & algo_FERMATA ) { schedule_communication( current_hash ); }
 }
 
-void 
-shim_post( int shim_id, union shim_parameters *p ){
+void shim_post_1(){
 	// If we aren't initialized yet, stop here.
 	if(!MPI_Initialized_Already){ return; }
 	
@@ -691,27 +643,33 @@ shim_post( int shim_id, union shim_parameters *p ){
 	// Bookkeeping.
 	mark_time(&time_comm, 0);
 	//dump_timeval(logfile, "Communication halted. ", &ts_stop_communication);
+}
 
-	// (Most) Function-specific intercept code.
-	if(shim_id == GMPI_INIT){ post_MPI_Init( p ); }
-	
-	schedule[current_hash].observed_comm_seconds = time_comm.elapsed_time;
-	schedule[current_hash].start_time = current_start_time;
-	schedule[current_hash].end_time = time_comm.stop.tv_sec + 
+void shim_post_2(){
+	ind(schedule[current_hash]).observed_comm_seconds = time_comm.elapsed_time;
+	ind(schedule[current_hash]).start_time = time_comp.start.tv_sec + 
+		time_comp.start.tv_usec / 1000000.0;
+	ind(schedule[current_hash]).end_time = time_comm.stop.tv_sec + 
 		time_comm.stop.tv_usec / 1000000.0;
+	ind(schedule[current_hash]).observed_comm_ratio = time_comm.ratio;
+	ind(schedule[current_hash]).observed_comm_c0 = 
+		(double)time_comm.mperf_accum / time_comm.tsc_accum;
 	if( previous_hash >= 0 ){
+		//! @todo we can detect mispredictions here
 		schedule[previous_hash].following_entry = current_hash;
 	}
+}
 
-	// Logging occurs as we're about to leave the task.
-	if(g_trace){ Log( shim_id, p ); };
-	
+void 
+shim_post_3(){	
 	// Bookkeeping.  MUST COME AFTER LOGGING.
 	previous_hash = current_hash;
 	clear_time(&time_comp);
 	mark_time(&time_comp, 1);
+	/*
 	current_start_time = time_comp.start.tv_sec + 
 		time_comp.start.tv_usec / 1000000.0;
+	*/
 	//dump_timeval(logfile, "COMPUTATION started.  ", &ts_start_computation);
 	start_papi();	//Computation.
 
@@ -724,13 +682,11 @@ shim_post( int shim_id, union shim_parameters *p ){
 	}else{
 		current_freq = FASTEST_FREQ;	// Default case.
 	}
+
 	// Regardless of computation scheduling algorithm, always shift here.
 	// (Most of the time it should have no effect.)
 	if( ! (g_algo & mods_FAKEFREQ) ) { shift_core( my_core, current_freq ); }
 
-	// NOTE:  THIS HAS TO GO LAST.  Otherwise the logfile will be closed
-	// prematurely.
-	if(shim_id == GMPI_FINALIZE){ post_MPI_Finalize( p ); }
 	in_computation = 1;
 }
 
@@ -801,7 +757,7 @@ schedule_communication( int idx ){
 
 	// If we haven't measured communication time yet, or there isn't 
 	// enough to bother with, go home.
-	if( schedule[ idx ].observed_comm_seconds < 2*GMPI_MIN_COMM_SECONDS ){
+	if( indp(schedule[ idx ]).observed_comm_seconds < 2*GMPI_MIN_COMM_SECONDS ){
 		return;
 	}
 
@@ -815,10 +771,86 @@ schedule_communication( int idx ){
 	 */
 }
 
+/*!
+	Examine history for this entry, and make a prediction for the next iteration.
+	For now, assume min(previous three times).
+*/
+static double updateDeadlineComp(struct entryHist *eh){
+	double minTime = __builtin_inf();
+	int i;
+	
+	for(i = 0; i < histEntries; i++)
+		// if we have data
+		if(eh->hist[i].observed_comp_seconds)
+			minTime = min(minTime, eh->hist[i].observed_comp_seconds);
+	
+	return minTime;
+}
+
+static double updateDeadline(struct entryHist *eh){
+	double minTime = __builtin_inf();
+	int i;
+	
+	for(i = 0; i < histEntries; i++)
+		if(eh->hist[i].observed_comp_seconds)
+			minTime = min(minTime, eh->hist[i].observed_comp_seconds + 
+										eh->hist[i].observed_comm_seconds);
+	
+	return minTime;
+}
+
+/*! this is the core scheduling decision.
+	If the last task execution experienced short comm time 
+	(< comm threshold, indicating it was on the critical path), speed up. 
+	Otherwise, adjust according to worst-case slowdown
+ */
+static double updateRatio(struct entryHist *eh, double deadline){
+	double newRatio;
+	
+#ifdef detectCritical
+	//! @todo look into MPI_Iprobe
+	//! @todo this is good for global sync, but probably not much else
+	if(indd(eh).observed_comm_seconds < GMPI_BLOCKING_BUFFER){
+#ifdef _DEBUG
+		if(g_trace)
+			fprintf( logfile, "on critical path?\n");
+#endif
+		critical_path_fires++;
+		newRatio = 1.0;
+	} else
+#endif // #ifdef detectCritical
+		{
+			// calculate observed effective frequency ratio
+		
+			/* for now, just base rate on previous entry
+				 double oldRatio = 0.0, totalCompTime = 0.0;
+				 int i;
+		
+				 for(i = 0; i < histEntries; i++)
+				 totalCompTime += eh->hist[i].observed_comp_seconds;
+		
+				 for(i = 0; i < histEntries; i++)
+				 oldRatio += (eh->hist[i].observed_comp_seconds / totalCompTime) * 
+				 eh->hist[i].observed_ratio;
+		
+				 if(g_trace)
+				 fprintf( logfile, "\n");
+
+				 newRatio = (totalCompTime / histEntries * oldRatio) / 
+				 (deadline * ratios[FASTEST_FREQ]);
+			*/
+
+			newRatio = (indd(eh).observed_comp_seconds * indd(eh).observed_ratio) /
+				(deadline * ratios[FASTEST_FREQ]);
+		}
+
+	return(min(1.0, newRatio));
+}
+
 static void
 schedule_computation( int idx ){
 	int i; 
-	double p=0.0, d=0.0, I=0.0, seconds_until_interrupt=0.0;
+	double p=0.0, d, I, seconds_until_interrupt=0.0;
 
 	// WARNING:  The actual shift to the value placed in current_freq
 	// happens after this function returns.  The default case is to 
@@ -832,44 +864,29 @@ schedule_computation( int idx ){
 	// If we have no data to work with, go home.
 	if( idx==0 ){ goto schedule_computation_exit; }
 
-	schedule[idx].requested_ratio = frequencies[current_freq] / frequencies[FASTEST_FREQ];
-
 	// On the first time through, establish worst-case slowdown rates.
 	//! @todo fix for average frequency
-	if( schedule[ idx ].seconds_per_insn == 0.0 ){
+	//! @todo this should never be executed
+	if( ind(schedule[ idx ]).observed_comp_seconds == 0.0  || 
+			ind(schedule[ idx ]).observed_comp_insn == 0 ){
+		printf("fixme %s:%d\n", __FILE__, __LINE__);
 #ifdef _DEBUG
 		if(g_trace)
 			fprintf( logfile, "#==> schedule_computation First time through.\n");
 #endif
-		if( schedule[ idx ].observed_comp_seconds <= GMPI_MIN_COMP_SECONDS ){
-#ifdef _DEBUG
-				if(g_trace)
-					fprintf( logfile, "#==> schedule_computation min_seconds violation.\n");
-#endif
-			goto schedule_computation_exit;
-		}
-		schedule[ idx ].seconds_per_insn = 
-			schedule[ idx ].observed_comp_seconds /
-			schedule[ idx ].observed_comp_insn;
-#ifdef _DEBUG
-		if(!isnan(schedule[idx].seconds_per_insn))
-			if(g_trace)
-				fprintf(logfile, "#&&& SPI = %16.15lf\n", 
-								schedule[idx].seconds_per_insn);
-#endif
 	}
 
-	// On subsequent execution, only update where we have data.
-	if( schedule[ idx ].observed_comp_seconds > GMPI_MIN_COMP_SECONDS ){
-			schedule[ idx ].seconds_per_insn = 
-				schedule[ idx ].observed_comp_seconds/
-				schedule[ idx ].observed_comp_insn;
-		}
+	// only update where we have data.
+	if( ind(schedule[ idx ]).observed_comp_seconds > GMPI_MIN_COMP_SECONDS ){
+		ind(schedule[ idx ]).seconds_per_insn = 
+			ind(schedule[ idx ]).observed_comp_seconds/
+			ind(schedule[ idx ]).observed_comp_insn;
+	}
 #ifdef _DEBUG
-	if(!isnan(schedule[idx].seconds_per_insn))
+	if(!isnan(ind(schedule[idx]).seconds_per_insn))
 			if(g_trace)
 				fprintf(logfile, "#&&& SPI = %16.15lf\n", 
-								schedule[idx].seconds_per_insn);
+								ind(schedule[idx]).seconds_per_insn);
 #endif
 	//}
 
@@ -882,8 +899,14 @@ schedule_computation( int idx ){
 	//
 	// p = ( d - Ir[i+1] )/( Ir[i] - Ir[i+1] ) 
 	
-	d += schedule[ idx ].observed_comp_seconds;
-	I += schedule[ idx ].observed_comp_insn;
+	//d = ind(schedule[ idx ]).observed_comp_seconds;
+	d = updateDeadlineComp(&schedule[idx]);
+#ifdef _DEBUG
+	if(g_trace)
+		fprintf( logfile, "hash %d comp deadline: %le\n", idx, d);
+#endif
+
+	I = ind(schedule[ idx ]).observed_comp_insn;
 	
 	// If there's not enough computation to bother scaling, skip it.
 	if( d <= GMPI_MIN_COMP_SECONDS ){
@@ -892,17 +915,45 @@ schedule_computation( int idx ){
 	}
 
 	// The deadline includes blocking time, minus a buffer.
-	d += schedule[ idx ].observed_comm_seconds - GMPI_BLOCKING_BUFFER;
+	//d += ind(schedule[ idx ]).observed_comm_seconds - GMPI_BLOCKING_BUFFER;
+	d = updateDeadline(&schedule[idx]) - GMPI_BLOCKING_BUFFER;
+
+#ifdef _DEBUG
+	if(g_trace)
+		fprintf( logfile, "hash %d deadline: %le\n", idx, d);
+#endif
 
 	// Create the schedule.
-	/*! @todo this is broken; see RAxML Adagio results.  
-		Desired frequencies for task 4713 are decreasing on rank 127
-		@todo base on previous instruction rate
+	/*! @todo base on previous instruction rate
 	 */
-	#warning fixme
-	double updatedRatio = min(1.0, (schedule[idx].observed_comp_seconds * 
-																	schedule[idx].observed_freq) / 
-														(d * frequencies[FASTEST_FREQ]));
+	#warning this needs much verification
+	schedule[idx].desired_ratio = updateRatio(&schedule[idx], d);
+
+#ifdef _DEBUG
+	if(g_trace)
+		fprintf( logfile, "hash %d T_Ratio: %le\n", idx, schedule[idx].desired_ratio);
+#endif
+
+	// generate discrete index from ratio
+	current_freq = SLOWEST_FREQ;
+	for(i = SLOWEST_FREQ; i >= FASTEST_FREQ; i--)
+		if(schedule[idx].desired_ratio > ratios[i])
+			current_freq = max(i-1, FASTEST_FREQ);
+
+#ifdef _DEBUG
+	if(g_trace)
+		fprintf( logfile, "hash %d ReqRatio: %le\n", idx, ratios[current_freq]);
+#endif
+
+	//! @todo use alarm to implement split freqs
+
+	/*
+		min(1.0, (schedule[idx].observed_comp_seconds * 
+		schedule[idx].observed_freq) / 
+		(d * frequencies[FASTEST_FREQ]));
+	*/
+
+	/*! @todo integrate into updateRatio
 #if _DEBUG > 1
 	printf("rank %d updating hash %06d target ratio from %f to %f; insn: %le comp: %f comm: %f\n",
 				 rank, idx, schedule[idx].desired_ratio,
@@ -911,21 +962,20 @@ schedule_computation( int idx ){
 				 schedule[idx].observed_comp_seconds, 
 				 schedule[idx].observed_comm_seconds);
 #endif	
-	schedule[idx].desired_ratio = updatedRatio;
 	
 	// If the fastest frequency isn't fast enough, use f0 all the time.
 	//! @todo fix for average frequency measurement; need prediction
-	if( I * schedule[ idx ].seconds_per_insn * 
-			schedule[ idx ].observed_freq/frequencies[FASTEST_FREQ] >= d ){
+	if( I * ind(schedule[ idx ]).seconds_per_insn * 
+			ind(schedule[ idx ]).observed_ratio >= d ){
 #ifdef _DEBUG
 		if(g_trace){
 			fprintf( logfile, "#==> schedule_computation GO FASTEST.\n");
 			fprintf( logfile, "#==>     I=%lf\n", I);
 			fprintf( logfile, "#==>   SPI=%16.15lf\n",   
-							 schedule[ idx ].seconds_per_insn * 
+							 ind(schedule[ idx ]).seconds_per_insn * 
 							 schedule[idx].observed_freq / frequencies[FASTEST_FREQ]);
 			fprintf( logfile, "#==> I*SPI=%16.15lf\n", 
-							 I*schedule[ idx ].seconds_per_insn *
+							 I*ind(schedule[ idx ]).seconds_per_insn *
 							 schedule[idx].observed_freq / frequencies[FASTEST_FREQ]);
 			fprintf( logfile, "#==>     d=%lf\n", d
 							 );
@@ -935,17 +985,17 @@ schedule_computation( int idx ){
 	}
 	// If the slowest frequency isn't slow enough, use that.
 	//! @todo fix for average frequency measurement; need prediction
-	else if( I * schedule[ idx ].seconds_per_insn * 
-					 schedule[ idx ].observed_freq/frequencies[ SLOWEST_FREQ ] <= d ){
+	else if( I * ind(schedule[ idx ]).seconds_per_insn * 
+					 ind(schedule[ idx ]).observed_freq/frequencies[ SLOWEST_FREQ ] <= d ){
 #ifdef _DEBUG
 		if(g_trace){
 			fprintf( logfile, "#==> schedule_computation GO SLOWEST.\n");
 			fprintf( logfile, "#==>     I=%lf\n", I);
 			fprintf( logfile, "#==>   SPI=%16.15lf\n",   
-							 schedule[ idx ].seconds_per_insn * 
+							 ind(schedule[ idx ]).seconds_per_insn * 
 							 schedule[idx].observed_freq / frequencies[ SLOWEST_FREQ ]);
 			fprintf( logfile, "#==> I*SPI=%16.15lf\n", 
-							 I*schedule[ idx ].seconds_per_insn * 
+							 I*ind(schedule[ idx ]).seconds_per_insn * 
 							 schedule[idx].observed_freq / frequencies[ SLOWEST_FREQ ]);
 			fprintf( logfile, "#==>     d=%lf\n", d);
 		}
@@ -955,18 +1005,18 @@ schedule_computation( int idx ){
 	// Find the slowest frequency that allows the work to be completed in time.
 	else{
 		for( i=SLOWEST_FREQ-1; i>FASTEST_FREQ; i-- ){
-			if( I * schedule[ idx ].seconds_per_insn * 
-					schedule[ idx ].observed_freq/frequencies[ i ] < d ){
+			if( I * ind(schedule[ idx ]).seconds_per_insn * 
+					ind(schedule[ idx ]).observed_freq/frequencies[ i ] < d ){
 				// We have a winner.
 				//! @todo adjust for average frequency measurement
 				p = 
-					( d - I * schedule[ idx ].seconds_per_insn * 
-						schedule[ idx ].observed_freq/frequencies[ i+1 ] )
+					( d - I * ind(schedule[ idx ]).seconds_per_insn * 
+						ind(schedule[ idx ]).observed_freq/frequencies[ i+1 ] )
 					/
-					( I * schedule[ idx ].seconds_per_insn * 
-						schedule[ idx ].observed_freq/frequencies[ i ] - 
-					  I * schedule[ idx ].seconds_per_insn * 
-						schedule[ idx ].observed_freq/frequencies[ i+1 ] );
+					( I * ind(schedule[ idx ]).seconds_per_insn * 
+						ind(schedule[ idx ]).observed_freq/frequencies[ i ] - 
+					  I * ind(schedule[ idx ]).seconds_per_insn * 
+						ind(schedule[ idx ]).observed_freq/frequencies[ i+1 ] );
 
 #ifdef _DEBUG
 				if(g_trace){
@@ -986,14 +1036,14 @@ schedule_computation( int idx ){
 				current_freq = i;
 
 				// Do we need to shift down partway through?
-				if((    p * I * schedule[idx].seconds_per_insn * 
-								schedule[ idx ].observed_freq/frequencies[i  ]>GMPI_MIN_COMP_SECONDS)
-				&& (1.0-p * I * schedule[idx].seconds_per_insn * 
-						schedule[ idx ].observed_freq/frequencies[i+1]>GMPI_MIN_COMP_SECONDS)
+				if((    p * I * ind(schedule[idx]).seconds_per_insn * 
+								ind(schedule[ idx ]).observed_freq/frequencies[i  ]>GMPI_MIN_COMP_SECONDS)
+					 && (1.0-p * I * ind(schedule[idx]).seconds_per_insn * 
+						ind(schedule[ idx ]).observed_freq/frequencies[i+1]>GMPI_MIN_COMP_SECONDS)
 				){
 					seconds_until_interrupt = 
-						p * I * schedule[ idx ].seconds_per_insn * 
-						schedule[ idx ].observed_freq/frequencies[ i ];
+						p * I * ind(schedule[ idx ]).seconds_per_insn * 
+						ind(schedule[ idx ]).observed_freq/frequencies[ i ];
 					next_freq = i+1;
 #ifdef _DEBUG
 					if(g_trace)
@@ -1006,7 +1056,8 @@ schedule_computation( int idx ){
 			}
 		}
 	}
+	*/
  schedule_computation_exit:
-	schedule[idx].requested_ratio = frequencies[current_freq] / frequencies[FASTEST_FREQ];
+	schedule[idx].requested_ratio = ratios[current_freq];
 	return;
 }

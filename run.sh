@@ -1,7 +1,7 @@
 #!/bin/bash
 if [ "$1" == "trace" ];
 then 
-trace="-mca gmpi_trace all"
+trace="-genv OMPI_MCA_gmpi_trace all"
 else 
 trace=
 fi
@@ -22,10 +22,10 @@ echo 'command:'$command >> $path/info
 oldDir=`pwd`
 cd $path
 cores=$SLURM_NPROCS
-mpirun -n $SLURM_NPROCS -bind-to-core -report-bindings $trace $oldDir/$command >log 2>errlog
+mpirun -n $SLURM_NPROCS MV2_CPU_BINDING_POLICY=bunch $trace $oldDir/$command >log 2>errlog
 
 #cores=32
-#mpirun -n $cores -cpus-per-proc 4 -report-bindings $trace -mca gmpi_bind collapse $oldDir/harness -S >log 2>errlog
+#mpirun -n $cores MV2_CPU_BINDING_POLICY=scatter $trace -genv OMPI_MCA_gmpi_bind collapse $oldDir/harness -S >log 2>errlog
 # pernode gives segfaults...
 echo 'cores:'$cores >> $path/info
 mpirun -n $SLURM_NNODES bash -c "cat scaling_available_frequencies | cut -d' ' -f1 | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_max_freq"
@@ -33,5 +33,5 @@ mpirun -n $SLURM_NNODES bash -c "cat scaling_available_frequencies | sed -re 's/
 cd ..
 namez=$oldDir/$name.bz2
 tar -cjvf $namez $name
-rsync --progress $namez lec.cs.arizona.edu:/home/pbailey/data/GreenMPI/$benchmark/
+#rsync --progress $namez lec.cs.arizona.edu:/home/pbailey/data/GreenMPI/$benchmark/
 
