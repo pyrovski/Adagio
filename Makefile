@@ -7,6 +7,7 @@
 # gmpi_trace:
 # 	none all ts file line fn comp comm rank pcontrol
 
+-include localConfig
 -include installPath
 installDest ?= $(HOME)/local
 
@@ -29,7 +30,7 @@ export NAS_EXTRA_FLAGS= -mca gmpi_mods bigcomm
 
 # Compile environment
 
-MPICC=$(HOME)/local/bin/mpicc
+MPICC?=$(HOME)/local/bin/mpicc
 wrap=../wrap/wrap.py
 ifneq ($(dbg),)
 DBG=-D_DEBUG=$(dbg) -DBLR_USE_EAGER_LOGGING -g -pg
