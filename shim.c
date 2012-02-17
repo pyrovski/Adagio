@@ -322,6 +322,7 @@ pre_MPI_Init(){
 
 	// get list of available frequencies
 	// assume all processors support the same options
+ 	// must come before FASTEST_FREQ selection
 	shift_parse_freqs();
 	
 	if(g_algo & mods_TURBOBOOST)
@@ -336,12 +337,9 @@ pre_MPI_Init(){
 		g_algo |= algo_FERMATA;
 		FASTEST_FREQ = 1 + turboboost_present;
 	} else {
-		if(turboboost_present){
-			if(g_algo & mods_TURBOBOOST)
-				FASTEST_FREQ = 0;
-			else
-				FASTEST_FREQ = 1;
-		} else
+		if(turboboost_present && !(g_algo & mods_TURBOBOOST))
+			FASTEST_FREQ = 1;
+		else
 			FASTEST_FREQ = 0;
 	}
 	{

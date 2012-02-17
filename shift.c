@@ -80,9 +80,10 @@ int shift_parse_freqs(){
 
 	SLOWEST_FREQ = NUM_FREQS - 1;
 	if(NUM_FREQS > 1){
-		turboboost_present = frequencies[0] / frequencies[1] < 1.01;
-	} else
+		turboboost_present = (frequencies[0] / frequencies[1]) < 1.01;
+	} else {
 		turboboost_present = 0;
+	}
 
 	return 0;
 }
