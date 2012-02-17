@@ -150,6 +150,7 @@ libGreenMPI.so: Makefile shim.o wpapi.o shift.o meters.o cpuid.o shm.o\
 		$(objects) $(LIBS)
 install: libGreenMPI.so harness
 	install -m 0744 libGreenMPI.so $(installDest)/lib/
+	install -m 0744 reset_freqs.sh $(installDest)/bin/
 
 shim.o: Makefile shim.c shim.h log.o stacktrace.o 			\
 		gettimeofday_helpers.o wpapi.o shift.o  		\
