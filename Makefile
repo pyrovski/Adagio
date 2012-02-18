@@ -143,7 +143,7 @@ clean:
 # Adagio libraries.
 
 libGreenMPI.so: Makefile shim.o wpapi.o shift.o meters.o cpuid.o shm.o\
-	log.o stacktrace.o gettimeofday_helpers.o \
+	log.o stacktrace.o gettimeofday_helpers.o shim_functions.o\
 	$(GENERATED_SHIMFILES)  
 	$(MPICC) $(CFLAGS) $(LIBDIR) -shared -Wl,-soname,libGreenMPI.so \
 		-o libGreenMPI.so 					\
@@ -156,6 +156,8 @@ shim.o: Makefile shim.c shim.h log.o stacktrace.o 			\
 		gettimeofday_helpers.o wpapi.o shift.o  		\
 		$(GENERATED_SHIMFILES) 
 	$(MPICC) $(CFLAGS) -fPIC -c shim.c $(INCDIR) -DdetectCritical
+
+shim_functions.o:
 	$(MPICC) $(CFLAGS) -fPIC -c shim_functions.c
 
 log.o: Makefile log.c log.h
