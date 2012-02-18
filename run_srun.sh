@@ -1,0 +1,1 @@
+OMPI_MCA_gmpi_trace=all OMPI_MCA_gmpi_bind=collapse srun  --nodes=1 -p pfio mpirun -bind-to-core -cpus-per-proc 4 -n 2 harness
