@@ -9,6 +9,13 @@ Idea: don't ship around the shim_parameters union; just pass parameters directly
 #include "shim.h"
 #include "shim_enumeration.h"
 
+// for compatibility with ancient MPI implementations
+#ifdef PMPI_Type_get_extent
+#define compat_PMPI_Type_extent(datatype, lb, extent) PMPI_Type_get_extent(datatype, lb, extent)
+#else
+#define compat_PMPI_Type_extent(datatype, lb, extent) PMPI_Type_extent(datatype, extent)
+#endif
+
 {{fn foo MPI_Init}}{
      shim_pre_1();
      pre_MPI_Init();
@@ -67,7 +74,7 @@ for all functions except init and finalize, use
   shim_post_1();
   shim_post_2();
   if(g_trace){
-    PMPI_Type_get_extent({{2}}, &lb, &extent);
+    compat_PMPI_Type_extent({{2}}, &lb, &extent);
     msgSize = extent * {{1}};
     msgSrc = rank;
     msgDest = {{3}};
@@ -88,7 +95,7 @@ for all functions except init and finalize, use
   shim_post_1();
   shim_post_2();
   if(g_trace){
-    PMPI_Type_get_extent({{3}}, &lb, &extent);
+    compat_PMPI_Type_extent({{3}}, &lb, &extent);
     msgSize = extent * {{2}};
     msgSrc = -2;
     msgDest = G{{foo}} == GMPI_Reduce ? {{5}} : -2;
@@ -110,7 +117,7 @@ for all functions except init and finalize, use
   shim_post_1();
   shim_post_2();
   if(g_trace){
-    PMPI_Type_get_extent({{2}}, &lb, &extent);
+    compat_PMPI_Type_extent({{2}}, &lb, &extent);
     msgSize = extent * {{1}};
     msgSrc = {{3}};
     msgDest = G{{foo}} == GMPI_Bcast ? -2 : rank;
@@ -141,9 +148,9 @@ for all functions except init and finalize, use
   shim_post_1();
   shim_post_2();
   if(g_trace){
-    PMPI_Type_get_extent({{2}}, &lb, &extent);
+    compat_PMPI_Type_extent({{2}}, &lb, &extent);
     msgSize = extent * {{1}};
-    PMPI_Type_get_extent({{5}}, &lb, &extent);
+    compat_PMPI_Type_extent({{5}}, &lb, &extent);
     msgSize += extent * {{4}};
     msgDest = G{{foo}} == GMPI_Gather ? rank : -2;
     msgSrc = G{{foo}} == GMPI_Scatter ? rank : -2;
