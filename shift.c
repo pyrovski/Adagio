@@ -161,10 +161,8 @@ int shift_set_socket_min_freq(int socket){
 			  config.map_socket_to_core[socket][core_index], 
 			  cpufreq_path[1], cpufreq_min);
 		 sfp = fopen(filename, "w");
-		 if(!sfp){
-			 fprintf(stderr, "!!! %s does not exist.  Bye!\n", 
-				 filename);
-		 }
+		 if(!sfp)
+			 perror(filename);
 		 assert(sfp);
 		 fprintf(sfp, "%u", freqs[ SLOWEST_FREQ ]);
 		 fclose(sfp);
