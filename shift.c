@@ -115,10 +115,8 @@ int shift_core(int core, int freq_idx){
 	snprintf(filename, 100, "%s%u%s%s", cpufreq_path[0], core, 
 		 cpufreq_path[1], cpufreq_speed);
 	sfp = fopen(filename, "w");
-	if(!sfp){
-		fprintf(stderr, "!!! %s does not exist.  Bye!\n", 
-			filename);
-	}
+	if(!sfp)
+		perror(filename);
 	assert(sfp);
 #ifdef _DEBUG
 	printf("rank %d socket %d rank %d core %d shifting core %d to %d\n", 
@@ -184,10 +182,8 @@ int shift_set_socket_max_freq(int socket){
 			  config.map_socket_to_core[socket][core_index], 
 			  cpufreq_path[1], cpufreq_max);
 		 sfp = fopen(filename, "w");
-		 if(!sfp){
-			 fprintf(stderr, "!!! %s does not exist.  Bye!\n", 
-				 filename);
-		 }
+		 if(!sfp)
+			 perror(filename);
 		 assert(sfp);
 		 fprintf(sfp, "%u", freqs[ FASTEST_FREQ ]);
 		 fclose(sfp);
