@@ -87,8 +87,6 @@ initialize_papi(){
 	wpapi_add_events(EventSet, events, num_counters);
 }
 
-
-
 int 
 wpapi_library_init(int version){
 	int rc;

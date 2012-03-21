@@ -1,7 +1,7 @@
 #include <papi.h>
 
 /*! make sure to update the "events" variable in wpapi.c */
-enum  {papi_instructions,
+enum  {papi_instructions = 0,
        papi_L3_cache_misses, 
        papi_TLB_data_misses, 
        papi_stall_cycles, 
