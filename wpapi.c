@@ -11,7 +11,7 @@
 static void initialize_papi();
 //static int wpapi_library_init(int version);
 static int wpapi_create_eventset (int *eventset);
-//static int wpapi_add_events(int eventset, int *eventcodes, int number);
+static int wpapi_add_events(int eventset, int *eventcodes, int number);
 static int wpapi_add_event(int eventset, int eventcode);
 //static int wpapi_read(int EventSet, long_long *values);
 //static int wpapi_accum(int EventSet, long_long *values);
@@ -20,7 +20,9 @@ static int wpapi_stop(int EventSet, long_long *values);
 //static int wpapi_reset(int EventSet);
 
 static int EventSet = PAPI_NULL;
-static long_long inst;
+static int events[] = {PAPI_TOT_INS, PAPI_L3_TCM, PAPI_TLB_DM, PAPI_STL_ICY, PAPI_SR_INS, PAPI_LD_INS};
+static const int num_counters = sizeof(events)/sizeof(events[0]);
+static long_long counters[sizeof(events)/sizeof(events[0])];
 static void initialize_papi(void);
 
 
@@ -38,8 +40,8 @@ start_papi(){
 
 double
 stop_papi(){
-        wpapi_stop(EventSet, &inst);
-        return (double)inst;
+        wpapi_stop(EventSet, counters);
+        return (double)counters[0];
 }
 
 
@@ -74,7 +76,7 @@ initialize_papi(){
                 //      __FILE__, __LINE__);
         }
         wpapi_create_eventset(&EventSet);
-        wpapi_add_event(EventSet, PAPI_TOT_INS);
+	wpapi_add_events(EventSet, events, num_counters);
 }
 
 
