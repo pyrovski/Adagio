@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <assert.h>
 #include "wpapi.h"
 
 static void initialize_papi();
@@ -20,11 +21,16 @@ static int wpapi_stop(int EventSet, long_long *values);
 //static int wpapi_reset(int EventSet);
 
 static int EventSet = PAPI_NULL;
-static int events[] = {PAPI_TOT_INS, PAPI_L3_TCM, PAPI_TLB_DM, PAPI_STL_ICY, PAPI_SR_INS, PAPI_LD_INS};
-static const int num_counters = sizeof(events)/sizeof(events[0]);
-static long_long counters[sizeof(events)/sizeof(events[0])];
-static void initialize_papi(void);
 
+/*! make sure to update the enum in wpapi.h */
+int events[] = {PAPI_TOT_INS,
+		PAPI_L3_TCM, 
+		PAPI_TLB_DM, 
+		PAPI_STL_ICY, 
+		PAPI_SR_INS, 
+		PAPI_LD_INS};
+
+static void initialize_papi(void);
 
 void
 start_papi(){
@@ -38,16 +44,18 @@ start_papi(){
         wpapi_start(EventSet);
 }
 
-double
-stop_papi(){
+void
+stop_papi(long_long *counters){
         wpapi_stop(EventSet, counters);
-        return (double)counters[0];
 }
 
 
 static void
 initialize_papi(){
         int rc;
+
+	assert(num_counters == sizeof(events)/sizeof(int));
+
         rc=PAPI_library_init(PAPI_VER_CURRENT);
         if(rc != PAPI_VER_CURRENT){
                 fprintf(stderr,"%s::%d PAPI_library_init error:  ", __FILE__, __LINE__);

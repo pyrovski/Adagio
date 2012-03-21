@@ -37,12 +37,17 @@ int rank;
 static int size;
 
 typedef struct {
+	// measured
 	struct timeval start, stop;
+	double elapsed_time;
 	uint64_t aperf_start, aperf_stop, aperf_accum,
 		mperf_start, mperf_stop, mperf_accum,
 		tsc_start, tsc_stop, tsc_accum;
+	
+	long_long counters[num_counters];
 
-	double freq, ratio, elapsed_time;
+	// derived
+	double freq, ratio;
 } timing_t;
 
 static timing_t time_comp, time_comm, time_total;
@@ -79,10 +84,6 @@ FILE *runTimeStats = 0;
 // Don't change this without altering the hash function.
 //! @todo change hash function?
 static struct entryHist schedule[8192];
-
-//static double current_comp_seconds;
-static double current_comp_insn;
-//static double current_start_time;
 
 static inline uint64_t rdtsc(void)
 {
@@ -176,6 +177,7 @@ static inline void mark_time(timing_t *t, int start_stop){
 		gettimeofday(&t->start, 0);
 		t->tsc_start = rdtsc();
 		read_aperf_mperf(&t->aperf_start, &t->mperf_start);
+		start_papi();
 	} else { // stop
 		/*
 			elapsed_time should be initialized to zero and added to on each stop.
@@ -183,6 +185,8 @@ static inline void mark_time(timing_t *t, int start_stop){
 		gettimeofday(&t->stop, 0);
 		t->tsc_stop = rdtsc();
 		read_aperf_mperf(&t->aperf_stop, &t->mperf_stop);
+		stop_papi(t->counters);
+
 		calc_rates(t);
 #if _DEBUG > 1
 		printf("rank %d timing stop 0x%lx delta: %11.7f ratio: %f min ratio: %f "
@@ -584,9 +588,6 @@ void shim_pre_2(int shim_id){
 	in_computation = 0;
 	mark_time(&time_comp, 0);
 
-	//!  this count may correspond to multiple frequencies
-	current_comp_insn=stop_papi();
-
 	// Which call is this?
 	current_hash=hash_backtrace(shim_id, rank);
 
@@ -612,14 +613,9 @@ void shim_pre_2(int shim_id){
 				 time_comp.mperf_accum,
 				 time_comp.elapsed_time);
 #endif
-	// Copy time accrued before we shifted into current freq.
-	// current_comp_seconds is set in the signal handler
-	//schedule[current_hash].observed_comp_seconds = current_comp_seconds;
-	//current_comp_seconds = 0;
-
 	// Copy insn accrued before we shifted into current freq.
-	ind(schedule[current_hash]).observed_comp_insn = current_comp_insn;
-	current_comp_insn = 0;
+	ind(schedule[current_hash]).observed_comp_insn = 
+		time_comp.counters[papi_instructions];
 	
 	/*! @todo multiple assignment to observed_comp_seconds;
 	 which is correct? */
@@ -640,7 +636,6 @@ void shim_post_1(){
 
 	// Bookkeeping.
 	mark_time(&time_comm, 0);
-	//dump_timeval(logfile, "Communication halted. ", &ts_stop_communication);
 }
 
 void shim_post_2(){
@@ -664,12 +659,6 @@ shim_post_3(){
 	previous_hash = current_hash;
 	clear_time(&time_comp);
 	mark_time(&time_comp, 1);
-	/*
-	current_start_time = time_comp.start.tv_sec + 
-		time_comp.start.tv_usec / 1000000.0;
-	*/
-	//dump_timeval(logfile, "COMPUTATION started.  ", &ts_start_computation);
-	start_papi();	//Computation.
 
 	// Setup computation schedule.
 	if(g_algo & algo_ANDANTE){
@@ -704,8 +693,6 @@ signal_handler(int signal){
 	//fprintf( logfile, "++> SIGNAL HANDLER\n");
 	if(in_computation){
 		mark_time(&time_comp, 0);
-		current_comp_insn=stop_papi();	                                   //  <---|
-		//		current_comp_seconds = time_comp.elapsed_time;                          // |
 	}                                                                         // |
                                                                             // |
 	if( ! (g_algo & mods_FAKEFREQ) ) {                                        // |
@@ -722,7 +709,6 @@ signal_handler(int signal){
                                                                             // |
 	if(in_computation){                                                       // |
 		mark_time(&time_comp, 1);                                               // |
-		start_papi();	                                                     //  <---|
 	}
 }
 
