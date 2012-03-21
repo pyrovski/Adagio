@@ -179,10 +179,10 @@ meters.o: Makefile meters.c meters.h gettimeofday_helpers.o
 
 shim_functions.c: Makefile shim_functions.w shim_enumeration.w
 	rm -f $@
-	$(wrap) -o shim_functions.c shim_functions.w
+	$(wrap) -f -o shim_functions.c shim_functions.w
 	chmod 440 $@
 
 shim_enumeration.h: Makefile shim_enumeration.w
 	rm -f $@
-	$(wrap) -o shim_enumeration.h shim_enumeration.w
+	$(wrap) -f -o shim_enumeration.h shim_enumeration.w
 	chmod 440 $@
