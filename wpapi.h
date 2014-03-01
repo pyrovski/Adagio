@@ -12,4 +12,3 @@ enum  {papi_instructions = 0,
 // High-level interface.  This does auto-initialize.
 void start_papi(void);
 void stop_papi(long_long *results);
-

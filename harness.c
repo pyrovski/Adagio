@@ -189,4 +189,3 @@ main( int argc, char **argv ){
 	assert( MPI_SUCCESS == MPI_Finalize() );
 	return 0;
 }
-

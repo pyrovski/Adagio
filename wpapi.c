@@ -205,5 +205,3 @@ int wpapi_reset(int EventSet){
 	}
 	return rc;
 }
-
-
