@@ -12,7 +12,7 @@ Welcome to Adagio.
 
 The source code herein was used as the basis of Rountree ICS 2009.  It
 was my first nontrivial MPI tool and was never intended to be released
-to the wider world.  I beleive it was tied rather tightly to a subset
+to the wider world.  I believe it was tied rather tightly to a subset
 of a (now) old MPI implementation.  I expect a nontrivial amount of 
 work would have to be done to get this to compile and run again, and
 that effort would probably be better served starting from scratch 
@@ -68,7 +68,7 @@ domain).
 Looking back on this work, the primary contribution was moving the 
 community away from metrics such as "Energy x Delay^2" by asking
 how much energy could be saved assuming only negligible (<1%) slowdown.
-While that question was good enough for a disseration (and may still
+While that question was good enough for a dissertation (and may still
 be of interest for smaller supercomputing centers), the far more 
 interesting question for exascale and beyond is "How do we optimize
 execution time (or turnaround time) given a hard power bound in a
